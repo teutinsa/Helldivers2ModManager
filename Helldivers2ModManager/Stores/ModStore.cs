@@ -46,36 +46,42 @@ namespace Helldivers2ModManager.Stores
 			_settingsStore = settingsStore;
 			_mods = [];
 
+			_logger.LogInformation("Retrieving mods for startup");
 			var modDir = new DirectoryInfo(Path.Combine(_settingsStore.StorageDirectory, "Mods"));
-			foreach (var dir in modDir.GetDirectories())
+			if (modDir.Exists)
 			{
-				var manifestFile = dir.GetFiles("manifest.json").FirstOrDefault();
-				if (manifestFile is null)
+				foreach (var dir in modDir.GetDirectories())
 				{
-					_logger.LogWarning("No manifest found in \"{}\"", dir.FullName);
-					_logger.LogWarning("Skipping \"{}\"", dir.Name);
-					continue;
-				}
-
-				try
-				{
-					var manifest = ModManifest.Deserialize(manifestFile);
-					if (manifest is null)
+					var manifestFile = dir.GetFiles("manifest.json").FirstOrDefault();
+					if (manifestFile is null)
 					{
-						_logger.LogWarning("Unable to parse manifest \"{}\"", manifestFile.FullName);
+						_logger.LogWarning("No manifest found in \"{}\"", dir.FullName);
 						_logger.LogWarning("Skipping \"{}\"", dir.Name);
 						continue;
 					}
 
-					_mods.Add(new ModData(dir, manifest));
-				}
-				catch(JsonException ex)
-				{
-					_logger.LogWarning(ex, "An Exception occurred while parsing manifest \"{}\"", manifestFile.FullName);
-					_logger.LogWarning("Skipping \"{}\"", dir.Name);
-					continue;
+					try
+					{
+						var manifest = ModManifest.Deserialize(manifestFile);
+						if (manifest is null)
+						{
+							_logger.LogWarning("Unable to parse manifest \"{}\"", manifestFile.FullName);
+							_logger.LogWarning("Skipping \"{}\"", dir.Name);
+							continue;
+						}
+
+						_mods.Add(new ModData(dir, manifest));
+					}
+					catch (JsonException ex)
+					{
+						_logger.LogWarning(ex, "An Exception occurred while parsing manifest \"{}\"", manifestFile.FullName);
+						_logger.LogWarning("Skipping \"{}\"", dir.Name);
+						continue;
+					}
 				}
 			}
+			else
+				_logger.LogInformation("Mod directory does not exist yet");
 		}
 
 		public async Task<bool> TryAddModFromArchiveAsync(FileInfo file)
@@ -120,6 +126,8 @@ namespace Helldivers2ModManager.Stores
 
 				if (manifest.Options is not null)
 				{
+					option = 0;
+
 					if (manifest.Options.Count == 0)
 					{
 						_logger.LogError("Options where empty");
@@ -182,6 +190,7 @@ namespace Helldivers2ModManager.Stores
 				tmpDir.Delete(true);
 				return false;
 			}
+			modDir.Parent?.Create();
 			await Task.Run(() => tmpDir.MoveTo(modDir.FullName));
 
 			_logger.LogInformation("Adding mod");

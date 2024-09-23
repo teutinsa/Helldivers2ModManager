@@ -44,7 +44,7 @@ internal sealed partial class SettingsPageViewModel(NavigationStore navStore, Se
 			OnPropertyChanged();
 
 			_storageDirChanged = true;
-			ShowInfo("");
+			ShowInfo("Storage directory changed. The application needs to be restarted and will quit once you hit \"OK\".");
 		}
 	}
 
@@ -104,10 +104,7 @@ internal sealed partial class SettingsPageViewModel(NavigationStore navStore, Se
 		_settingsStore.Save();
 
 		if (_storageDirChanged)
-		{
-			Process.Start(Application.ResourceAssembly.Location);
 			Application.Current.Shutdown();
-		}
 		else
 			_navStore.Navigate<DashboardPageViewModel>();
 	}

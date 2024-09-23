@@ -53,6 +53,11 @@
 						   Foreground="DarkGray">
 					This is where files about all the managed mods are stored.
 				</TextBlock>
+				<TextBlock FontSize="12"
+						   FontFamily="Sanserif"
+						   Foreground="Red">
+					Purge before changing this as a record of the installed files is stored in this!
+				</TextBlock>
 				<Grid>
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="*"/>
