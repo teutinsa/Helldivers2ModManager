@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseWPF>true</UseWPF>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<ApplicationIcon>Resources\Images\icon.ico</ApplicationIcon>
+		<Platforms>AnyCPU;x64</Platforms>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Remove="Resources\Fonts\Blockletter.otf" />
+	  <None Remove="Resources\Images\logo.png" />
+	  <None Remove="Resources\Images\logo_icon.png" />
+	  <None Remove="Resources\Images\logo_splash.png" />
+	  <None Remove="Resources\Images\remove.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="Resources\Images\icon.ico">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Common" Version="8.2.2" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+		<PackageReference Include="SharpCompress" Version="0.37.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Resource Include="Resources\Fonts\Blockletter.otf" />
+	  <Resource Include="Resources\Images\logo.png" />
+	  <Resource Include="Resources\Images\logo_icon.png" />
+	  <Resource Include="Resources\Images\remove.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Components\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <SplashScreen Include="Resources\Images\logo_splash.png" />
+	</ItemGroup>
+
+</Project>

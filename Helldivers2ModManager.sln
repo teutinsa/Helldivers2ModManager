@@ -1,0 +1,36 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# 17
+VisualStudioVersion = 17.10.35122.118
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Helldivers2ModManager", "Helldivers2ModManager\Helldivers2ModManager.csproj", "{211EED12-1D66-481B-9CDC-D3FF77053413}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{EE691734-AD93-4E8D-B5C9-B522C17A4097}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Installer", "Installer\Installer.csproj", "{1B72C59C-CB7F-4DF3-9A8D-1F4E8019A4C4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{211EED12-1D66-481B-9CDC-D3FF77053413}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{211EED12-1D66-481B-9CDC-D3FF77053413}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{211EED12-1D66-481B-9CDC-D3FF77053413}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{211EED12-1D66-481B-9CDC-D3FF77053413}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE691734-AD93-4E8D-B5C9-B522C17A4097}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE691734-AD93-4E8D-B5C9-B522C17A4097}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE691734-AD93-4E8D-B5C9-B522C17A4097}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE691734-AD93-4E8D-B5C9-B522C17A4097}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B72C59C-CB7F-4DF3-9A8D-1F4E8019A4C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B72C59C-CB7F-4DF3-9A8D-1F4E8019A4C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B72C59C-CB7F-4DF3-9A8D-1F4E8019A4C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B72C59C-CB7F-4DF3-9A8D-1F4E8019A4C4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A426CD32-90B5-4FE3-A598-E07FE78C8F05}
+	EndGlobalSection
+EndGlobal

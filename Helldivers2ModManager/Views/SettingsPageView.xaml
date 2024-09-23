@@ -1,0 +1,145 @@
+﻿<Page x:Class="Helldivers2ModManager.Views.SettingsPageView"
+	  x:ClassModifier="internal"
+	  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	  xmlns:vms="clr-namespace:Helldivers2ModManager.ViewModels"
+	  mc:Ignorable="d"
+	  d:DataContext="{d:DesignInstance vms:SettingsPageViewModel}"
+	  d:Background="Black"
+	  d:DesignWidth="800"
+	  d:DesignHeight="600"
+	  Title="{Binding Title}">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+		<ScrollViewer Grid.Row="0"
+					  Margin="3">
+			<StackPanel Margin="3">
+				<TextBlock FontSize="24"
+						   Foreground="White">
+					Game Directory
+				</TextBlock>
+				<TextBlock FontSize="12"
+						   FontFamily="Sanserif"
+						   Foreground="DarkGray">
+					This is the games directory where you want the mods to be installed.
+					<LineBreak/>
+					(Clicking "..." will prompt you to select the games .exe file)
+				</TextBlock>
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+					<TextBox Text="{Binding GameDir, Mode=OneWay}"
+							 IsReadOnly="True"
+							 FontSize="18"
+							 VerticalAlignment="Center"/>
+					<Button Grid.Column="1"
+							Content="..."
+							Command="{Binding BrowseGameCommand}"/>
+				</Grid>
+				<TextBlock FontSize="24"
+						   Foreground="White"
+						   Margin="0 10 0 0">
+					Storage Directory
+				</TextBlock>
+				<TextBlock FontSize="12"
+						   FontFamily="Sanserif"
+						   Foreground="DarkGray">
+					This is where files about all the managed mods are stored.
+				</TextBlock>
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+					<TextBox Text="{Binding StorageDir, Mode=OneWay}"
+							 IsReadOnly="True"
+							 FontSize="18"
+							 VerticalAlignment="Center"/>
+					<Button Content="..."
+							Grid.Column="1"
+							Command="{Binding BrowseStorageCommand}"/>
+				</Grid>
+				<TextBlock FontSize="24"
+					       Foreground="White"
+						   Margin="0 10 0 0">
+					Temporary Directory
+				</TextBlock>
+				<TextBlock FontSize="12"
+						   FontFamily="Sanserif"
+						   Foreground="DarkGray">
+					This is the directory where all temporary files will be stored. Examples are:
+					<LineBreak/>
+					- Download files
+					<LineBreak/>
+					- Staging files
+					<LineBreak/>
+					- Decompressed files
+				</TextBlock>
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+					<TextBox Text="{Binding TempDir, Mode=OneWay}"
+							 IsReadOnly="True"
+							 FontSize="18"
+							 VerticalAlignment="Center"/>
+					<Button Content="..."
+							Grid.Column="1"
+							Command="{Binding BrowseTempCommand}"/>
+				</Grid>
+			</StackPanel>
+		</ScrollViewer>
+		<Grid Grid.Row="1">
+			<Button Content="Reset"
+					Command="{Binding ResetCommand}"
+					HorizontalAlignment="Left"/>
+			<Button Content="OK"
+					Command="{Binding OkCommand}"
+					HorizontalAlignment="Right"/>
+		</Grid>
+		<Grid Grid.RowSpan="2"
+			  Background="#6000"
+			  Visibility="{Binding MessageVisibility}"
+			  d:Visibility="Hidden">
+			<Border BorderThickness="3"
+					BorderBrush="DarkGray"
+					Background="Black"
+					VerticalAlignment="Center"
+					HorizontalAlignment="Center"
+					MinWidth="300"
+					MinHeight="50">
+				<Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="*"/>
+						<RowDefinition Height="Auto"/>
+					</Grid.RowDefinitions>
+					<TextBlock Grid.Row="0"
+							   Text="{Binding MessageTitle}"
+							   Foreground="Yellow"
+							   HorizontalAlignment="Center"
+							   Margin="3"
+							   FontSize="24"/>
+					<TextBlock Grid.Row="1"
+							   Text="{Binding MessageText, FallbackValue='Message'}"
+							   Foreground="White"
+							   Margin="3"
+							   FontSize="16"
+							   FontFamily="Sanserif"/>
+					<Button Grid.Row="2"
+							Content="OK"
+							HorizontalAlignment="Right"
+							Command="{Binding MessageOkCommand}"/>
+				</Grid>
+			</Border>
+		</Grid>
+	</Grid>
+</Page>
