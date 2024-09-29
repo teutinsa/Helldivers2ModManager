@@ -162,9 +162,10 @@
 		<Style TargetType="TextBox">
 			<Setter Property="SnapsToDevicePixels" Value="True"/>
 			<Setter Property="BorderBrush" Value="DarkGray"/>
-			<Setter Property="BorderThickness" Value="2"/>
+			<Setter Property="BorderThickness" Value="3"/>
 			<Setter Property="Background" Value="Transparent"/>
 			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="CaretBrush" Value="WhiteSmoke"/>
 			<Style.Triggers>
 				<Trigger Property="IsMouseOver" Value="True">
 					<Setter Property="BorderBrush" Value="Yellow"/>
@@ -352,6 +353,19 @@
 					<Setter Property="Foreground" Value="DarkGray"/>
 				</Trigger>
 			</Style.Triggers>
+		</Style>
+
+		<Style TargetType="TreeView">
+			<Setter Property="SnapsToDevicePixels" Value="True"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="3"/>
+			<Setter Property="BorderBrush" Value="DarkGray"/>
+		</Style>
+
+		<Style TargetType="TreeViewItem">
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="FontSize" Value="16"/>
 		</Style>
 	</Application.Resources>
 </Application>

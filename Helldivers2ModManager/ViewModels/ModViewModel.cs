@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Helldivers2ModManager.Models;
-using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
@@ -8,7 +7,7 @@ using System.Windows.Media.Imaging;
 
 namespace Helldivers2ModManager.ViewModels
 {
-	internal sealed partial class ModViewModel(ModData mod) : ObservableObject
+	internal sealed partial class ModViewModel : ObservableObject
 	{
 		public Guid Guid => _mod.Manifest.Guid;
 
@@ -20,7 +19,7 @@ namespace Helldivers2ModManager.ViewModels
 
 		public IReadOnlyList<string>? Options => _mod.Manifest.Options;
 
-		public ImageSource Icon { get; } = new BitmapImage(mod.Manifest.IconPath is null ? new Uri("../Resources/Images/logo_icon.png", UriKind.Relative) : new Uri(Path.Combine(mod.Directory.FullName, mod.Manifest.IconPath), UriKind.Absolute));
+		public ImageSource Icon { get; }
 
 		public ModData Data => _mod;
 		public int SelectedOption
@@ -34,8 +33,26 @@ namespace Helldivers2ModManager.ViewModels
 			}
 		}
 
-		private readonly ModData _mod = mod;
+		private readonly ModData _mod;
 		[ObservableProperty]
-		private bool _enabled = false;
+		private bool _enabled;
+
+		public ModViewModel(ModData mod)
+		{
+			_mod = mod;
+			_enabled = false;
+
+			var bmp = new BitmapImage();
+			bmp.BeginInit();
+			if (_mod.Manifest.IconPath is string path)
+			{
+				bmp.UriSource = new Uri(Path.Combine(_mod.Directory.FullName, path));
+				bmp.CacheOption = BitmapCacheOption.OnLoad;
+			}
+			else
+				bmp.UriSource = new Uri(@"..\Resources\Images\logo_icon.png", UriKind.Relative);
+			bmp.EndInit();
+			Icon = bmp;
+		}
 	}
 }

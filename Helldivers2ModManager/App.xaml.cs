@@ -14,7 +14,7 @@ internal partial class App : Application
 {
 	public static new App Current => (App)Application.Current;
 	
-	public static Version Version { get; } = new Version(1, 0, 0, 1);
+	public static Version Version { get; } = new Version(1, 0, 1, 0);
 
 	public IHost Host { get; }
 
@@ -32,7 +32,7 @@ internal partial class App : Application
 #if DEBUG
 			log.AddDebug();
 #endif
-			log.AddFile("ModManager.log");
+			log.AddFile("ModManager");
 		});
 		builder.Services.AddTransient<MainWindow>();
 		
@@ -70,6 +70,7 @@ internal partial class App : Application
 		services.AddTransient<MainViewModel>();
 		services.AddTransient<DashboardPageViewModel>();
 		services.AddTransient<SettingsPageViewModel>();
+		services.AddTransient<CreatePageViewModel>();
 	}
 }
 

@@ -26,14 +26,12 @@
 					Command="{Binding AddCommand}"/>
 			<Button Content="Browse"
 					Command="{Binding BrowseCommand}"
-					IsEnabled="False"
-					ToolTip="Coming soon..."
-					ToolTipService.IsEnabled="True"/>
+					IsEnabled="False"/>
 			<Button Content="Create"
-					Command="{Binding CreateCommand}"
 					IsEnabled="False"
-					ToolTip="Under construction..."
-					ToolTipService.IsEnabled="True"/>
+					Command="{Binding CreateCommand}"/>
+			<Button Content="Report Bug"
+					Command="{Binding ReportBugCommand}"/>
 		</StackPanel>
 		<Button Grid.Row="1"
 				Grid.Column="0"
@@ -43,6 +41,12 @@
 					Grid.Column="1"
 					Orientation="Horizontal"
 					HorizontalAlignment="Right">
+			<Button Content="Export"
+					IsEnabled="False"
+					Command="{Binding ExportCommand}"/>
+			<Button Content="Import"
+					IsEnabled="False"
+					Command="{Binding ImportCommand}"/>
 			<Button Content="Run"
 					Command="{Binding RunCommand}"/>
 			<Button Content="Purge"
@@ -76,11 +80,12 @@
 									<RowDefinition Height="40"/>
 									<RowDefinition Height="30"/>
 								</Grid.RowDefinitions>
-								<Image Grid.Column="0"
-									   Grid.Row="0"
-									   Grid.RowSpan="2"
-									   Source="{Binding Icon}"
-									   Stretch="UniformToFill"/>
+								<Viewbox Grid.Column="0"
+										 Grid.Row="0"
+										 Grid.RowSpan="2"
+										 Margin="0 0 3 0">
+									<Image Source="{Binding Icon}"/>
+								</Viewbox>
 								<TextBlock Grid.Column="1"
 										   Grid.Row="0"
 										   Text="{Binding Name}"

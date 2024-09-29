@@ -1,0 +1,102 @@
+﻿<Page x:Class="Helldivers2ModManager.Views.CreatePageView"
+	  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+	  xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+	  xmlns:local="clr-namespace:Helldivers2ModManager.Views"
+	  xmlns:vms="clr-namespace:Helldivers2ModManager.ViewModels"
+	  mc:Ignorable="d" 
+	  d:DataContext="{d:DesignInstance vms:CreatePageViewModel}"
+	  d:Background="Black"
+	  d:DesignWidth="800"
+	  d:DesignHeight="600"
+	  Title="{Binding Title}">
+	<Page.Resources>
+	</Page.Resources>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+		<TextBlock Grid.Row="0"
+				   Text="Create a Mod"
+				   Foreground="Yellow"
+				   FontSize="24"
+				   HorizontalAlignment="Center"/>
+		<ScrollViewer Grid.Row="1"
+					  VerticalScrollBarVisibility="Auto"
+					  HorizontalScrollBarVisibility="Disabled">
+			<StackPanel Margin="3">
+				<Label Content="Name"
+					   FontSize="16"/>
+				<TextBlock Text="The display name of your mod."
+						   Foreground="Gray"
+						   Margin="0 0 0 3"
+						   FontFamily="Sanserif"/>
+				<TextBox Text="{Binding ModName, UpdateSourceTrigger=PropertyChanged}"
+					     FontSize="16"
+					     Margin="0 0 0 5"/>
+				<Label Content="Description"
+					   FontSize="16"/>
+				<TextBlock Text="A short description of your mod."
+						   Foreground="Gray"
+						   Margin="0 0 0 3"
+						   FontFamily="Sanserif"/>
+				<TextBox Text="{Binding ModDescription, UpdateSourceTrigger=PropertyChanged}"
+					     FontSize="16"
+					     AcceptsReturn="True"
+					     Margin="0 0 0 5"/>
+				<Label Content="Content"
+					   FontSize="16"/>
+				<TextBlock Text="Right click on the elements below to define the structure of your mod."
+						   Foreground="Gray"
+						   Margin="0 0 0 3"
+						   FontFamily="Sanserif"/>
+				<TreeView MinHeight="50"
+						  Margin="0 0 0 5">
+					<TreeViewItem Header="Root"
+								  ItemsSource="{Binding ModContent}">
+						<TreeViewItem.ContextMenu>
+							<ContextMenu>
+								<MenuItem Header="Add Option"/>
+								<MenuItem Header="Add Files"/>
+							</ContextMenu>
+						</TreeViewItem.ContextMenu>
+					</TreeViewItem>
+				</TreeView>
+				<Label Content="Output File"
+					   FontSize="16"/>
+				<TextBlock Foreground="Gray"
+						   Margin="0 0 0 3"
+						   FontFamily="Sanserif">
+					The output file name of your mod.
+					<LineBreak/>
+					(Click "..." to browse)
+				</TextBlock>
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+					<TextBox Grid.Column="0"
+							 Text="{Binding OutputFile}"
+							 IsReadOnly="True"
+							 VerticalAlignment="Center"
+							 FontSize="16"/>
+					<Button Grid.Column="1"
+							Content="..."
+							Command="{Binding BrowseOutputCommand}"/>
+				</Grid>
+			</StackPanel>
+		</ScrollViewer>
+		<Grid Grid.Row="2">
+			<Button Content="Cancel"
+					HorizontalAlignment="Left"
+					Command="{Binding CancelCommand}"/>
+			<Button Content="Create"
+					HorizontalAlignment="Right"
+					Command="{Binding CreateCommand}"/>
+		</Grid>
+	</Grid>
+</Page>

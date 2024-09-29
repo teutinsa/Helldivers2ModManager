@@ -24,6 +24,9 @@
 		<DataTemplate DataType="{x:Type vms:SettingsPageViewModel}">
 			<views:SettingsPageView/>
 		</DataTemplate>
+		<DataTemplate DataType="{x:Type vms:CreatePageViewModel}">
+			<views:CreatePageView/>
+		</DataTemplate>
 	</Window.Resources>
 	
 	<Window.Style>

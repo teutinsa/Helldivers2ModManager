@@ -16,7 +16,7 @@ namespace Helldivers2ModManager.Stores
 
 	internal sealed partial class ModStore
 	{
-		private struct PatchFileTriplet
+		private readonly struct PatchFileTriplet
 		{
 			public FileInfo? Patch { get; init; }
 
@@ -107,9 +107,7 @@ namespace Helldivers2ModManager.Stores
 			if (rootFiles.Where(static f => f.Name == "manifest.json").FirstOrDefault() is FileInfo manifestFile)
 			{
 				_logger.LogInformation("Deserializing found manifest");
-#pragma warning disable 8600
 				manifest = ModManifest.Deserialize(manifestFile);
-#pragma warning restore 8600
 				if (manifest is null)
 				{
 					_logger.LogError("Deserialization failed");
@@ -191,13 +189,14 @@ namespace Helldivers2ModManager.Stores
 				return false;
 			}
 			modDir.Parent?.Create();
-			await Task.Run(() => tmpDir.MoveTo(modDir.FullName));
+			await Task.Run(() => tmpDir.CopyTo(modDir.FullName));
 
 			_logger.LogInformation("Adding mod");
 			var mod = new ModData(modDir, manifest) { Option = option };
 			_mods.Add(mod);
 			OnModAdded(new ModEventArgs(mod));
 
+			tmpDir.Delete(true);
 			return true;
 		}
 

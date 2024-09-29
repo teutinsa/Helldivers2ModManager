@@ -23,7 +23,10 @@ internal sealed class FileLoggerProvider : ILoggerProvider
 
 	public FileLoggerProvider(string filename)
 	{
-		_fileStream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.Read);
+		if (!Directory.Exists("logs"))
+			Directory.CreateDirectory("logs");
+
+		_fileStream = new FileStream(Path.Combine("logs", $"{filename}_{DateTime.UtcNow:dd-MM-yyyy_HH-mm-ss}.log"), FileMode.CreateNew, FileAccess.Write, FileShare.Read);
 		_stream = new StreamWriter(_fileStream);
 	}
 

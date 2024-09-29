@@ -52,10 +52,8 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		WriteIndented = true,
 		ReadCommentHandling = JsonCommentHandling.Skip
 	};
-	private static readonly ProcessStartInfo s_gameStartInfo = new("steam://run/553850")
-	{
-		UseShellExecute = true
-	};
+	private static readonly ProcessStartInfo s_gameStartInfo = new("steam://run/553850") { UseShellExecute = true };
+	private static readonly ProcessStartInfo s_reportStartInfo = new("https://www.nexusmods.com/helldivers2/mods/109?tab=bugs") { UseShellExecute = true };
 	private readonly ILogger<DashboardPageViewModel> _logger;
 	private readonly IServiceProvider _provider;
 	private readonly Lazy<NavigationStore> _navStore;
@@ -191,7 +189,13 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	[RelayCommand]
 	void Create()
 	{
+		_navStore.Value.Navigate<CreatePageViewModel>();
+	}
 
+	[RelayCommand]
+	void ReportBug()
+	{
+		Process.Start(s_reportStartInfo);
 	}
 
 	[RelayCommand]
@@ -200,7 +204,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		_navStore.Value.Navigate<SettingsPageViewModel>();
 	}
 
-	[RelayCommand]
+	[RelayCommand(AllowConcurrentExecutions = false)]
 	async Task Purge()
 	{
 		ShowProgress("Purging Mods");
@@ -208,7 +212,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		HideMessage();
 	}
 
-	[RelayCommand]
+	[RelayCommand(AllowConcurrentExecutions = false)]
 	async Task Deploy()
 	{
 		if (string.IsNullOrEmpty(_settingsStore.GameDirectory))
