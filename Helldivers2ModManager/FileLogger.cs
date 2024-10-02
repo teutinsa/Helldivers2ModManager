@@ -8,9 +8,9 @@ namespace Helldivers2ModManager;
 
 internal static class FileLoggerExtensions
 {
-	public static ILoggingBuilder AddFile(this ILoggingBuilder builder, string filename)
+	public static ILoggingBuilder AddFile(this ILoggingBuilder builder, string name)
 	{
-		builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, FileLoggerProvider>(provider => new FileLoggerProvider(filename)));
+		builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, FileLoggerProvider>(provider => new FileLoggerProvider(name)));
 		return builder;
 	}
 }
@@ -21,12 +21,12 @@ internal sealed class FileLoggerProvider : ILoggerProvider
 	private readonly FileStream _fileStream;
 	private readonly StreamWriter _stream;
 
-	public FileLoggerProvider(string filename)
+	public FileLoggerProvider(string name)
 	{
 		if (!Directory.Exists("logs"))
 			Directory.CreateDirectory("logs");
 
-		_fileStream = new FileStream(Path.Combine("logs", $"{filename}_{DateTime.UtcNow:dd-MM-yyyy_HH-mm-ss}.log"), FileMode.CreateNew, FileAccess.Write, FileShare.Read);
+		_fileStream = new FileStream(Path.Combine("logs", $"{name}_{DateTime.UtcNow:dd-MM-yyyy_HH-mm-ss}.log"), FileMode.CreateNew, FileAccess.Write, FileShare.Read);
 		_stream = new StreamWriter(_fileStream);
 	}
 

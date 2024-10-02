@@ -368,5 +368,4 @@ FodyWeavers.xsd
 *.wxs
 *.wixpdb
 *.wixobj
-/Installer/wix/Installer.g.wxs
-/Installer/HD2MM.msi
+*.zip

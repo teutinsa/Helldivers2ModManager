@@ -218,18 +218,18 @@ namespace Helldivers2ModManager.Stores
 			return false;
 		}
 
-		public async Task<bool> DeployAsync(Guid[] modGuids)
+		public async Task DeployAsync(Guid[] modGuids)
 		{
 			if (string.IsNullOrEmpty(_settingsStore.GameDirectory))
 			{
 				_logger.LogError("Helldivers 2 path not set!");
-				return false;
+				throw new InvalidOperationException("Helldivers 2 path not set!");
 			}
 
 			if (modGuids.Length == 0)
 			{
 				_logger.LogInformation("No mods enabled, skipping deployment");
-				return true;
+				return;
 			}
 
 			await PurgeAsync();
@@ -299,21 +299,45 @@ namespace Helldivers2ModManager.Stores
 				for (int i = 0; i < list.Count; i++)
 				{
 					var triplet = list[i];
+
+					var newPatchPath = Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{i}");
+					FileInfo pathDest;
 					if (triplet.Patch is not null)
 					{
-						var dest = triplet.Patch.CopyTo(Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{i}"));
-						installedFiles.Add(dest.FullName);
+						pathDest = triplet.Patch.CopyTo(newPatchPath);
 					}
+					else
+					{
+						pathDest = new FileInfo(newPatchPath);
+						pathDest.Create().Dispose();
+					}
+					installedFiles.Add(pathDest.FullName);
+
+					var newGpuResourcesPath = Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{i}.gpu_resources");
+					FileInfo gpuResourceDest;
 					if (triplet.GpuResources is not null)
 					{
-						var dest = triplet.GpuResources.CopyTo(Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{i}.gpu_resources"));
-						installedFiles.Add(dest.FullName);
+						gpuResourceDest = triplet.GpuResources.CopyTo(newGpuResourcesPath);
 					}
+					else
+					{
+						gpuResourceDest = new FileInfo(newGpuResourcesPath);
+						gpuResourceDest.Create().Dispose();
+					}
+					installedFiles.Add(gpuResourceDest.FullName);
+
+					var newStreamPath = Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{i}.stream");
+					FileInfo streamDest;
 					if (triplet.Stream is not null)
 					{
-						var dest = triplet.Stream.CopyTo(Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{i}.stream"));
-						installedFiles.Add(dest.FullName);
+						streamDest = triplet.Stream.CopyTo(newStreamPath);
 					}
+					else
+					{
+						streamDest = new FileInfo(newStreamPath);
+						streamDest.Create().Dispose();
+					}
+					installedFiles.Add(streamDest.FullName);
 				}
 			}
 
@@ -321,7 +345,6 @@ namespace Helldivers2ModManager.Stores
 			await File.WriteAllLinesAsync(Path.Combine(_settingsStore.StorageDirectory, "installed.txt"), installedFiles);
 
 			_logger.LogInformation("Deployment success");
-			return true;
 		}
 
 		public async Task PurgeAsync()
@@ -336,7 +359,8 @@ namespace Helldivers2ModManager.Stores
 
 				_logger.LogInformation("Deleting files");
 				foreach (var file in installedFiles)
-					File.Delete(file);
+					if (File.Exists(file))
+						File.Delete(file);
 
 				_logger.LogInformation("Deleting installed file list");
 				File.Delete(path);

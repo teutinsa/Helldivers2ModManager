@@ -14,14 +14,18 @@ internal partial class App : Application
 {
 	public static new App Current => (App)Application.Current;
 	
-	public static Version Version { get; } = new Version(1, 0, 1, 0);
+	public static Version Version { get; } = new Version(1, 0, 2, 0);
 
 	public IHost Host { get; }
 
-	private readonly ILogger _logger;
+	private readonly ILogger? _logger;
 
 	public App()
 	{
+		AppDomain.CurrentDomain.UnhandledException += (_, e) => LogUnhandledException(e.ExceptionObject as Exception);
+		Current.DispatcherUnhandledException += (_, e) => LogUnhandledException(e.Exception);
+		TaskScheduler.UnobservedTaskException += (_, e) => LogUnhandledException(e.Exception);
+
 		HostApplicationBuilder builder = new();
 
 		AddServices(builder.Services);
@@ -39,10 +43,6 @@ internal partial class App : Application
 		Host = builder.Build();
 
 		_logger = Host.Services.GetRequiredService<ILogger<App>>();
-
-		AppDomain.CurrentDomain.UnhandledException += (_, e) => _logger.LogError("An unhandled exception occured!");
-		Current.DispatcherUnhandledException += (_, e) => _logger.LogError(e.Exception, "An unhandled exception occured!");
-		TaskScheduler.UnobservedTaskException += (_, e) => _logger.LogError(e.Exception, "An unhandled exception occured!");
 	}
 
 	protected override void OnStartup(StartupEventArgs e)
@@ -71,6 +71,14 @@ internal partial class App : Application
 		services.AddTransient<DashboardPageViewModel>();
 		services.AddTransient<SettingsPageViewModel>();
 		services.AddTransient<CreatePageViewModel>();
+	}
+
+	private void LogUnhandledException(Exception? ex)
+	{
+		if (_logger is null)
+			MessageBox.Show($"An unhandled exception occurred before logging could be initialized!\n\n{ex?.ToString()}", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Error);
+		else
+			_logger?.LogError(ex, "An unhandled exception occured!");
 	}
 }
 

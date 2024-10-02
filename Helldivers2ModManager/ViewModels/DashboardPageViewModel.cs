@@ -169,13 +169,15 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		if (dialog.ShowDialog() ?? false)
 		{
 			ShowProgress("Adding mod");
-			if (await _modStore.TryAddModFromArchiveAsync(new FileInfo(dialog.FileName)))
+			try
 			{
+				await _modStore.TryAddModFromArchiveAsync(new FileInfo(dialog.FileName));
 				HideMessage();
 			}
-			else
+			catch(Exception ex)
 			{
-				ShowError("Unable to add mod!");
+				_logger.LogWarning(ex, "Failed to add mod");
+				ShowError(ex.Message);
 			}
 		}
 	}
@@ -222,11 +224,14 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		}
 
 		ShowProgress("Deploying Mods");
-		await Task.Delay(10);
+
 		var mods = Mods.Where(static vm => vm.Enabled).ToArray();
 		var guids = mods.Select(static vm => vm.Guid).ToArray();
-		if (await _modStore.DeployAsync(guids))
+
+		try
 		{
+			await _modStore.DeployAsync(guids);
+
 			var enabledFile = new FileInfo(Path.Combine(_settingsStore.StorageDirectory, "enabled.json"));
 			var list = guids.Zip(mods.Select(static m => m.SelectedOption)).Select(static tpl => new ListTuple(tpl.First, tpl.Second)).ToArray();
 			using var stream = enabledFile.Open(FileMode.Create, FileAccess.Write, FileShare.None);
@@ -234,8 +239,11 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 
 			ShowInfo("Deployment successful.");
 		}
-		else
-			ShowError("Deployment failed!");
+		catch(Exception ex)
+		{
+			_logger.LogWarning(ex, "Deployment failed");
+			ShowError(ex.Message);
+		}
 	}
 
 	[RelayCommand]

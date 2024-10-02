@@ -16,7 +16,7 @@ namespace Installer
 				Name = "Helldivers2ModManager",
 				GUID = new Guid("e5cd740f-6f38-4289-bce9-3571af0a8e9a"),
 				ProductId = Guid.NewGuid(),
-				Version = new Version(1, 0, 1, 0),
+				Version = new Version(1, 0, 2, 0),
 				UpgradeCode = new Guid("b07936d3-c8c4-40ea-a323-e31e057d7972"),
 				Dirs = new[]
 				{
@@ -26,6 +26,13 @@ namespace Installer
 							$@"{rootDir}\Helldivers2ModManager\bin\Release\net8.0-windows\*.*",
 							f => f.EndsWith(".exe") || f.EndsWith(".dll") || f.EndsWith(".json")
 						)
+					),
+					new Dir(
+						@"%ProgramMenu%",
+						new ExeFileShortcut("Helldivers 2 Mod Manager", Path.Combine("[INSTALLDIR]", "Helldivers2ModManager.exe"), string.Empty)
+						{
+							WorkingDirectory = "[INSTALLDIR]"
+						}
 					)
 				},
 				Platform = Platform.x64,
