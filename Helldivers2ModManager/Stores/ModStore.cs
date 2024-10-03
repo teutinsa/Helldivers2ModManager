@@ -84,6 +84,11 @@ namespace Helldivers2ModManager.Stores
 				_logger.LogInformation("Mod directory does not exist yet");
 		}
 
+		/// <summary>
+		/// Attempts to add an archive file as a mod.
+		/// </summary>
+		/// <param name="file">The archive file to add as a mod.</param>
+		/// <returns><see langword="true"/> if mod is successfully added, otherwise <see langword="false"/>.</returns>
 		public async Task<bool> TryAddModFromArchiveAsync(FileInfo file)
 		{
 			_logger.LogInformation("Attempting to add mod from \"{}\"", file.Name);
@@ -200,11 +205,21 @@ namespace Helldivers2ModManager.Stores
 			return true;
 		}
 
+		/// <summary>
+		/// Retrieves a mod by its global unique identifier.
+		/// </summary>
+		/// <param name="guid">The <see cref="Guid"/> to look for.</param>
+		/// <returns>A <see cref="ModData"/> object if found, otherwise <see langword="null"/>.</returns>
 		public ModData? GetModByGuid(Guid guid)
 		{
 			return _mods.FirstOrDefault(m => m.Manifest.Guid == guid);
 		}
 
+		/// <summary>
+		/// Attempts to remove a mod.
+		/// </summary>
+		/// <param name="mod">The mod to remove.</param>
+		/// <returns><see langword="true"/> if the removal was successful, otherwise <see langword="false"/>.</returns>
 		public bool Remove(ModData mod)
 		{
 			_logger.LogInformation("Attempting to remove {}", mod.Manifest.Guid);
@@ -218,6 +233,11 @@ namespace Helldivers2ModManager.Stores
 			return false;
 		}
 
+		/// <summary>
+		/// Deploys all mods listed by <paramref name="modGuids"/>.
+		/// </summary>
+		/// <param name="modGuids">The mods <see cref="Guid"/>s to deploy.</param>
+		/// <exception cref="InvalidOperationException">Thrown if the Helldivers 2 path is not set.</exception>
 		public async Task DeployAsync(Guid[] modGuids)
 		{
 			if (string.IsNullOrEmpty(_settingsStore.GameDirectory))
@@ -268,7 +288,7 @@ namespace Helldivers2ModManager.Stores
 					_logger.LogInformation("Option \"{}\" selected", modDir.Name);
 				}
 
-				var files = modDir.GetFiles().Where(static f => GetParchFileRegex().IsMatch(f.Name)).ToArray();
+				var files = modDir.GetFiles().Where(static f => GetPatchFileRegex().IsMatch(f.Name)).ToArray();
 				_logger.LogInformation("Found {} files", files.Length);
 				var names = new HashSet<string>();
 				for (int i = 0; i < files.Length; i++)
@@ -277,18 +297,28 @@ namespace Helldivers2ModManager.Stores
 
 				foreach (var name in names)
 				{
-					FileInfo? patchFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_[0-9]+$"));
-					FileInfo? gpuFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_[0-9]+.gpu_resources$"));
-					FileInfo? streamFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_[0-9]+.stream$"));
-
-					if (!groups.ContainsKey(name))
-						groups.Add(name, []);
-					groups[name].Add(new PatchFileTriplet
+					var indicies = new HashSet<int>();
+					foreach(var file in files)
 					{
-						Patch = patchFile,
-						GpuResources = gpuFile,
-						Stream = streamFile
-					});
+						var match = GetPatchIndexRegex().Match(file.Name);
+						indicies.Add(int.Parse(match.Groups[1].ValueSpan));
+					}
+
+					foreach (var index in indicies)
+					{
+						FileInfo? patchFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_{index}$"));
+						FileInfo? gpuFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_{index}.gpu_resources$"));
+						FileInfo? streamFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_{index}.stream$"));
+
+						if (!groups.ContainsKey(name))
+							groups.Add(name, []);
+						groups[name].Add(new PatchFileTriplet
+						{
+							Patch = patchFile,
+							GpuResources = gpuFile,
+							Stream = streamFile
+						});
+					}
 				}
 			}
 
@@ -399,9 +429,12 @@ namespace Helldivers2ModManager.Stores
 		}
 
 		[GeneratedRegex(@"^[a-z0-9]{16}\.patch_[0-9]+(\.(stream|gpu_resources))?$")]
-		private static partial Regex GetParchFileRegex();
+		private static partial Regex GetPatchFileRegex();
 
 		[GeneratedRegex(@"\.patch_[0-9]+")]
-		private static partial Regex GetParchRegex();
+		private static partial Regex GetPatchRegex();
+
+		[GeneratedRegex(@"^(?:[a-z0-9]{16}\.patch_)([0-9]+)(?:(?:\.(?:stream|gpu_resources))?)$")]
+		private static partial Regex GetPatchIndexRegex();
 	}
 }

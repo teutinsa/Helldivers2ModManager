@@ -124,7 +124,7 @@ internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewMode
 	void BrowseGame()
 	{
 		var dialog = new OpenFolderDialog
-        {
+		{
 			Multiselect = false,
 			Title = "Please select you Helldivers 2 folder..."
 		};
@@ -138,13 +138,13 @@ internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewMode
 				newDir = newDir.Parent;
 			}
 
-            if (newDir is not DirectoryInfo { Name: "Helldivers 2" })
+			if (newDir is not DirectoryInfo { Name: "Helldivers 2" })
 			{ 
-                ShowError("The selected Helldivers 2 folder does not reside in a valid directory!");
-                return;
-            }
+				ShowError("The selected Helldivers 2 folder does not reside in a valid directory!");
+				return;
+			}
 
-            var subDirs = newDir.EnumerateDirectories();
+			var subDirs = newDir.EnumerateDirectories();
 			if (!subDirs.Any(static dir => dir.Name == "data"))
 			{
 				ShowError("The selected Helldivers 2 root path does not contain a directory named \"data\"!");
@@ -155,13 +155,13 @@ internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewMode
 				ShowError("The selected Helldivers 2 root path does not contain a directory named \"tools\"!");
 				return;
 			}
-            if (!subDirs.Any(static dir => dir.Name == "bin"))
-            {
-                ShowError("The selected Helldivers 2 root path does not contain a directory named \"bin\"!");
-                return;
-            }
+			if (!subDirs.Any(static dir => dir.Name == "bin"))
+			{
+				ShowError("The selected Helldivers 2 root path does not contain a directory named \"bin\"!");
+				return;
+			}
 
-            GameDir = newDir.FullName;
+			GameDir = newDir.FullName;
 		}
 		else
 		{

@@ -70,7 +70,7 @@
 							Command="{Binding BrowseStorageCommand}"/>
 				</Grid>
 				<TextBlock FontSize="24"
-					       Foreground="White"
+						   Foreground="White"
 						   Margin="0 10 0 0"
 						   Text="Temporary Directory"/>
 				<TextBlock FontSize="12"
@@ -98,7 +98,7 @@
 							Command="{Binding BrowseTempCommand}"/>
 				</Grid>
 				<TextBlock FontSize="24"
-					       Foreground="White"
+						   Foreground="White"
 						   Margin="0 10 0 0"
 						   Text="Utilities"/>
 				<TextBlock FontSize="12"
@@ -114,7 +114,7 @@
 		</ScrollViewer>
 		<Grid Grid.Row="1">
 			<Button Content="Reset"
-                    Style="{DynamicResource CancelButton}"
+					Style="{DynamicResource CancelButton}"
 					Command="{Binding ResetCommand}"
 					HorizontalAlignment="Left"/>
 			<Button Content="OK"
