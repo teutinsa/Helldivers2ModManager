@@ -123,45 +123,49 @@ internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewMode
 	[RelayCommand]
 	void BrowseGame()
 	{
-		var dialog = new OpenFileDialog
-		{
-			CheckFileExists = true,
-			CheckPathExists = true,
-			Filter = "HD2 Executable|helldivers2.exe",
+		var dialog = new OpenFolderDialog
+        {
 			Multiselect = false,
-			Title = "Please select you Helldivers 2 executable..."
+			Title = "Please select you Helldivers 2 folder..."
 		};
 
 		if (dialog.ShowDialog() ?? false)
 		{
-			var exe = new FileInfo(dialog.FileName);
-			if (exe.Directory is DirectoryInfo { Name: "bin" } binDir)
-			{
-				if (binDir.Parent is DirectoryInfo { Name: "Helldivers 2" } hd2Dir)
-				{
-					var subDirs = hd2Dir.EnumerateDirectories();
-					if (!subDirs.Any(static dir => dir.Name == "data"))
-					{
-						ShowError("The selected Helldivers 2 root path does not contain a directory named \"data\"!");
-						return;
-					}
-					if (!subDirs.Any(static dir => dir.Name == "tools"))
-					{
-						ShowError("The selected Helldivers 2 root path does not contain a directory named \"tools\"!");
-						return;
-					}
+			var newDir = new DirectoryInfo(dialog.FolderName);
 
-					GameDir = hd2Dir.FullName;
-				}
-				else
-				{
-					ShowError("The selected Helldivers 2 executable does not reside in a directory named \"bin\"!");
-				}
-			}
-			else
+			if (newDir.Parent is DirectoryInfo { Name: "Helldivers 2" })
 			{
-				ShowError("The selected path is not a valid Helldivers 2 root!");
+				newDir = newDir.Parent;
 			}
+
+            if (newDir is not DirectoryInfo { Name: "Helldivers 2" })
+			{ 
+                ShowError("The selected Helldivers 2 folder does not reside in a valid directory!");
+                return;
+            }
+
+            var subDirs = newDir.EnumerateDirectories();
+			if (!subDirs.Any(static dir => dir.Name == "data"))
+			{
+				ShowError("The selected Helldivers 2 root path does not contain a directory named \"data\"!");
+				return;
+			}
+			if (!subDirs.Any(static dir => dir.Name == "tools"))
+			{
+				ShowError("The selected Helldivers 2 root path does not contain a directory named \"tools\"!");
+				return;
+			}
+            if (!subDirs.Any(static dir => dir.Name == "bin"))
+            {
+                ShowError("The selected Helldivers 2 root path does not contain a directory named \"bin\"!");
+                return;
+            }
+
+            GameDir = newDir.FullName;
+		}
+		else
+		{
+			ShowError("The selected path is not a valid Helldivers 2 root!");
 		}
 	}
 

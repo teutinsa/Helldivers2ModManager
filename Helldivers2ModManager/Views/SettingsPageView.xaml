@@ -114,6 +114,7 @@
 		</ScrollViewer>
 		<Grid Grid.Row="1">
 			<Button Content="Reset"
+                    Style="{DynamicResource CancelButton}"
 					Command="{Binding ResetCommand}"
 					HorizontalAlignment="Left"/>
 			<Button Content="OK"
