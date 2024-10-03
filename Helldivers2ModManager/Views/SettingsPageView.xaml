@@ -20,9 +20,8 @@
 					  Margin="3">
 			<StackPanel Margin="3">
 				<TextBlock FontSize="24"
-						   Foreground="White">
-					Game Directory
-				</TextBlock>
+						   Foreground="White"
+						   Text="Game Directory"/>
 				<TextBlock FontSize="12"
 						   FontFamily="Sanserif"
 						   Foreground="DarkGray">
@@ -45,9 +44,8 @@
 				</Grid>
 				<TextBlock FontSize="24"
 						   Foreground="White"
-						   Margin="0 10 0 0">
-					Storage Directory
-				</TextBlock>
+						   Margin="0 10 0 0"
+						   Text="Storage Directory"/>
 				<TextBlock FontSize="12"
 						   FontFamily="Sanserif"
 						   Foreground="DarkGray">
@@ -73,9 +71,8 @@
 				</Grid>
 				<TextBlock FontSize="24"
 					       Foreground="White"
-						   Margin="0 10 0 0">
-					Temporary Directory
-				</TextBlock>
+						   Margin="0 10 0 0"
+						   Text="Temporary Directory"/>
 				<TextBlock FontSize="12"
 						   FontFamily="Sanserif"
 						   Foreground="DarkGray">
@@ -100,6 +97,19 @@
 							Grid.Column="1"
 							Command="{Binding BrowseTempCommand}"/>
 				</Grid>
+				<TextBlock FontSize="24"
+					       Foreground="White"
+						   Margin="0 10 0 0"
+						   Text="Utilities"/>
+				<TextBlock FontSize="12"
+						   FontFamily="Sanserif"
+						   Foreground="DarkGray">
+					This will delete all patch files regardless if the have been installed with this manager or not!
+				</TextBlock>
+				<Button Content="Hard Purge"
+						Style="{DynamicResource CancelButton}"
+						Command="{Binding HardPurgeCommand}"
+						HorizontalAlignment="Left"/>
 			</StackPanel>
 		</ScrollViewer>
 		<Grid Grid.Row="1">

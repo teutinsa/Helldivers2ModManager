@@ -1,14 +1,15 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Helldivers2ModManager.Stores;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
-using System.Diagnostics;
+using SharpCompress;
 using System.IO;
 using System.Windows;
 
 namespace Helldivers2ModManager.ViewModels;
 
-internal sealed partial class SettingsPageViewModel(NavigationStore navStore, SettingsStore settingsStore) : PageViewModelBase
+internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewModel> logger, NavigationStore navStore, SettingsStore settingsStore) : PageViewModelBase
 {
 	public override string Title => "Settings";
 
@@ -48,6 +49,7 @@ internal sealed partial class SettingsPageViewModel(NavigationStore navStore, Se
 		}
 	}
 
+	private readonly ILogger<SettingsPageViewModel> _logger = logger;
 	private readonly NavigationStore _navStore = navStore;
 	private readonly SettingsStore _settingsStore = settingsStore;
 	[ObservableProperty]
@@ -195,5 +197,28 @@ internal sealed partial class SettingsPageViewModel(NavigationStore navStore, Se
 	void MessageOk()
 	{
 		MessageVisibility = Visibility.Hidden;
+	}
+
+	[RelayCommand]
+	void HardPurge()
+	{
+		_logger.LogInformation("Hard purging patch files");
+		
+		var path = Path.Combine(_settingsStore.StorageDirectory, "installed.txt");
+		if (File.Exists(path))
+			File.Delete(path);
+
+		var dataDir = new DirectoryInfo(Path.Combine(_settingsStore.GameDirectory, "data"));
+		
+		var files = dataDir.EnumerateFiles("*.patch_*").ToArray();
+		_logger.LogInformation("Found {} patch files", files.Length);
+
+		foreach (var file in files)
+		{
+			_logger.LogTrace("Deleting \"{}\"", file.Name);
+			file.Delete();
+		}
+
+		_logger.LogInformation("Hard purge complete");
 	}
 }
