@@ -15,6 +15,8 @@
 	<ItemGroup>
 	  <None Remove="DirectoryInfoExtensions.cs~RF211c16b9.TMP" />
 	  <None Remove="Resources\Fonts\Blockletter.otf" />
+	  <None Remove="Resources\Images\discord_icon.png" />
+	  <None Remove="Resources\Images\github_icon.png" />
 	  <None Remove="Resources\Images\logo.png" />
 	  <None Remove="Resources\Images\logo_icon.png" />
 	  <None Remove="Resources\Images\logo_splash.png" />
@@ -23,6 +25,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Resource Include="Resources\Images\discord_icon.png" />
 	  <Content Include="Resources\Images\icon.ico">
 	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
 	  </Content>
@@ -37,6 +40,7 @@
 
 	<ItemGroup>
 	  <Resource Include="Resources\Fonts\Blockletter.otf" />
+	  <Resource Include="Resources\Images\github_icon.png" />
 	  <Resource Include="Resources\Images\logo.png" />
 	  <Resource Include="Resources\Images\logo_icon.png" />
 	  <Resource Include="Resources\Images\remove.png" />

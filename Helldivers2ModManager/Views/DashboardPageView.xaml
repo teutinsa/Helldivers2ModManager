@@ -41,6 +41,14 @@
 					Grid.Column="1"
 					Orientation="Horizontal"
 					HorizontalAlignment="Right">
+			<Button Command="{Binding GithubCommand}">
+				<Image Source="..\Resources\Images\github_icon.png"
+					   Height="30"/>
+			</Button>
+			<Button Command="{Binding DiscordCommand}">
+				<Image Source="..\Resources\Images\discord_icon.png"
+					   Height="30"/>
+			</Button>
 			<Button Content="Export"
 					IsEnabled="False"
 					Command="{Binding ExportCommand}"/>

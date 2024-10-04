@@ -2,7 +2,7 @@
 
 namespace Helldivers2ModManager;
 
-internal static class DirectoryInfoExtensions
+internal static class IOExtensions
 {
 	public static void CopyTo(this DirectoryInfo info, string destDirName)
 	{

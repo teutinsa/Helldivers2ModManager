@@ -54,6 +54,8 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	};
 	private static readonly ProcessStartInfo s_gameStartInfo = new("steam://run/553850") { UseShellExecute = true };
 	private static readonly ProcessStartInfo s_reportStartInfo = new("https://www.nexusmods.com/helldivers2/mods/109?tab=bugs") { UseShellExecute = true };
+	private static readonly ProcessStartInfo s_discordStartInfo = new("https://discord.gg/ZwjPaZNwH7") { UseShellExecute = true };
+	private static readonly ProcessStartInfo s_githubStartInfo = new("https://github.com/teutinsa/Helldivers2ModManager") { UseShellExecute = true };
 	private readonly ILogger<DashboardPageViewModel> _logger;
 	private readonly IServiceProvider _provider;
 	private readonly Lazy<NavigationStore> _navStore;
@@ -282,5 +284,17 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	void Run()
 	{
 		Process.Start(s_gameStartInfo);
+	}
+
+	[RelayCommand]
+	void Github()
+	{
+		Process.Start(s_githubStartInfo);
+	}
+
+	[RelayCommand]
+	void Discord()
+	{
+		Process.Start(s_discordStartInfo);
 	}
 }

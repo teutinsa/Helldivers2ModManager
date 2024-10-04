@@ -14,7 +14,7 @@ internal partial class App : Application
 {
 	public static new App Current => (App)Application.Current;
 	
-	public static Version Version { get; } = new Version(1, 0, 2, 0);
+	public static Version Version { get; } = new Version(1, 0, 3, 0);
 
 	public IHost Host { get; }
 

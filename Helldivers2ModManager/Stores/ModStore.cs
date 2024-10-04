@@ -297,14 +297,15 @@ namespace Helldivers2ModManager.Stores
 
 				foreach (var name in names)
 				{
-					var indicies = new HashSet<int>();
+					var indexes = new HashSet<int>();
 					foreach(var file in files)
 					{
 						var match = GetPatchIndexRegex().Match(file.Name);
-						indicies.Add(int.Parse(match.Groups[1].ValueSpan));
+						indexes.Add(int.Parse(match.Groups[1].ValueSpan));
 					}
+					_logger.LogInformation("Found {} different indexes", indexes.Count);
 
-					foreach (var index in indicies)
+					foreach (var index in indexes)
 					{
 						FileInfo? patchFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_{index}$"));
 						FileInfo? gpuFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_{index}.gpu_resources$"));

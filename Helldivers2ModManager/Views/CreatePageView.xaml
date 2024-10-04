@@ -11,8 +11,6 @@
 	  d:DesignWidth="800"
 	  d:DesignHeight="600"
 	  Title="{Binding Title}">
-	<Page.Resources>
-	</Page.Resources>
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
@@ -54,16 +52,28 @@
 						   Margin="0 0 0 3"
 						   FontFamily="Sanserif"/>
 				<TreeView MinHeight="50"
-						  Margin="0 0 0 5">
-					<TreeViewItem Header="Root"
-								  ItemsSource="{Binding ModContent}">
-						<TreeViewItem.ContextMenu>
-							<ContextMenu>
-								<MenuItem Header="Add Option"/>
-								<MenuItem Header="Add Files"/>
-							</ContextMenu>
-						</TreeViewItem.ContextMenu>
-					</TreeViewItem>
+						  Margin="0 0 0 5"
+						  ItemsSource="{Binding Content}">
+					<TreeView.ItemTemplate>
+						<DataTemplate DataType="vms:ContentViewModel">
+							<TreeViewItem Header="{Binding Name}"
+										  ToolTip="{Binding ToolTip}"
+										  FontFamily="Sanserif"
+										  ItemsSource="{Binding}">
+								<TreeViewItem.ContextMenu>
+									<ContextMenu>
+										<MenuItem Header="Add Files"
+												  Command="{Binding AddFilesCommand}"/>
+										<MenuItem Header="Add Option"
+												  Command="{Binding AddOptionCommand}"/>
+										<Separator/>
+										<MenuItem Header="Remove"
+												  Command="{Binding RemoveCommand}"/>
+									</ContextMenu>
+								</TreeViewItem.ContextMenu>
+							</TreeViewItem>
+						</DataTemplate>
+					</TreeView.ItemTemplate>
 				</TreeView>
 				<Label Content="Output File"
 					   FontSize="16"/>
