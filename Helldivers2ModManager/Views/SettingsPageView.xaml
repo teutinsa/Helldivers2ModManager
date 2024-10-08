@@ -5,12 +5,23 @@
 	  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	  xmlns:vms="clr-namespace:Helldivers2ModManager.ViewModels"
+	  xmlns:sys="clr-namespace:System;assembly=mscorlib"
+	  xmlns:logging="clr-namespace:Microsoft.Extensions.Logging;assembly=Microsoft.Extensions.Logging.Abstractions"
 	  mc:Ignorable="d"
 	  d:DataContext="{d:DesignInstance vms:SettingsPageViewModel}"
 	  d:Background="Black"
 	  d:DesignWidth="800"
 	  d:DesignHeight="600"
 	  Title="{Binding Title}">
+	<Page.Resources>
+		<ObjectDataProvider x:Key="LogLevelEnumData"
+							MethodName="GetValues"
+							ObjectType="{x:Type sys:Enum}">
+			<ObjectDataProvider.MethodParameters>
+				<x:Type TypeName="logging:LogLevel"/>
+			</ObjectDataProvider.MethodParameters>
+		</ObjectDataProvider>
+	</Page.Resources>
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="*"/>
@@ -97,6 +108,21 @@
 							Grid.Column="1"
 							Command="{Binding BrowseTempCommand}"/>
 				</Grid>
+				<TextBlock FontSize="24"
+						   Foreground="White"
+						   Margin="0 10 0 0"
+						   Text="Log Level"/>
+				<TextBlock FontSize="12"
+						   FontFamily="Sanserif"
+						   Foreground="DarkGray">
+					This sets the level of messages which should be logged to the log file.
+					The option set and anything below it will be captured an logged.
+					<LineBreak/>
+					By default only warnings and anything more severe will be logged.
+				</TextBlock>
+				<ComboBox HorizontalAlignment="Left"
+						  ItemsSource="{Binding Source={StaticResource LogLevelEnumData}}"
+						  SelectedItem="{Binding LogLevel}"/>
 				<TextBlock FontSize="24"
 						   Foreground="White"
 						   Margin="0 10 0 0"

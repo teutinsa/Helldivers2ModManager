@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Helldivers2ModManager.Stores;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using System.IO;
@@ -10,7 +11,7 @@ internal static class FileLoggerExtensions
 {
 	public static ILoggingBuilder AddFile(this ILoggingBuilder builder, string name)
 	{
-		builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, FileLoggerProvider>(provider => new FileLoggerProvider(name)));
+		builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, FileLoggerProvider>(provider => new FileLoggerProvider(name, provider.GetRequiredService<SettingsStore>())));
 		return builder;
 	}
 }
@@ -20,19 +21,21 @@ internal sealed class FileLoggerProvider : ILoggerProvider
 {
 	private readonly FileStream _fileStream;
 	private readonly StreamWriter _stream;
+	private readonly SettingsStore _settingsStore;
 
-	public FileLoggerProvider(string name)
+	public FileLoggerProvider(string name, SettingsStore settingsStore)
 	{
 		if (!Directory.Exists("logs"))
 			Directory.CreateDirectory("logs");
 
 		_fileStream = new FileStream(Path.Combine("logs", $"{name}_{DateTime.UtcNow:dd-MM-yyyy_HH-mm-ss}.log"), FileMode.CreateNew, FileAccess.Write, FileShare.Read);
 		_stream = new StreamWriter(_fileStream);
+		_settingsStore = settingsStore;
 	}
 
 	public ILogger CreateLogger(string categoryName)
 	{
-		return new FileLogger(categoryName, _stream);
+		return new FileLogger(categoryName, _stream, _settingsStore);
 	}
 
 	public void Dispose()
@@ -42,10 +45,11 @@ internal sealed class FileLoggerProvider : ILoggerProvider
 	}
 }
 
-internal sealed class FileLogger(string name, StreamWriter stream) : ILogger
+internal sealed class FileLogger(string name, StreamWriter stream, SettingsStore settingsStore) : ILogger
 {
 	private readonly string _name = name;
 	private readonly StreamWriter _stream = stream;
+	private readonly SettingsStore _settingsStore = settingsStore;
 
 	public IDisposable? BeginScope<TState>(TState state) where TState : notnull
 	{
@@ -54,7 +58,11 @@ internal sealed class FileLogger(string name, StreamWriter stream) : ILogger
 
 	public bool IsEnabled(LogLevel logLevel)
 	{
-		return logLevel != LogLevel.None;
+#if DEBUG
+		return true;
+#else
+		return logLevel != LogLevel.None && logLevel >= _settingsStore.LogLevel;
+#endif
 	}
 
 	public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)

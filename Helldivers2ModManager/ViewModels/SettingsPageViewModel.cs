@@ -49,6 +49,18 @@ internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewMode
 		}
 	}
 
+
+	public LogLevel LogLevel
+	{
+		get => _settingsStore.LogLevel;
+		set
+		{
+			OnPropertyChanging();
+			_settingsStore.LogLevel = value;
+			OnPropertyChanged();
+		}
+	}
+
 	private readonly ILogger<SettingsPageViewModel> _logger = logger;
 	private readonly NavigationStore _navStore = navStore;
 	private readonly SettingsStore _settingsStore = settingsStore;

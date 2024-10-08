@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Text.Json;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.Logging;
 
 namespace Helldivers2ModManager.Stores;
 
@@ -12,6 +13,8 @@ internal sealed class SettingsStore
 
 	public string StorageDirectory { get; set; }
 
+	public LogLevel LogLevel { get; set; }
+
 	private static readonly FileInfo s_settingFile = new("settings.json");
 
 	public SettingsStore()
@@ -22,6 +25,8 @@ internal sealed class SettingsStore
 	[MemberNotNull(nameof(TempDirectory), nameof(GameDirectory), nameof(StorageDirectory))]
 	public void Load()
 	{
+		LogLevel = LogLevel.Warning;
+
 		if (s_settingFile.Exists)
 		{
 			byte[] data = File.ReadAllBytes(s_settingFile.FullName);
@@ -37,6 +42,8 @@ internal sealed class SettingsStore
 						GameDirectory = prop.GetString()!;
 					if (root.TryGetProperty(nameof(StorageDirectory), out prop))
 						StorageDirectory = prop.GetString()!;
+					if (root.TryGetProperty(nameof(LogLevel), out prop))
+						LogLevel = (LogLevel)prop.GetInt32();
 				}
 			}
 			catch(JsonException)
@@ -53,6 +60,7 @@ internal sealed class SettingsStore
 		TempDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Temp", "Helldivers2ModManager");
 		GameDirectory = string.Empty;
 		StorageDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Helldivers2ModManager");
+		LogLevel = LogLevel.Warning;
 	}
 
 	public void Save()
@@ -65,6 +73,7 @@ internal sealed class SettingsStore
 		writer.WriteString(nameof(TempDirectory), TempDirectory);
 		writer.WriteString(nameof(GameDirectory), GameDirectory);
 		writer.WriteString(nameof(StorageDirectory), StorageDirectory);
+		writer.WriteNumber(nameof(LogLevel), (int)LogLevel);
 
 		writer.WriteEndObject();
 		

@@ -227,7 +227,7 @@ namespace Helldivers2ModManager.Stores
 			{
 				mod.Directory.Delete(true);
 				OnModRemoved(new ModEventArgs(mod));
-				_logger.LogInformation("Mod {} removed", mod.Manifest.Guid);
+				_logger.LogInformation("Mod \"{}\" removed", mod.Manifest.Name);
 				return true;
 			}
 			return false;

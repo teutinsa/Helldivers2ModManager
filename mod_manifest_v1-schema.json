@@ -1,0 +1,91 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://raw.githubusercontent.com/teutinsa/Helldivers2ModManager/refs/heads/master/mod_manifest_v1-schema.md",
+	"title": "Mod Manifest v1",
+	"description": "A manifest for mods used in the Helldivers 2 Mod manager",
+	"type": "object",
+	"properties": {
+		"Version": {
+			"description": "The version of the manifest. This tells the manager how to read it.",
+			"type": "integer",
+			"minimum": 1,
+			"maximum": 1
+		},
+		"Guid": {
+			"description": "The global unique identifier of the mod.",
+			"type": "string",
+			"format": "uuid"
+		},
+		"Name": {
+			"description": "The name of the mod.",
+			"type": "string"
+		},
+		"Description": {
+			"description": "A short description of the mod.",
+			"type": "string"
+		},
+		"IconPath": {
+			"description": "A relative path to an image file to be used as a icon for the mod.",
+			"type": [
+				"string",
+				"null"
+			]
+		},
+		"Options": {
+			"description": "Defines options for the mod. These can be individually enabled and disabled by the user.",
+			"type": [
+				"array",
+				"null"
+			],
+			"items": {
+				"type": "object",
+				"properties": {
+					"Name": {
+						"description": "The name of the option.",
+						"type": "string"
+					},
+					"Path": {
+						"description": "The path to the root of the options folder.",
+						"type": "string"
+					},
+					"Include": {
+						"description": "Array of paths to folders to always include in this option.",
+						"type": [
+							"array",
+							"null"
+						],
+						"items": {
+							"type": "string"
+						},
+						"minItems": 1,
+						"uniqueItems": true
+					},
+					"SubOptions": {
+						"description": "Sub-options for the option. Only one can be chosen by the user for each.",
+						"type": [
+							"array",
+							"null"
+						],
+						"items": {
+							"type": "string"
+						},
+						"minItems": 1,
+						"uniqueItems": true
+					}
+				},
+				"required": [
+					"Name",
+					"Path"
+				]
+			},
+			"minItems": 1,
+			"uniqueItems": true
+		}
+	},
+	"required": [
+		"Version",
+		"Guid",
+		"Name",
+		"Description"
+	]
+}

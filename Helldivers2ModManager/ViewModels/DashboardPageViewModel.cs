@@ -7,6 +7,7 @@ using Microsoft.Win32;
 using SharpCompress;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -187,7 +188,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	[RelayCommand]
 	void Browse()
 	{
-
+		throw new NotImplementedException();
 	}
 
 	[RelayCommand]
@@ -197,6 +198,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	}
 
 	[RelayCommand]
+	[SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This is a command of a view model and should not be static.")]
 	void ReportBug()
 	{
 		Process.Start(s_reportStartInfo);
@@ -281,18 +283,21 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	}
 
 	[RelayCommand]
+	[SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This is a command of a view model and should not be static.")]
 	void Run()
 	{
 		Process.Start(s_gameStartInfo);
 	}
 
 	[RelayCommand]
+	[SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This is a command of a view model and should not be static.")]
 	void Github()
 	{
 		Process.Start(s_githubStartInfo);
 	}
 
 	[RelayCommand]
+	[SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This is a command of a view model and should not be static.")]
 	void Discord()
 	{
 		Process.Start(s_discordStartInfo);
