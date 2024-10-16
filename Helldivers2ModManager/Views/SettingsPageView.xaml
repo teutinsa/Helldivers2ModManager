@@ -38,7 +38,7 @@
 						   Foreground="DarkGray">
 					This is the games directory where you want the mods to be installed.
 					<LineBreak/>
-					(Clicking "..." will prompt you to select the games .exe file)
+					(Clicking "..." will prompt you to select the games directory)
 				</TextBlock>
 				<Grid>
 					<Grid.ColumnDefinitions>

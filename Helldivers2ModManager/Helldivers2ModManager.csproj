@@ -47,10 +47,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Components\" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <SplashScreen Include="Resources\Images\logo_splash.png" />
 	</ItemGroup>
 

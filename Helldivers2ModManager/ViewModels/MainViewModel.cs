@@ -1,9 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Helldivers2ModManager.Stores;
 
 namespace Helldivers2ModManager.ViewModels;
 
-internal sealed class MainViewModel : ObservableObject
+internal sealed partial class MainViewModel : ObservableObject
 {
 	public string Title => "HD2 Mod Manager - " + CurrentViewModel.Title;
 
@@ -21,5 +22,11 @@ internal sealed class MainViewModel : ObservableObject
 	{
 		OnPropertyChanged(nameof(CurrentViewModel));
 		OnPropertyChanged(nameof(Title));
+	}
+
+	[RelayCommand]
+	void Help()
+	{
+
 	}
 }

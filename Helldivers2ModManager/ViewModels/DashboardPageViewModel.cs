@@ -1,5 +1,6 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using Helldivers2ModManager.Components;
 using Helldivers2ModManager.Stores;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -11,8 +12,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Windows;
-using System.Windows.Media;
 
 namespace Helldivers2ModManager.ViewModels;
 
@@ -55,25 +54,13 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	};
 	private static readonly ProcessStartInfo s_gameStartInfo = new("steam://run/553850") { UseShellExecute = true };
 	private static readonly ProcessStartInfo s_reportStartInfo = new("https://www.nexusmods.com/helldivers2/mods/109?tab=bugs") { UseShellExecute = true };
-	private static readonly ProcessStartInfo s_discordStartInfo = new("https://discord.gg/ZwjPaZNwH7") { UseShellExecute = true };
+	private static readonly ProcessStartInfo s_discordStartInfo = new("https://discord.gg/helldiversmodding") { UseShellExecute = true };
 	private static readonly ProcessStartInfo s_githubStartInfo = new("https://github.com/teutinsa/Helldivers2ModManager") { UseShellExecute = true };
 	private readonly ILogger<DashboardPageViewModel> _logger;
 	private readonly IServiceProvider _provider;
 	private readonly Lazy<NavigationStore> _navStore;
 	private readonly ModStore _modStore;
 	private readonly SettingsStore _settingsStore;
-	[ObservableProperty]
-	private Visibility _messageVisibility = Visibility.Hidden;
-	[ObservableProperty]
-	private string _messageTitle = string.Empty;
-	[ObservableProperty]
-	private string _messageText = string.Empty;
-	[ObservableProperty]
-	private Visibility _messageOkVisibility = Visibility.Collapsed;
-	[ObservableProperty]
-	private Visibility _messageProgressVisibility = Visibility.Collapsed;
-	[ObservableProperty]
-	private Color _messageColor = Colors.Yellow;
 
 	static DashboardPageViewModel()
 	{
@@ -121,41 +108,6 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		_modStore.ModAdded += (_, e) => Mods.Add(new ModViewModel(e.Mod) { Enabled = true });
 	}
 
-	private void ShowError(string message)
-	{
-		MessageTitle = "Error";
-		MessageText = message;
-		MessageColor = Colors.Red;
-		MessageOkVisibility = Visibility.Visible;
-		MessageProgressVisibility = Visibility.Collapsed;
-		MessageVisibility = Visibility.Visible;
-	}
-
-	private void ShowInfo(string message)
-	{
-		MessageTitle = "Info";
-		MessageText = message;
-		MessageColor = Colors.Yellow;
-		MessageOkVisibility = Visibility.Visible;
-		MessageProgressVisibility = Visibility.Collapsed;
-		MessageVisibility = Visibility.Visible;
-	}
-
-	private void ShowProgress(string actionName)
-	{
-		MessageTitle = actionName;
-		MessageText = "Please wait democratically.";
-		MessageColor = Colors.Yellow;
-		MessageOkVisibility = Visibility.Collapsed;
-		MessageProgressVisibility = Visibility.Visible;
-		MessageVisibility = Visibility.Visible;
-	}
-
-	private void HideMessage()
-	{
-		MessageVisibility = Visibility.Hidden;
-	}
-
 	[RelayCommand(AllowConcurrentExecutions = false)]
 	async Task Add()
 	{
@@ -171,16 +123,23 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 
 		if (dialog.ShowDialog() ?? false)
 		{
-			ShowProgress("Adding mod");
+			WeakReferenceMessenger.Default.Send(new MessageBoxProgressMessage()
+			{
+				Title = "Adding Mod",
+				Message = "Please wait democratically."
+			});
 			try
 			{
 				await _modStore.TryAddModFromArchiveAsync(new FileInfo(dialog.FileName));
-				HideMessage();
+				WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
 			}
 			catch(Exception ex)
 			{
 				_logger.LogWarning(ex, "Failed to add mod");
-				ShowError(ex.Message);
+				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+				{
+					Message = ex.Message
+				});
 			}
 		}
 	}
@@ -213,9 +172,13 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	[RelayCommand(AllowConcurrentExecutions = false)]
 	async Task Purge()
 	{
-		ShowProgress("Purging Mods");
+		WeakReferenceMessenger.Default.Send(new MessageBoxProgressMessage()
+		{
+			Title = "Purging Mods",
+			Message = "Please wait democratically."
+		});
 		await _modStore.PurgeAsync();
-		HideMessage();
+		WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
 	}
 
 	[RelayCommand(AllowConcurrentExecutions = false)]
@@ -223,11 +186,18 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	{
 		if (string.IsNullOrEmpty(_settingsStore.GameDirectory))
 		{
-			ShowError("Unable to deploy! Helldivers 2 Path not set. Please go to settings.");
+			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+			{
+				Message = "Unable to deploy! Helldivers 2 Path not set. Please go to settings."
+			});
 			return;
 		}
 
-		ShowProgress("Deploying Mods");
+		WeakReferenceMessenger.Default.Send(new MessageBoxProgressMessage()
+		{
+			Title = "Deploying Mods",
+			Message = "Please wait democratically."
+		});
 
 		var mods = Mods.Where(static vm => vm.Enabled).ToArray();
 		var guids = mods.Select(static vm => vm.Guid).ToArray();
@@ -241,12 +211,18 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			using var stream = enabledFile.Open(FileMode.Create, FileAccess.Write, FileShare.None);
 			await JsonSerializer.SerializeAsync(stream, list);
 
-			ShowInfo("Deployment successful.");
+			WeakReferenceMessenger.Default.Send(new MessageBoxInfoMessage()
+			{
+				Message = "Deployment successful."
+			});
 		}
 		catch(Exception ex)
 		{
 			_logger.LogWarning(ex, "Deployment failed");
-			ShowError(ex.Message);
+			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+			{
+				Message = ex.Message
+			});
 		}
 	}
 
@@ -274,12 +250,6 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	{
 		if (_modStore.Remove(modVm.Data))
 			Mods.Remove(modVm);
-	}
-
-	[RelayCommand]
-	void MessageOk()
-	{
-		HideMessage();
 	}
 
 	[RelayCommand]

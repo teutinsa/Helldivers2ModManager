@@ -20,6 +20,11 @@ internal partial class MainWindow : Window
 		base.OnActivated(e);
 	}
 
+	private void HelpButton_Click(object sender, RoutedEventArgs e)
+	{
+		(DataContext as MainViewModel)?.HelpCommand.Execute(null);
+	}
+
 	private void MinButton_Click(object sender, RoutedEventArgs e)
 	{
 		WindowState = WindowState.Minimized;
