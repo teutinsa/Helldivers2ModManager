@@ -17,7 +17,9 @@
 		Content="{Binding CurrentViewModel}"
 		WindowStyle="None"
 		AllowsTransparency="True"
-		WindowStartupLocation="CenterScreen">
+		WindowStartupLocation="CenterScreen"
+		Background="{Binding Background}"
+		d:Background="Black">
 	<Window.Resources>
 		<DataTemplate DataType="{x:Type vms:DashboardPageViewModel}">
 			<views:DashboardPageView/>
@@ -28,6 +30,9 @@
 		<DataTemplate DataType="{x:Type vms:CreatePageViewModel}">
 			<views:CreatePageView/>
 		</DataTemplate>
+		<DataTemplate DataType="{x:Type vms:HelpPageViewModel}">
+			<views:HelpPageView/>
+		</DataTemplate>
 	</Window.Resources>
 	
 	<Window.Style>
@@ -35,7 +40,7 @@
 			<Setter Property="OverridesDefaultStyle" Value="True"/>
 			<Setter Property="SnapsToDevicePixels" Value="True"/>
 			<Setter Property="BorderBrush" Value="DarkGray"/>
-			<Setter Property="Background" Value="#C000"/>
+			<!--<Setter Property="Background" Value="#C000"/>-->
 			<Setter Property="BorderThickness" Value="3"/>
 			<Setter Property="Template">
 				<Setter.Value>

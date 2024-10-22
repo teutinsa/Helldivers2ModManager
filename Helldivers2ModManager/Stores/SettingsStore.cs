@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
+using System.Windows.Controls;
 
 namespace Helldivers2ModManager.Stores;
 
@@ -15,6 +16,10 @@ internal sealed class SettingsStore
 
 	public LogLevel LogLevel { get; set; }
 
+	public float Opacity { get; set; }
+
+	public event EventHandler? SettingsChanged;
+
 	private static readonly FileInfo s_settingFile = new("settings.json");
 
 	public SettingsStore()
@@ -22,10 +27,10 @@ internal sealed class SettingsStore
 		Load();
 	}
 
-	[MemberNotNull(nameof(TempDirectory), nameof(GameDirectory), nameof(StorageDirectory))]
+	[MemberNotNull(nameof(TempDirectory), nameof(GameDirectory), nameof(StorageDirectory), nameof(LogLevel), nameof(Opacity))]
 	public void Load()
 	{
-		LogLevel = LogLevel.Warning;
+		Reset();
 
 		if (s_settingFile.Exists)
 		{
@@ -44,23 +49,23 @@ internal sealed class SettingsStore
 						StorageDirectory = prop.GetString()!;
 					if (root.TryGetProperty(nameof(LogLevel), out prop))
 						LogLevel = (LogLevel)prop.GetInt32();
+					if (root.TryGetProperty(nameof(Opacity), out prop))
+						Opacity = prop.GetSingle();
 				}
 			}
 			catch(JsonException)
 			{ }
 		}
-
-		TempDirectory ??= Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Temp", "Helldivers2ModManager");
-		GameDirectory ??= string.Empty;
-		StorageDirectory ??= Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Helldivers2ModManager");
 	}
 
+	[MemberNotNull(nameof(TempDirectory), nameof(GameDirectory), nameof(StorageDirectory), nameof(LogLevel), nameof(Opacity))]
 	public void Reset()
 	{
 		TempDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Temp", "Helldivers2ModManager");
 		GameDirectory = string.Empty;
 		StorageDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Helldivers2ModManager");
 		LogLevel = LogLevel.Warning;
+		Opacity = 0.8f;
 	}
 
 	public void Save()
@@ -74,9 +79,12 @@ internal sealed class SettingsStore
 		writer.WriteString(nameof(GameDirectory), GameDirectory);
 		writer.WriteString(nameof(StorageDirectory), StorageDirectory);
 		writer.WriteNumber(nameof(LogLevel), (int)LogLevel);
+		writer.WriteNumber(nameof(Opacity), Opacity);
 
 		writer.WriteEndObject();
 		
 		writer.Flush();
+
+		SettingsChanged?.Invoke(this, EventArgs.Empty);
 	}
 }

@@ -71,6 +71,7 @@ internal partial class App : Application
 		services.AddTransient<DashboardPageViewModel>();
 		services.AddTransient<SettingsPageViewModel>();
 		services.AddTransient<CreatePageViewModel>();
+		services.AddTransient<HelpPageViewModel>();
 	}
 
 	private void LogUnhandledException(Exception? ex)

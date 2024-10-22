@@ -1,9 +1,9 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using Helldivers2ModManager.Components;
 using Helldivers2ModManager.Stores;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
-using SharpCompress;
 using System.IO;
 using System.Windows;
 
@@ -45,10 +45,12 @@ internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewMode
 			OnPropertyChanged();
 
 			_storageDirChanged = true;
-			ShowInfo("Storage directory changed. The application needs to be restarted and will quit once you hit \"OK\".");
+			WeakReferenceMessenger.Default.Send(new MessageBoxInfoMessage()
+			{
+				Message = "Storage directory changed. The application needs to be restarted and will quit once you hit \"OK\"."
+			});
 		}
 	}
-
 
 	public LogLevel LogLevel
 	{
@@ -61,52 +63,52 @@ internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewMode
 		}
 	}
 
+	public float Opacity
+	{
+		get => _settingsStore.Opacity;
+		set
+		{
+			OnPropertyChanging();
+			_settingsStore.Opacity = value;
+			OnPropertyChanged();
+		}
+	}
+
 	private readonly ILogger<SettingsPageViewModel> _logger = logger;
 	private readonly NavigationStore _navStore = navStore;
 	private readonly SettingsStore _settingsStore = settingsStore;
-	[ObservableProperty]
-	private Visibility _messageVisibility = Visibility.Hidden;
-	[ObservableProperty]
-	private string _messageTitle = string.Empty;
-	[ObservableProperty]
-	private string _messageText = string.Empty;
 	private bool _storageDirChanged = false;
 
 	private bool ValidateSettings()
 	{
 		if (string.IsNullOrEmpty(GameDir))
 		{
-			ShowError("Game directory can not be left empty!");
+			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+			{
+				Message = "Game directory can not be left empty!"
+			});
 			return false;
 		}
 
 		if (string.IsNullOrEmpty(StorageDir))
 		{
-			ShowError("Storage directory can not be left empty!");
+			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+			{
+				Message = "Storage directory can not be left empty!"
+			});
 			return false;
 		}
 
 		if (string.IsNullOrEmpty(TempDir))
 		{
-			ShowError("Temporary directory can not be left empty!");
+			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+			{
+				Message = "Temporary directory can not be left empty!"
+			});
 			return false;
 		}
 
 		return true;
-	}
-
-	private void ShowInfo(string message)
-	{
-		MessageVisibility = Visibility.Visible;
-		MessageTitle = "Info";
-		MessageText = message;
-	}
-
-	private void ShowError(string message)
-	{
-		MessageVisibility = Visibility.Visible;
-		MessageTitle = "Error";
-		MessageText = message;
 	}
 
 	[RelayCommand]
@@ -151,25 +153,37 @@ internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewMode
 			}
 
 			if (newDir is not DirectoryInfo { Name: "Helldivers 2" })
-			{ 
-				ShowError("The selected Helldivers 2 folder does not reside in a valid directory!");
+			{
+				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+				{
+					Message = "The selected Helldivers 2 folder does not reside in a valid directory!"
+				});
 				return;
 			}
 
 			var subDirs = newDir.EnumerateDirectories();
 			if (!subDirs.Any(static dir => dir.Name == "data"))
 			{
-				ShowError("The selected Helldivers 2 root path does not contain a directory named \"data\"!");
+				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+				{
+					Message = "The selected Helldivers 2 root path does not contain a directory named \"data\"!"
+				});
 				return;
 			}
 			if (!subDirs.Any(static dir => dir.Name == "tools"))
 			{
-				ShowError("The selected Helldivers 2 root path does not contain a directory named \"tools\"!");
+				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+				{
+					Message = "The selected Helldivers 2 root path does not contain a directory named \"tools\"!"
+				});
 				return;
 			}
 			if (!subDirs.Any(static dir => dir.Name == "bin"))
 			{
-				ShowError("The selected Helldivers 2 root path does not contain a directory named \"bin\"!");
+				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+				{
+					Message = "The selected Helldivers 2 root path does not contain a directory named \"bin\"!"
+				});
 				return;
 			}
 
@@ -177,7 +191,10 @@ internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewMode
 		}
 		else
 		{
-			ShowError("The selected path is not a valid Helldivers 2 root!");
+			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+			{
+				Message = "The selected path is not a valid Helldivers 2 root!"
+			});
 		}
 	}
 
@@ -207,12 +224,6 @@ internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewMode
 
 		if (dialog.ShowDialog() ?? false)
 			TempDir = dialog.FolderName;
-	}
-
-	[RelayCommand]
-	void MessageOk()
-	{
-		MessageVisibility = Visibility.Hidden;
 	}
 
 	[RelayCommand]

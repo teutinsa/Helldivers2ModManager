@@ -111,6 +111,23 @@
 				<TextBlock FontSize="24"
 						   Foreground="White"
 						   Margin="0 10 0 0"
+						   Text="Opacity"/>
+				<TextBlock FontSize="12"
+						   FontFamily="Sanserif"
+						   Foreground="DarkGray">
+					Change the opacity of the window background.
+				</TextBlock>
+				<Slider HorizontalAlignment="Left"
+						Width="200"
+						Minimum="0.5"
+						Maximum="1"
+						TickFrequency="0.05"
+						TickPlacement="BottomRight"
+						IsSnapToTickEnabled="True"
+						Value="{Binding Opacity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+				<TextBlock FontSize="24"
+						   Foreground="White"
+						   Margin="0 10 0 0"
 						   Text="Log Level"/>
 				<TextBlock FontSize="12"
 						   FontFamily="Sanserif"
@@ -156,42 +173,6 @@
 			<Button Content="OK"
 					Command="{Binding OkCommand}"
 					HorizontalAlignment="Right"/>
-		</Grid>
-		<Grid Grid.RowSpan="2"
-			  Background="#6000"
-			  Visibility="{Binding MessageVisibility}"
-			  d:Visibility="Hidden">
-			<Border BorderThickness="3"
-					BorderBrush="DarkGray"
-					Background="Black"
-					VerticalAlignment="Center"
-					HorizontalAlignment="Center"
-					MinWidth="300"
-					MinHeight="50">
-				<Grid>
-					<Grid.RowDefinitions>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="*"/>
-						<RowDefinition Height="Auto"/>
-					</Grid.RowDefinitions>
-					<TextBlock Grid.Row="0"
-							   Text="{Binding MessageTitle}"
-							   Foreground="Yellow"
-							   HorizontalAlignment="Center"
-							   Margin="3"
-							   FontSize="24"/>
-					<TextBlock Grid.Row="1"
-							   Text="{Binding MessageText, FallbackValue='Message'}"
-							   Foreground="White"
-							   Margin="3"
-							   FontSize="16"
-							   FontFamily="Sanserif"/>
-					<Button Grid.Row="2"
-							Content="OK"
-							HorizontalAlignment="Right"
-							Command="{Binding MessageOkCommand}"/>
-				</Grid>
-			</Border>
 		</Grid>
 	</Grid>
 </Page>

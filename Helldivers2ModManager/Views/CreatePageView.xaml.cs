@@ -2,7 +2,7 @@
 
 namespace Helldivers2ModManager.Views;
 
-public partial class CreatePageView : Page
+internal partial class CreatePageView : Page
 {
 	public CreatePageView()
 	{

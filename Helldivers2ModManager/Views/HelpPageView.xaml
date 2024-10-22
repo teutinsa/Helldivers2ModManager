@@ -1,0 +1,100 @@
+﻿<Page x:Class="Helldivers2ModManager.Views.HelpPageView"
+	  x:ClassModifier="internal"
+	  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+	  xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+	  xmlns:local="clr-namespace:Helldivers2ModManager.Views"
+	  mc:Ignorable="d"
+	  d:DataContext="{d:DesignInstance vms:HelpPageViewModel}"
+	  d:Background="Black"
+	  d:DesignWidth="800"
+	  d:DesignHeight="600"
+	  Title="{Binding Title}">
+	<Page.Resources>
+		<Style TargetType="TextBlock" x:Key="Heading">
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="FontSize" Value="32"/>
+			<Setter Property="HorizontalAlignment" Value="Center"/>
+			<Setter Property="TextDecorations" Value="Underline"/>
+			<Setter Property="FontFamily" Value="..\Resources\Fonts\#Blockletter"/>
+		</Style>
+		<Style TargetType="TextBlock" x:Key="Text">
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="FontSize" Value="14"/>
+			<Setter Property="TextWrapping" Value="Wrap"/>
+			<Setter Property="FontFamily" Value="Sanserif"/>
+		</Style>
+	</Page.Resources>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+		<ScrollViewer Grid.Row="0"
+					  VerticalScrollBarVisibility="Auto"
+					  HorizontalScrollBarVisibility="Disabled">
+			<StackPanel Margin="5">
+				<TextBlock Style="{StaticResource Heading}"
+						   FontSize="48"
+						   Text="Help"/>
+				<TextBlock Style="{StaticResource Text}">
+					If you do not want to read you can look at the 
+					<Hyperlink Foreground="Yellow"
+							   NavigateUri="https://www.youtube.com/watch?v=R26Gv-ZiG-k">
+						YouTube tutorial
+					</Hyperlink>
+					made by our good friend of the modding community
+					<Hyperlink Foreground="Yellow"
+							   NavigateUri="https://www.youtube.com/channel/UC0fWGickP2EhPfNrL4bG3QQ">
+						ArcanePoro.
+					</Hyperlink>
+				</TextBlock>
+				<Separator/>
+				<TextBlock Style="{StaticResource Heading}"
+						   Text="First time setup"/>
+				<TextBlock Style="{StaticResource Text}">
+					The first thing you'll want to do when you start the manager up
+					for the fist time is setup your paths.
+					<LineBreak/>
+					The most important of which is the path to your game installation.
+					Most commonly this would be something like:
+					<LineBreak/>
+					<Italic Foreground="DarkGray">
+						"Steam\steamapps\common\Helldivers 2"
+					</Italic>
+				</TextBlock>
+				<Separator/>
+				<TextBlock Style="{StaticResource Heading}"
+						   Text="Adding mods"/>
+				<TextBlock Style="{StaticResource Text}">
+					To add a mod download any ZIP file form the
+					<Hyperlink Foreground="Yellow"
+							   NavigateUri="https://www.nexusmods.com/helldivers2">
+						Nexus.
+					</Hyperlink>
+					Then use the "Add" button and select the ZIP.
+					After that make sure that the check box of the mod is ticked
+					to make sure it's enabled.
+				</TextBlock>
+				<Separator/>
+				<TextBlock Style="{StaticResource Heading}"
+						   Text="Load order"/>
+				<TextBlock Style="{StaticResource Text}">
+					The load order is important!
+					<LineBreak/>
+					The so called load order is defined by the order the mods are in the list.
+					The further they are down the later they get loaded.
+					If you have multiple mods that replace the B-01 armor,
+					which ever mod get's loaded last will show up in game
+					as it overrides the previous ones.
+				</TextBlock>
+			</StackPanel>
+		</ScrollViewer>
+		<Grid Grid.Row="1">
+			<Button Content="Back"
+					Command="{Binding BackCommand}"
+					HorizontalAlignment="Right"/>
+		</Grid>
+	</Grid>
+</Page>
