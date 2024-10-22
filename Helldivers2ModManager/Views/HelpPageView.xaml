@@ -89,6 +89,23 @@
 					which ever mod get's loaded last will show up in game
 					as it overrides the previous ones.
 				</TextBlock>
+				<Separator/>
+				<TextBlock Style="{StaticResource Heading}"
+						   Text="My mods don't work"/>
+				<TextBlock Style="{StaticResource Text}">
+					What if your mods don't work?
+					<LineBreak/>
+					Some mods that don't contains a manifest and/or have an unconventional
+					structure may not be correctly deployed buy the manager.
+					In this case it's recommended to take a further look at the mods
+					Nexus page and look for installation instructions.
+					You may need to re-zip some patch files to make it work.
+					If you want an example you should definitely look at the
+					<Hyperlink Foreground="Yellow"
+							   NavigateUri="https://www.youtube.com/watch?v=R26Gv-ZiG-k">
+						YouTube tutorial.
+					</Hyperlink>
+				</TextBlock>
 			</StackPanel>
 		</ScrollViewer>
 		<Grid Grid.Row="1">

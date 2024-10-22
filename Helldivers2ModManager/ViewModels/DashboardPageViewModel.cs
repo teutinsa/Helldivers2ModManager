@@ -23,7 +23,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		{
 			var doc = JsonDocument.ParseValue(ref reader);
 			var root = doc.RootElement;
-			return new ListTuple(Guid.Parse(root.GetProperty(nameof(ListTuple.Guid)).GetString()!), root.GetProperty(nameof(ListTuple.Option)).GetInt32());
+			return new ListTuple(Guid.Parse(root.GetProperty(nameof(ListTuple.Guid)).GetString()!), root.GetProperty(nameof(ListTuple.Enabled)).GetBoolean(), root.GetProperty(nameof(ListTuple.Option)).GetInt32());
 		}
 
 		public override void Write(Utf8JsonWriter writer, ListTuple value, JsonSerializerOptions options)
@@ -35,9 +35,11 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		}
 	}
 
-	private readonly struct ListTuple(Guid guid, int option)
+	private readonly struct ListTuple(Guid guid, bool enabled, int option)
 	{
 		public Guid Guid { get; } = guid;
+
+		public bool Enabled { get; } = enabled;
 
 		public int Option { get; } = option;
 	}
@@ -87,7 +89,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			}
 			catch(JsonException ex)
 			{
-				_logger.LogError(ex, "Unable to pare \"{}\"", enabledFile.FullName);
+				_logger.LogError(ex, "Unable to parse \"{}\"", enabledFile.FullName);
 			}
 		}
 		list ??= [];
@@ -101,7 +103,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 				_logger.LogWarning("Mod {} not found, skipping", item.Guid);
 				continue;
 			}
-			Mods.Add(new ModViewModel(mod) { Enabled = true, SelectedOption = item.Option });
+			Mods.Add(new ModViewModel(mod) { Enabled = item.Enabled, SelectedOption = item.Option });
 		}
 		_modStore.Mods.Where(m => !list.Where(itm => itm.Guid == m.Manifest.Guid).Any()).ToArray().ForEach(m => Mods.Add(new ModViewModel(m)));
 
@@ -207,7 +209,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			await _modStore.DeployAsync(guids);
 
 			var enabledFile = new FileInfo(Path.Combine(_settingsStore.StorageDirectory, "enabled.json"));
-			var list = guids.Zip(mods.Select(static m => m.SelectedOption)).Select(static tpl => new ListTuple(tpl.First, tpl.Second)).ToArray();
+			var list = Mods.Select(static m => new ListTuple(m.Guid, m.Enabled, m.SelectedOption)).ToArray();
 			using var stream = enabledFile.Open(FileMode.Create, FileAccess.Write, FileShare.None);
 			await JsonSerializer.SerializeAsync(stream, list);
 
