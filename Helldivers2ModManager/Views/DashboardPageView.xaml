@@ -100,7 +100,8 @@
 										   FontSize="36"
 										   Foreground="White"
 										   TextWrapping="NoWrap"
-										   TextTrimming="CharacterEllipsis"/>
+										   TextTrimming="CharacterEllipsis"
+										   FontFamily="../Resources/Fonts/#FS Sinclair Medium"/>
 								<TextBlock Grid.Column="1"
 										   Grid.Row="1"
 										   Text="{Binding Description}"

@@ -68,6 +68,10 @@
 										<TextBlock Text="Mod Manager"
 												   FontSize="44"
 												   Foreground="White"/>
+										<TextBlock Text="{Binding Version}"
+												   FontSize="20"
+												   Foreground="White"
+												   Margin="5"/>
 									</StackPanel>
 									<StackPanel Grid.Column="2"
 												Orientation="Horizontal"

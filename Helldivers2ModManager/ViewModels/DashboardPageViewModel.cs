@@ -30,6 +30,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		{
 			writer.WriteStartObject();
 			writer.WriteString(nameof(ListTuple.Guid), value.Guid.ToString());
+			writer.WriteBoolean(nameof(ListTuple.Enabled), value.Enabled);
 			writer.WriteNumber(nameof(ListTuple.Option), value.Option);
 			writer.WriteEndObject();
 		}
@@ -211,7 +212,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			var enabledFile = new FileInfo(Path.Combine(_settingsStore.StorageDirectory, "enabled.json"));
 			var list = Mods.Select(static m => new ListTuple(m.Guid, m.Enabled, m.SelectedOption)).ToArray();
 			using var stream = enabledFile.Open(FileMode.Create, FileAccess.Write, FileShare.None);
-			await JsonSerializer.SerializeAsync(stream, list);
+			await JsonSerializer.SerializeAsync(stream, list, s_jsonOptions);
 
 			WeakReferenceMessenger.Default.Send(new MessageBoxInfoMessage()
 			{

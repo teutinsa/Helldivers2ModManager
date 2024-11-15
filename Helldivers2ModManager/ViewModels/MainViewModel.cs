@@ -13,6 +13,8 @@ internal sealed partial class MainViewModel : ObservableObject
 
 	public Brush Background => _background;
 
+	public string Version => App.Version.ToString();
+
 	private readonly NavigationStore _navigationStore;
 	private readonly SettingsStore _settingsStore;
 	private readonly SolidColorBrush _background;

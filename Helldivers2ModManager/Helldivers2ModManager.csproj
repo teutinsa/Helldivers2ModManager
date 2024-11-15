@@ -15,6 +15,9 @@
 	<ItemGroup>
 	  <None Remove="DirectoryInfoExtensions.cs~RF211c16b9.TMP" />
 	  <None Remove="Resources\Fonts\Blockletter.otf" />
+	  <None Remove="Resources\Fonts\FS Sinclair Bold.otf" />
+	  <None Remove="Resources\Fonts\FS Sinclair Medium.otf" />
+	  <None Remove="Resources\Fonts\FS Sinclair Regular.otf" />
 	  <None Remove="Resources\Images\discord_icon.png" />
 	  <None Remove="Resources\Images\github_icon.png" />
 	  <None Remove="Resources\Images\logo.png" />
@@ -25,6 +28,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Resource Include="Resources\Fonts\FS Sinclair Bold.otf" />
+	  <Resource Include="Resources\Fonts\FS Sinclair Medium.otf" />
+	  <Resource Include="Resources\Fonts\FS Sinclair Regular.otf" />
 	  <Resource Include="Resources\Images\discord_icon.png" />
 	  <Content Include="Resources\Images\icon.ico">
 	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
