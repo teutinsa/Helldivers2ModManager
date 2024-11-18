@@ -64,6 +64,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	private readonly Lazy<NavigationStore> _navStore;
 	private readonly ModStore _modStore;
 	private readonly SettingsStore _settingsStore;
+	private ModViewModel? _draggedItem;
 
 	static DashboardPageViewModel()
 	{

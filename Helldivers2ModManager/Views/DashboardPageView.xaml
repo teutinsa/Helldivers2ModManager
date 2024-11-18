@@ -4,6 +4,7 @@
 	  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	  xmlns:dd="urn:gong-wpf-dragdrop"
 	  xmlns:vms="clr-namespace:Helldivers2ModManager.ViewModels"
 	  mc:Ignorable="d"
 	  d:DataContext="{d:DesignInstance vms:DashboardPageViewModel}"
@@ -71,7 +72,9 @@
 					  BorderThickness="0"
 					  HorizontalScrollBarVisibility="Disabled"
 					  VerticalScrollBarVisibility="Visible">
-			<ItemsControl ItemsSource="{Binding Mods}">
+			<ItemsControl ItemsSource="{Binding Mods}"
+						  dd:DragDrop.IsDragSource="True"
+						  dd:DragDrop.IsDropTarget="True">
 				<ItemsControl.ItemTemplate>
 					<DataTemplate DataType="vms:ModViewModel">
 						<Border Height="70"
