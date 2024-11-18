@@ -89,7 +89,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			{
 				list = JsonSerializer.Deserialize<ListTuple[]>(stream, s_jsonOptions);
 			}
-			catch(JsonException ex)
+			catch(Exception ex)
 			{
 				_logger.LogError(ex, "Unable to parse \"{}\"", enabledFile.FullName);
 			}
