@@ -41,12 +41,14 @@
 				<TextBlock Style="{StaticResource Text}">
 					If you do not want to read you can look at the 
 					<Hyperlink Foreground="Yellow"
-							   NavigateUri="https://www.youtube.com/watch?v=R26Gv-ZiG-k">
+							   NavigateUri="https://www.youtube.com/watch?v=R26Gv-ZiG-k"
+							   RequestNavigate="Hyperlink_RequestNavigate">
 						YouTube tutorial
 					</Hyperlink>
 					made by our good friend of the modding community
 					<Hyperlink Foreground="Yellow"
-							   NavigateUri="https://www.youtube.com/channel/UC0fWGickP2EhPfNrL4bG3QQ">
+							   NavigateUri="https://next.nexusmods.com/profile/ArcanePoro"
+							   RequestNavigate="Hyperlink_RequestNavigate">
 						ArcanePoro.
 					</Hyperlink>
 				</TextBlock>
@@ -70,7 +72,8 @@
 				<TextBlock Style="{StaticResource Text}">
 					To add a mod download any ZIP file form the
 					<Hyperlink Foreground="Yellow"
-							   NavigateUri="https://www.nexusmods.com/helldivers2">
+							   NavigateUri="https://www.nexusmods.com/helldivers2"
+							   RequestNavigate="Hyperlink_RequestNavigate">
 						Nexus.
 					</Hyperlink>
 					Then use the "Add" button and select the ZIP.
@@ -102,7 +105,8 @@
 					You may need to re-zip some patch files to make it work.
 					If you want an example you should definitely look at the
 					<Hyperlink Foreground="Yellow"
-							   NavigateUri="https://www.youtube.com/watch?v=R26Gv-ZiG-k">
+							   NavigateUri="https://www.youtube.com/watch?v=R26Gv-ZiG-k"
+							   RequestNavigate="Hyperlink_RequestNavigate">
 						YouTube tutorial.
 					</Hyperlink>
 				</TextBlock>
