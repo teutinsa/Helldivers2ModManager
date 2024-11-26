@@ -33,7 +33,7 @@ internal sealed partial class BrowsePageViewModel : PageViewModelBase
 
 		Mods = [];
 
-		_nexusService.UseApiKey("kl6RcAbeYGrCBqaQnm1clB8YoL3Bs/uu+3biKCZVc793rQ==--V2dPz0FSmF1wFfmw--Ig5t7ERtaBum7CglVuIA5A==");
+		_nexusService.UseApiKey("bi4Q/NXn4HtGDD0DCkHDoi/PHjooLEII68i2WbQGJev5rRxcYPBWUqY=--dCc9dZRH7KaT1nHg--ZAn4YDH5GgGsoxD/G/Rh2g==");
 		_ = LoadRecentlyUpdatedModsAsync();
 	}
 
