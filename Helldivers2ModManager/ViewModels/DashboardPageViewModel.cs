@@ -151,7 +151,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	[RelayCommand]
 	void Browse()
 	{
-		throw new NotImplementedException();
+		_navStore.Value.Navigate<BrowsePageViewModel>();
 	}
 
 	[RelayCommand]

@@ -12,9 +12,11 @@ namespace Helldivers2ModManager;
 
 internal partial class App : Application
 {
+	public static readonly Version Version = new(1, 2, 0, 0);
+
+	public static readonly string VersionAddition = "(Nexus Preview)";
+
 	public static new App Current => (App)Application.Current;
-	
-	public static Version Version { get; } = new Version(1, 1, 0, 0);
 
 	public IHost Host { get; }
 
@@ -63,6 +65,7 @@ internal partial class App : Application
 		services.AddSingleton(static provider => new NavigationStore(provider, provider.GetRequiredService<DashboardPageViewModel>()));
 		services.AddSingleton<ModStore>();
 		services.AddSingleton<SettingsStore>();
+		services.AddSingleton<SSOStore>();
 	}
 
 	private static void AddViewModels(IServiceCollection services)
@@ -72,6 +75,7 @@ internal partial class App : Application
 		services.AddTransient<SettingsPageViewModel>();
 		services.AddTransient<CreatePageViewModel>();
 		services.AddTransient<HelpPageViewModel>();
+		services.AddTransient<BrowsePageViewModel>();
 	}
 
 	private void LogUnhandledException(Exception? ex)

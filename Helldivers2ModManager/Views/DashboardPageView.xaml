@@ -27,7 +27,7 @@
 					Command="{Binding AddCommand}"/>
 			<Button Content="Browse"
 					Command="{Binding BrowseCommand}"
-					IsEnabled="False"/>
+					IsEnabled="True"/>
 			<Button Content="Create"
 					IsEnabled="False"
 					Command="{Binding CreateCommand}"/>

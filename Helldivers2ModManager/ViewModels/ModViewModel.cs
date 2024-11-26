@@ -33,26 +33,35 @@ namespace Helldivers2ModManager.ViewModels
 			}
 		}
 
+		private static readonly BitmapImage s_image;
 		private readonly ModData _mod;
 		[ObservableProperty]
 		private bool _enabled;
+
+		static ModViewModel()
+		{
+			s_image = new BitmapImage();
+			s_image.BeginInit();
+			s_image.UriSource = new Uri(@"..\Resources\Images\logo_icon.png", UriKind.Relative);
+			s_image.EndInit();
+		}
 
 		public ModViewModel(ModData mod)
 		{
 			_mod = mod;
 			_enabled = false;
 
-			var bmp = new BitmapImage();
-			bmp.BeginInit();
 			if (_mod.Manifest.IconPath is string path)
 			{
+				var bmp = new BitmapImage();
+				bmp.BeginInit();
 				bmp.UriSource = new Uri(Path.Combine(_mod.Directory.FullName, path));
 				bmp.CacheOption = BitmapCacheOption.OnLoad;
+				bmp.EndInit();
+				Icon = bmp;
 			}
 			else
-				bmp.UriSource = new Uri(@"..\Resources\Images\logo_icon.png", UriKind.Relative);
-			bmp.EndInit();
-			Icon = bmp;
+				Icon = s_image;
 		}
 	}
 }

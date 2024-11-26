@@ -1,8 +1,7 @@
-﻿using System.IO;
-using System.Text.Json;
+﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.Logging;
-using System.Windows.Controls;
+using System.IO;
+using System.Text.Json;
 
 namespace Helldivers2ModManager.Stores;
 
@@ -17,6 +16,8 @@ internal sealed class SettingsStore
 	public LogLevel LogLevel { get; set; }
 
 	public float Opacity { get; set; }
+
+	public bool SkipPatch0 { get; set; }
 
 	public event EventHandler? SettingsChanged;
 
@@ -51,6 +52,8 @@ internal sealed class SettingsStore
 						LogLevel = (LogLevel)prop.GetInt32();
 					if (root.TryGetProperty(nameof(Opacity), out prop))
 						Opacity = prop.GetSingle();
+					if (root.TryGetProperty(nameof(SkipPatch0), out prop))
+						SkipPatch0 = prop.GetBoolean();
 				}
 			}
 			catch(JsonException)
@@ -66,6 +69,7 @@ internal sealed class SettingsStore
 		StorageDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Helldivers2ModManager");
 		LogLevel = LogLevel.Warning;
 		Opacity = 0.8f;
+		SkipPatch0 = false;
 	}
 
 	public void Save()
@@ -80,6 +84,7 @@ internal sealed class SettingsStore
 		writer.WriteString(nameof(StorageDirectory), StorageDirectory);
 		writer.WriteNumber(nameof(LogLevel), (int)LogLevel);
 		writer.WriteNumber(nameof(Opacity), Opacity);
+		writer.WriteBoolean(nameof(SkipPatch0), SkipPatch0);
 
 		writer.WriteEndObject();
 		

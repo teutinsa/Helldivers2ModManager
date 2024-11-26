@@ -1,0 +1,120 @@
+﻿<Page x:Class="Helldivers2ModManager.Views.BrowsePageView"
+	  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+	  xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+	  xmlns:local="clr-namespace:Helldivers2ModManager.Views"
+	  xmlns:vms="clr-namespace:Helldivers2ModManager.ViewModels"
+	  mc:Ignorable="d"
+	  d:DataContext="{d:DesignInstance vms:BrowsePageViewModel}"
+	  d:Background="Black"
+	  d:DesignWidth="800"
+	  d:DesignHeight="600"
+	  Title="{Binding Title}">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+		<TextBlock Text="Browse"
+				   FontSize="48"
+				   Foreground="White"
+				   HorizontalAlignment="Center"/>
+		<Grid Grid.Row="1"
+			  Visibility="{Binding LoginVisibility}">
+			<Button Content="Login to Nexus"
+					Command="{Binding LoginCommand}"
+					VerticalAlignment="Center"
+					HorizontalAlignment="Center"/>
+		</Grid>
+		<Grid Grid.Row="1"
+			  Visibility="{Binding ProgressVisibility}">
+			<ProgressBar IsIndeterminate="True"
+						 Height="30"
+						 Width="200"
+						 BorderThickness="3"
+						 BorderBrush="DarkGray"
+						 Background="Black"
+						 Foreground="Yellow"/>
+		</Grid>
+		<ScrollViewer Grid.Row="1"
+					  Visibility="{Binding ModsVisibility}"
+					  VerticalScrollBarVisibility="Visible"
+					  HorizontalScrollBarVisibility="Disabled">
+			<ItemsControl ItemsSource="{Binding Mods}">
+				<ItemsControl.ItemTemplate>
+					<DataTemplate DataType="vms:NexusModViewModel">
+						<Border Background="Black"
+								BorderBrush="DarkGray"
+								BorderThickness="1"
+								Width="250"
+								Height="300"
+								Margin="3"
+								Padding="3">
+							<Grid>
+								<Grid.RowDefinitions>
+									<RowDefinition Height="100"/>
+									<RowDefinition Height="Auto"/>
+									<RowDefinition Height="Auto"/>
+									<RowDefinition Height="*"/>
+									<RowDefinition Height="Auto"/>
+								</Grid.RowDefinitions>
+								<Image Grid.Row="0"
+									   Source="{Binding Picture}"
+									   Height="100"
+									   Margin="0 0 0 3"
+									   Stretch="Uniform"/>
+								<TextBlock Grid.Row="1"
+										   Text="{Binding Name}"
+										   FontSize="16"
+										   FontFamily="../Resources/Fonts/#FS Sinclair Medium"
+										   Foreground="White"
+										   TextWrapping="Wrap"/>
+								<Grid Grid.Row="2">
+									<TextBlock Text="{Binding Author}"
+											   FontSize="12"
+											   Foreground="Yellow"
+											   HorizontalAlignment="Left"
+											   FontFamily="../Resources/Fonts/#FS Sinclair Regular"/>
+									<TextBlock Text="{Binding Version}"
+											   FontSize="12"
+											   Foreground="Gray"
+											   HorizontalAlignment="Right"/>
+								</Grid>
+								<TextBlock Grid.Row="3"
+										   Text="{Binding Summary}"
+										   FontSize="14"
+										   FontFamily="Sanserif"
+										   Foreground="DarkGray"
+										   VerticalAlignment="Stretch"
+										   TextWrapping="Wrap"
+										   TextTrimming="WordEllipsis"
+										   Margin="0 3 0 0"/>
+								<Button Grid.Row="4"
+										HorizontalAlignment="Right"
+										VerticalAlignment="Bottom"
+										Padding="6 3"
+										Command="{Binding DownloadCommand}">
+									<Image Source="../Resources/Images/download.png"
+										   Width="30"
+										   Height="30"/>
+								</Button>
+							</Grid>
+						</Border>
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+				<ItemsControl.ItemsPanel>
+					<ItemsPanelTemplate>
+						<WrapPanel/>
+					</ItemsPanelTemplate>
+				</ItemsControl.ItemsPanel>
+			</ItemsControl>
+		</ScrollViewer>
+		<Grid Grid.Row="2">
+			<Button Content="Back"
+					Command="{Binding BackCommand}"
+					HorizontalAlignment="Right"/>
+		</Grid>
+	</Grid>
+</Page>

@@ -33,6 +33,9 @@
 		<DataTemplate DataType="{x:Type vms:HelpPageViewModel}">
 			<views:HelpPageView/>
 		</DataTemplate>
+		<DataTemplate DataType="{x:Type vms:BrowsePageViewModel}">
+			<views:BrowsePageView/>
+		</DataTemplate>
 	</Window.Resources>
 	
 	<Window.Style>
@@ -57,7 +60,6 @@
 								</Grid.RowDefinitions>
 								<Grid Grid.Row="0">
 									<Grid.ColumnDefinitions>
-										<ColumnDefinition Width="Auto"/>
 										<ColumnDefinition Width="*"/>
 										<ColumnDefinition Width="Auto"/>
 									</Grid.ColumnDefinitions>
@@ -70,10 +72,12 @@
 												   Foreground="White"/>
 										<TextBlock Text="{Binding Version}"
 												   FontSize="20"
-												   Foreground="White"
-												   Margin="5"/>
+												   FontFamily="../Resources/Fonts/#FS Sinclair Regular"
+												   Foreground="WhiteSmoke"
+												   Margin="5"
+												   TextTrimming="CharacterEllipsis"/>
 									</StackPanel>
-									<StackPanel Grid.Column="2"
+									<StackPanel Grid.Column="1"
 												Orientation="Horizontal"
 												VerticalAlignment="Top"
 												HorizontalAlignment="Right">

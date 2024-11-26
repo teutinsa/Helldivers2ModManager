@@ -74,6 +74,17 @@ internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewMode
 		}
 	}
 
+	public bool SkipPatch0
+	{
+		get => _settingsStore.SkipPatch0;
+		set
+		{
+			OnPropertyChanging();
+			_settingsStore.SkipPatch0 = value;
+			OnPropertyChanged();
+		}
+	}
+
 	private readonly ILogger<SettingsPageViewModel> _logger = logger;
 	private readonly NavigationStore _navStore = navStore;
 	private readonly SettingsStore _settingsStore = settingsStore;
