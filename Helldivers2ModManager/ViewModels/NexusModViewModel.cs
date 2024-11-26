@@ -28,14 +28,11 @@ internal sealed partial class NexusModViewModel : ObservableObject
 			{
 				trimmedVersion += ".0";
 			}
-			try
-			{
-				return new Version(trimmedVersion).ToString();
-			}
-			catch
+			if (dotCount > 4)
 			{
 				return trimmedVersion;
 			}
+			return new Version(trimmedVersion).ToString();
         }
 	}
 
