@@ -48,40 +48,65 @@
 						<Border Background="Black"
 								BorderBrush="DarkGray"
 								BorderThickness="1"
-								Width="250"
+								Width="300"
 								Height="300"
 								Margin="3"
 								Padding="3">
 							<Grid>
 								<Grid.RowDefinitions>
-									<RowDefinition Height="100"/>
+									<RowDefinition Height="160"/>
 									<RowDefinition Height="Auto"/>
-									<RowDefinition Height="Auto"/>
-									<RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
 									<RowDefinition Height="Auto"/>
 								</Grid.RowDefinitions>
 								<Image Grid.Row="0"
 									   Source="{Binding Picture}"
-									   Height="100"
 									   Margin="0 0 0 3"
 									   Stretch="Uniform"/>
-								<TextBlock Grid.Row="1"
-										   Text="{Binding Name}"
-										   FontSize="16"
-										   FontFamily="../Resources/Fonts/#FS Sinclair Medium"
-										   Foreground="White"
-										   TextWrapping="Wrap"/>
-								<Grid Grid.Row="2">
-									<TextBlock Text="{Binding Author}"
-											   FontSize="12"
-											   Foreground="Yellow"
-											   HorizontalAlignment="Left"
-											   FontFamily="../Resources/Fonts/#FS Sinclair Regular"/>
-									<TextBlock Text="{Binding Version}"
-											   FontSize="12"
-											   Foreground="Gray"
-											   HorizontalAlignment="Right"/>
-								</Grid>
+                                <Grid Grid.Row="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="5"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0"
+										Text="{Binding Name}"
+										FontSize="16"
+										FontFamily="../Resources/Fonts/#FS Sinclair Medium"
+										Foreground="White"
+										TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="2"
+                                        Text="{Binding Version}"
+										FontSize="12"
+										Foreground="Gray"
+										HorizontalAlignment="Right"/>
+                                </Grid>
+                                <StackPanel Grid.Row="2" Orientation="Horizontal">
+                                    <TextBlock Text="Author:"
+                                        FontSize="12"
+										Foreground="Gray"
+										HorizontalAlignment="Left"
+										FontFamily="../Resources/Fonts/#FS Sinclair Regular"/>
+                                    <TextBlock Text="{Binding Author}"
+										FontSize="12"
+                                        Margin="5 0 0 0"
+										Foreground="White"
+										HorizontalAlignment="Left"
+										FontFamily="../Resources/Fonts/#FS Sinclair Regular"/>
+                                    <TextBlock Text="|  Uploader:"
+										FontSize="12"
+                                        Margin="7 0 0 0"
+										Foreground="Gray"
+										HorizontalAlignment="Left"
+										FontFamily="../Resources/Fonts/#FS Sinclair Regular"/>
+                                    <TextBlock Text="{Binding Uploader}"
+										Margin="5 0 0 0"
+										FontSize="12"
+										Foreground="Yellow"
+										HorizontalAlignment="Left"
+										FontFamily="../Resources/Fonts/#FS Sinclair Regular"/>
+                                </StackPanel>
 								<TextBlock Grid.Row="3"
 										   Text="{Binding Summary}"
 										   FontSize="14"
@@ -106,7 +131,7 @@
 				</ItemsControl.ItemTemplate>
 				<ItemsControl.ItemsPanel>
 					<ItemsPanelTemplate>
-						<WrapPanel/>
+						<WrapPanel HorizontalAlignment="Center"/>
 					</ItemsPanelTemplate>
 				</ItemsControl.ItemsPanel>
 			</ItemsControl>

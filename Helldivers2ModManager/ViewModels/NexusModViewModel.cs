@@ -16,8 +16,28 @@ internal sealed partial class NexusModViewModel : ObservableObject
 	public string Summary => _mod.Summary;
 
 	public string Author => _mod.Author;
+	public string Uploader => _mod.Uploader;
 
-	public string Version => _mod.Version;
+	public string Version
+	{
+		get
+		{
+			var trimmedVersion = _mod.Version.TrimStart('V', 'v');
+			var dotCount = trimmedVersion.Count(c => c == '.');
+			for ( var i = dotCount; i < 3; i++)
+			{
+				trimmedVersion += ".0";
+			}
+			try
+			{
+				return new Version(trimmedVersion).ToString();
+			}
+			catch
+			{
+				return trimmedVersion;
+			}
+        }
+	}
 
 
 	private static readonly BitmapImage s_image;

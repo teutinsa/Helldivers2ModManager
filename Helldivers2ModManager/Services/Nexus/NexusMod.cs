@@ -62,8 +62,16 @@ internal sealed class NexusMod
 			return _author;
 		}
 	}
+    public string Uploader
+    {
+        get
+        {
+            _uploader ??= _document.RootElement.GetProperty("uploaded_by").GetString() ?? throw new Exception();
+            return _uploader;
+        }
+    }
 
-	private readonly JsonDocument _document;
+    private readonly JsonDocument _document;
 	private bool? _available;
 	private string? _name;
 	private string? _summary;
@@ -71,8 +79,10 @@ internal sealed class NexusMod
 	private int? _modId;
 	private string? _version;
 	private string? _author;
+	private string? _uploader;
 
-	private NexusMod(JsonDocument document)
+
+    private NexusMod(JsonDocument document)
 	{
 		_document = document;
 		_prictureUrl = new(() =>
