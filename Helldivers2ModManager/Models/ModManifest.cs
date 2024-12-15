@@ -1,43 +1,42 @@
-﻿using System.IO;
-using System.Text.Json;
+﻿namespace Helldivers2ModManager.Models;
 
-namespace Helldivers2ModManager.Models
+internal sealed class ModManifest(object inner)
 {
-	internal sealed class ModManifest
+	public enum ManifestVersion
 	{
-		public required Guid Guid { get; init; }
-
-		public required string Name { get; init; }
-
-		public required string Description { get; init; }
-
-		public string? IconPath { get; init; }
-
-		public IReadOnlyList<string>? Options { get; init; }
-
-		private static readonly JsonSerializerOptions s_options;
-
-		static ModManifest()
-		{
-			s_options = new()
-			{
-				WriteIndented = true,
-				AllowTrailingCommas = true,
-				ReadCommentHandling = JsonCommentHandling.Skip,
-			};
-			s_options.Converters.Add(new ModManifestJsonConverter());
-		}
-
-		public static ModManifest? Deserialize(FileInfo file)
-		{
-			using var stream = file.OpenRead();
-			return JsonSerializer.Deserialize<ModManifest>(stream, s_options);
-		}
-
-		public void Serialize(FileInfo file)
-		{
-			using var stream = file.OpenWrite();
-			JsonSerializer.Serialize(stream, this, s_options);
-		}
+		Unknown,
+		Legacy,
+		V1
 	}
+
+	public object Inner => _inner;
+
+	public ManifestVersion Version => _inner switch
+	{
+		ModManifestLegacy _ => ManifestVersion.Legacy,
+		ModManifestV1 _ => ManifestVersion.V1,
+		_ => ManifestVersion.Unknown
+	};
+
+	public ModManifestLegacy Legacy => _inner as ModManifestLegacy ?? throw new InvalidOperationException($"Inner is not of type `{typeof(ModManifestLegacy)}`");
+
+	public ModManifestV1 V1 => _inner as ModManifestV1 ?? throw new InvalidOperationException($"Inner is not of type `{typeof(ModManifestV1)}`");
+
+	public Guid Guid => Version switch
+	{
+		ManifestVersion.Legacy => Legacy.Guid,
+		ManifestVersion.V1 => V1.Guid,
+		ManifestVersion.Unknown => throw new NotSupportedException(),
+		_ => throw new NotImplementedException()
+	};
+
+	public string Name => Version switch
+	{
+		ManifestVersion.Legacy => Legacy.Name,
+		ManifestVersion.V1 => V1.Name,
+		ManifestVersion.Unknown => throw new NotSupportedException(),
+		_ => throw new NotImplementedException()
+	};
+
+	private readonly object _inner = inner;
 }

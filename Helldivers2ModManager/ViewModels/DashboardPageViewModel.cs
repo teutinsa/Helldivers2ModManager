@@ -64,7 +64,6 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	private readonly Lazy<NavigationStore> _navStore;
 	private readonly ModStore _modStore;
 	private readonly SettingsStore _settingsStore;
-	private ModViewModel? _draggedItem;
 
 	static DashboardPageViewModel()
 	{
@@ -208,7 +207,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 
 		try
 		{
-			await _modStore.DeployAsync(guids);
+			await Task.Run(() => _modStore.DeployAsync(guids));
 
 			var enabledFile = new FileInfo(Path.Combine(_settingsStore.StorageDirectory, "enabled.json"));
 			var list = Mods.Select(static m => new ListTuple(m.Guid, m.Enabled, m.SelectedOption)).ToArray();

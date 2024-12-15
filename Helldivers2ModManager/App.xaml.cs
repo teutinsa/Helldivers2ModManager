@@ -1,6 +1,7 @@
 ﻿// Ignore Spelling: App
 
 using Helldivers2ModManager.Services;
+using Helldivers2ModManager.Services.Manifest;
 using Helldivers2ModManager.Stores;
 using Helldivers2ModManager.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,9 +23,11 @@ internal partial class App : Application
 
 	public App()
 	{
+#if !DEBUG
 		AppDomain.CurrentDomain.UnhandledException += (_, e) => LogUnhandledException(e.ExceptionObject as Exception);
 		Current.DispatcherUnhandledException += (_, e) => LogUnhandledException(e.Exception);
 		TaskScheduler.UnobservedTaskException += (_, e) => LogUnhandledException(e.Exception);
+#endif
 
 		HostApplicationBuilder builder = new();
 
@@ -56,6 +59,11 @@ internal partial class App : Application
 	private static void AddServices(IServiceCollection services)
 	{
 		services.AddTransient<NexusService>();
+		services.AddTransient<ModManifestLegacyService>();
+		services.AddTransient<ModManifestV1Service>();
+
+		//TODO: Update this line to the appropriate manifest version!
+		services.AddTransient<IModManifestService, ModManifestLegacyService>();
 	}
 
 	private static void AddStores(IServiceCollection services)

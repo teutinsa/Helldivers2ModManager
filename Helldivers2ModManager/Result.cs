@@ -1,13 +1,48 @@
-﻿namespace Helldivers2ModManager;
+﻿using System.Runtime.InteropServices;
 
-internal readonly ref struct Result<TOk, TErr>
+namespace Helldivers2ModManager;
+
+internal readonly ref struct Result<TErr>
 {
-	private enum ResultKind
+	public TErr Err
 	{
-		Err,
-		Ok
+		get
+		{
+			if (_isOk)
+				throw new InvalidOperationException("Can not retrieve 'Err' value as the result does not contain an error.");
+			return _err;
+		}
 	}
 
+	public bool IsOk => _isOk;
+
+	public bool IsErr => !_isOk;
+
+	private readonly bool _isOk;
+	private readonly TErr _err;
+
+	public Result()
+	{
+		_isOk = true;
+		_err = default!;
+	}
+
+	public Result(TErr err)
+	{
+		_isOk = true;
+		_err = err;
+	}
+
+
+	public static implicit operator Result<TErr>(TErr err)
+	{
+		return new Result<TErr>(err);
+	}
+}
+
+[StructLayout(LayoutKind.Explicit)]
+internal readonly ref struct Result<TOk, TErr>
+{
 	public TOk Ok
 	{
 		get
@@ -32,8 +67,11 @@ internal readonly ref struct Result<TOk, TErr>
 
 	public bool IsErr => !_isOk;
 
+	[FieldOffset(0)]
 	private readonly bool _isOk;
+	[FieldOffset(sizeof(bool))]
 	private readonly TOk _ok;
+	[FieldOffset(sizeof(bool))]
 	private readonly TErr _err;
 
 	public Result(TOk ok)
