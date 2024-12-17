@@ -1,6 +1,6 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://raw.githubusercontent.com/teutinsa/Helldivers2ModManager/refs/heads/master/mod_manifest_v1-schema.md",
+	"$id": "https://raw.githubusercontent.com/teutinsa/Helldivers2ModManager/refs/heads/master/mod_manifest_v1-schema.json",
 	"title": "Mod Manifest v1",
 	"description": "A manifest for mods used in the Helldivers 2 Mod manager",
 	"type": "object",
