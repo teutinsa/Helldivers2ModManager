@@ -13,9 +13,11 @@ namespace Helldivers2ModManager;
 
 internal partial class App : Application
 {
+	public static readonly Version Version = new(1, 2, 0, 0);
+
+	public static readonly string VersionAddition = "Preview";
+
 	public static new App Current => (App)Application.Current;
-	
-	public static Version Version { get; } = new Version(1, 1, 0, 0);
 
 	public IHost Host { get; }
 

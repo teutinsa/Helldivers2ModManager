@@ -13,7 +13,7 @@ internal sealed partial class MainViewModel : ObservableObject
 
 	public Brush Background => _background;
 
-	public string Version => App.Version.ToString();
+	public string Version => string.IsNullOrEmpty(App.VersionAddition) ? $"v{App.Version}" : $"v{App.Version} {App.VersionAddition}";
 
 	private readonly NavigationStore _navigationStore;
 	private readonly SettingsStore _settingsStore;
