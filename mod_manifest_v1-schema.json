@@ -126,15 +126,13 @@
 				"null"
 			],
 			"properties": {
-				"properties": {
-					"ModId": {
-						"description": "The ID given to your mod by Nexus.",
-						"type": "integer"
-					},
-					"Version": {
-						"description": "The version of the mod for this manifest.",
-						"type": "string"
-					}
+				"ModId": {
+					"description": "The ID given to your mod by Nexus.",
+					"type": "integer"
+				},
+				"Version": {
+					"description": "The version of the mod for this manifest.",
+					"type": "string"
 				}
 			},
 			"required": [
