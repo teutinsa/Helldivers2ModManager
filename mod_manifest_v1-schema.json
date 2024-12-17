@@ -44,12 +44,19 @@
 						"description": "The name of the option.",
 						"type": "string"
 					},
-					"Path": {
-						"description": "The path to the root of the options folder.",
+					"Description": {
+						"description": "The description of the option.",
 						"type": "string"
 					},
+					"Image": {
+						"description": "Path to an image to associate with this option.",
+						"type": [
+							"string",
+							"null"
+						]
+					},
 					"Include": {
-						"description": "Array of paths to folders to always include in this option.",
+						"description": "Array of paths to folders to always include in this option. (Paths are relative to mod root)",
 						"type": [
 							"array",
 							"null"
@@ -67,7 +74,38 @@
 							"null"
 						],
 						"items": {
-							"type": "string"
+							"type": "object",
+							"properties": {
+								"Name": {
+									"description": "The name of the sub-option.",
+									"type": "string"
+								},
+								"Description": {
+									"description": "The description of the sub-option.",
+									"type": "string"
+								},
+								"Image": {
+									"description": "Path to an image to associate with this sub-option.",
+									"type": [
+										"string",
+										"null"
+									]
+								},
+								"Include": {
+									"description": "Array of paths to folders to include in this sub-option. (Paths are relative to mod root)",
+									"type": "array",
+									"items": {
+										"type": "string"
+									},
+									"minItems": 1,
+									"uniqueItems": true
+								}
+							},
+							"required": [
+								"Name",
+								"Description",
+								"Include"
+							]
 						},
 						"minItems": 1,
 						"uniqueItems": true
@@ -75,7 +113,7 @@
 				},
 				"required": [
 					"Name",
-					"Path"
+					"Description"
 				]
 			},
 			"minItems": 1,
