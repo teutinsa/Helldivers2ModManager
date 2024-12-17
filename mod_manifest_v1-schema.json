@@ -118,6 +118,30 @@
 			},
 			"minItems": 1,
 			"uniqueItems": true
+		},
+		"NexusData": {
+			"description": "Data telling the manager that your mod is from Nexus, thus enabling auto updating.",
+			"type": [
+				"object",
+				"null"
+			],
+			"items": {
+				"type": "object",
+				"properties": {
+					"ModId": {
+						"description": "The ID given to your mod by Nexus.",
+						"type": "integer"
+					},
+					"Version": {
+						"description": "The version of the mod for this manifest.",
+						"type": "string"
+					}
+				},
+				"required": [
+					"ModId",
+					"Version"
+				]
+			}
 		}
 	},
 	"required": [
