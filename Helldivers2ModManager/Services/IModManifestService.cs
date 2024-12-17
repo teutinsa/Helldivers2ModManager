@@ -10,7 +10,7 @@ internal interface IModManifestService
 	{
 		AllowTrailingCommas = true,
 		CommentHandling = JsonCommentHandling.Skip,
-		MaxDepth = default
+		MaxDepth = 64
 	};
 
 	Task<object?> FromFileAsync(FileInfo file, CancellationToken cancellationToken = default);

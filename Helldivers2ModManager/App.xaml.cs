@@ -37,6 +37,7 @@ internal partial class App : Application
 		builder.Services.AddLogging(log =>
 		{
 #if DEBUG
+			log.SetMinimumLevel(LogLevel.Trace);
 			log.AddDebug();
 #endif
 			log.AddFile("ModManager");
@@ -61,9 +62,7 @@ internal partial class App : Application
 		services.AddTransient<NexusService>();
 		services.AddTransient<ModManifestLegacyService>();
 		services.AddTransient<ModManifestV1Service>();
-
-		//TODO: Update this line to the appropriate manifest version!
-		services.AddTransient<IModManifestService, ModManifestLegacyService>();
+		services.AddTransient<IModManifestService, ModManifestV1Service>();
 	}
 
 	private static void AddStores(IServiceCollection services)

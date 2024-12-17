@@ -16,7 +16,8 @@
 			Background="Black"
 			VerticalAlignment="Center"
 			HorizontalAlignment="Center"
-			MinWidth="300">
+			MinWidth="300"
+			Margin="100">
 		<Grid>
 			<Grid.RowDefinitions>
 				<RowDefinition Height="Auto"/>
@@ -38,7 +39,8 @@
 					   Foreground="WhiteSmoke"
 					   Margin="3"
 					   FontSize="16"
-					   FontFamily="Sanserif"/>
+					   FontFamily="Sanserif"
+					   TextWrapping="Wrap"/>
 			<Button Grid.Row="2"
 					x:Name="button"
 					Content="OK"

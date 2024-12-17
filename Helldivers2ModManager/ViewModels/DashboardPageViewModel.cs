@@ -1,6 +1,8 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Helldivers2ModManager.Components;
+using Helldivers2ModManager.Models;
 using Helldivers2ModManager.Stores;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -12,6 +14,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Windows;
 
 namespace Helldivers2ModManager.ViewModels;
 
@@ -23,7 +26,29 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		{
 			var doc = JsonDocument.ParseValue(ref reader);
 			var root = doc.RootElement;
-			return new ListTuple(Guid.Parse(root.GetProperty(nameof(ListTuple.Guid)).GetString()!), root.GetProperty(nameof(ListTuple.Enabled)).GetBoolean(), root.GetProperty(nameof(ListTuple.Option)).GetInt32());
+			var guid = Guid.Parse(root.ExpectStringProp(nameof(ListTuple.Guid)));
+			var enabled = root.ExpectBoolean(nameof(ListTuple.Enabled));
+			bool[]? toggled;
+			int[]? seleceted;
+
+			if (root.TryGetProperty("Option", out var _))
+			{
+				toggled = [];
+				seleceted = [root.ExpectInt32Prop("Option")];
+			}
+			else
+			{
+				toggled = root.ExpectBooleanArrayProp(nameof(ListTuple.Toggled));
+				seleceted = root.ExpectIntArrayProp(nameof(ListTuple.Selected));
+			}
+
+			return new ListTuple
+			{
+				Guid = guid,
+				Enabled = enabled,
+				Toggled = toggled,
+				Selected = seleceted
+			};
 		}
 
 		public override void Write(Utf8JsonWriter writer, ListTuple value, JsonSerializerOptions options)
@@ -31,18 +56,27 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			writer.WriteStartObject();
 			writer.WriteString(nameof(ListTuple.Guid), value.Guid.ToString());
 			writer.WriteBoolean(nameof(ListTuple.Enabled), value.Enabled);
-			writer.WriteNumber(nameof(ListTuple.Option), value.Option);
+			writer.WriteStartArray(nameof(ListTuple.Toggled));
+			foreach (var x in value.Toggled)
+				writer.WriteBooleanValue(x);
+			writer.WriteEndArray();
+			writer.WriteStartArray(nameof(ListTuple.Selected));
+			foreach (var x in value.Selected)
+				writer.WriteNumberValue(x);
+			writer.WriteEndArray();
 			writer.WriteEndObject();
 		}
 	}
 
-	private readonly struct ListTuple(Guid guid, bool enabled, int option)
+	private readonly struct ListTuple
 	{
-		public Guid Guid { get; } = guid;
+		public required Guid Guid { get; init; }
 
-		public bool Enabled { get; } = enabled;
+		public required bool Enabled { get; init; }
 
-		public int Option { get; } = option;
+		public required bool[] Toggled { get; init; }
+
+		public required int[] Selected { get; init; }
 	}
 
 	public override string Title => "Mods";
@@ -64,6 +98,10 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	private readonly Lazy<NavigationStore> _navStore;
 	private readonly ModStore _modStore;
 	private readonly SettingsStore _settingsStore;
+	[ObservableProperty]
+	private Visibility _editVisibility = Visibility.Hidden;
+	[ObservableProperty]
+	private ModViewModel? _editMod;
 
 	static DashboardPageViewModel()
 	{
@@ -104,7 +142,21 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 				_logger.LogWarning("Mod {} not found, skipping", item.Guid);
 				continue;
 			}
-			Mods.Add(new ModViewModel(mod) { Enabled = item.Enabled, SelectedOption = item.Option });
+			switch (mod.Manifest.Version)
+			{
+				case ModManifest.ManifestVersion.Legacy:
+					Mods.Add(new ModViewModel(mod) { Enabled = item.Enabled, LegacySelectedOption = item.Selected[0] });
+					break;
+
+				case ModManifest.ManifestVersion.V1:
+					{
+						var vm = new ModViewModel(mod) { Enabled = item.Enabled };
+						Array.Copy(item.Toggled, vm.Data.EnabledOptions, Math.Min(vm.Data.EnabledOptions.Length, item.Toggled.Length));
+						Array.Copy(item.Selected, vm.Data.SelectedOptions, Math.Min(vm.Data.SelectedOptions.Length, item.Selected.Length));
+						Mods.Add(vm);
+					}
+					break;
+			}
 		}
 		_modStore.Mods.Where(m => !list.Where(itm => itm.Guid == m.Manifest.Guid).Any()).ToArray().ForEach(m => Mods.Add(new ModViewModel(m)));
 
@@ -210,7 +262,24 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			await Task.Run(() => _modStore.DeployAsync(guids));
 
 			var enabledFile = new FileInfo(Path.Combine(_settingsStore.StorageDirectory, "enabled.json"));
-			var list = Mods.Select(static m => new ListTuple(m.Guid, m.Enabled, m.SelectedOption)).ToArray();
+			var list = Mods.Select(static m => m.Data.Manifest.Version switch
+			{
+				ModManifest.ManifestVersion.Legacy => new ListTuple
+				{
+					Guid = m.Guid,
+					Enabled = m.Enabled,
+					Toggled = [],
+					Selected = [m.LegacySelectedOption]
+				},
+				ModManifest.ManifestVersion.V1 => new ListTuple
+				{
+					Guid = m.Guid,
+					Enabled = m.Enabled,
+					Toggled = m.Data.EnabledOptions,
+					Selected = m.Data.SelectedOptions
+				},
+				_ => throw new InvalidOperationException()
+			}).ToArray();
 			using var stream = enabledFile.Open(FileMode.Create, FileAccess.Write, FileShare.None);
 			await JsonSerializer.SerializeAsync(stream, list, s_jsonOptions);
 
@@ -274,5 +343,19 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	void Discord()
 	{
 		Process.Start(s_discordStartInfo);
+	}
+
+	[RelayCommand]
+	void Edit(ModViewModel vm)
+	{
+		EditMod = vm;
+		EditVisibility = Visibility.Visible;
+	}
+
+	[RelayCommand]
+	void EditDone()
+	{
+		EditVisibility = Visibility.Hidden;
+		EditMod = null;
 	}
 }

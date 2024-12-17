@@ -38,5 +38,20 @@ internal sealed class ModManifest(object inner)
 		_ => throw new NotImplementedException()
 	};
 
+	public string Description => Version switch
+	{
+		ManifestVersion.Legacy => Legacy.Description,
+		ManifestVersion.V1 => V1.Description,
+		ManifestVersion.Unknown => throw new NotSupportedException(),
+		_ => throw new NotImplementedException()
+	};
+
+	public string? IconPath => Version switch
+	{
+		ManifestVersion.Legacy => Legacy.IconPath,
+		ManifestVersion.V1 => V1.IconPath,
+		_ => null
+	};
+
 	private readonly object _inner = inner;
 }

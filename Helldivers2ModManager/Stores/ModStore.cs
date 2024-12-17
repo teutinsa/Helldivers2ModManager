@@ -55,7 +55,7 @@ internal sealed partial class ModStore
 				tasks[i] = Task.Run(async () => await _manifestService.FromFileAsync(file));
 			}
 
-			var manifests = Task.WhenAll(tasks).Result;
+			var manifests = Task.WhenAll(tasks).GetAwaiter().GetResult();
 			_mods = new(manifests.Length);
 
 			for (int i = 0; i < manifests.Length; i++)
@@ -70,39 +70,6 @@ internal sealed partial class ModStore
 					_logger.LogWarning("Skipping \"{}\"", dir.Name);
 				}
 			}
-
-			/*
-			// Old version
-			foreach (var dir in modDir.GetDirectories())
-			{
-				var manifestFile = dir.GetFiles("manifest.json").FirstOrDefault();
-				if (manifestFile is null)
-				{
-					_logger.LogWarning("No manifest found in \"{}\"", dir.FullName);
-					_logger.LogWarning("Skipping \"{}\"", dir.Name);
-					continue;
-				}
-
-				try
-				{
-					var manifest = _manifestService.FromFileAsync(manifestFile).Result;
-					if (manifest is null)
-					{
-						_logger.LogWarning("Unable to parse manifest \"{}\"", manifestFile.FullName);
-						_logger.LogWarning("Skipping \"{}\"", dir.Name);
-						continue;
-					}
-
-					_mods.Add(new ModData(dir, manifest));
-				}
-				catch (JsonException ex)
-				{
-					_logger.LogWarning(ex, "An Exception occurred while parsing manifest \"{}\"", manifestFile.FullName);
-					_logger.LogWarning("Skipping \"{}\"", dir.Name);
-					continue;
-				}
-			}
-			*/
 		}
 		else
 		{
@@ -128,91 +95,6 @@ internal sealed partial class ModStore
 
 		_logger.LogInformation("Extracting archive");
 		await Task.Run(() => ArchiveFactory.Open(file.FullName).ExtractToDirectory(tmpDir.FullName));
-
-		/*
-		var subDirs = tmpDir.GetDirectories();
-		var rootFiles = tmpDir.GetFiles();
-		var dirNames = subDirs.Select(static dir => dir.Name).ToArray();
-
-		_logger.LogInformation("Looking for manifest");
-		ModManifest? manifest;
-		int option = -1;
-		if (rootFiles.Where(static f => f.Name == "manifest.json").FirstOrDefault() is FileInfo manifestFile)
-		{
-			_logger.LogInformation("Deserializing found manifest");
-			manifest = ModManifest.Deserialize(manifestFile);
-			if (manifest is null)
-			{
-				_logger.LogError("Deserialization failed");
-				tmpDir.Delete(true);
-				return false;
-			}
-
-			if (!IsGuidFree(manifest.Guid))
-			{
-				_logger.LogError("Manifest guid {} is already taken", manifest.Guid);
-				tmpDir.Delete(true);
-				return false;
-			}
-
-			if (manifest.Options is not null)
-			{
-				option = 0;
-
-				if (manifest.Options.Count == 0)
-				{
-					_logger.LogError("Options where empty");
-					tmpDir.Delete(true);
-					return false;
-				}
-
-				if (manifest.Options.Distinct().Count() != manifest.Options.Count)
-				{
-					_logger.LogError("Options contain duplicates");
-					tmpDir.Delete(true);
-					return false;
-				}
-
-				var opts = new HashSet<string>(manifest.Options);
-				var dirs = new HashSet<string>(dirNames);
-				if(!opts.IsSubsetOf(dirs))
-				{
-					_logger.LogError("Options and sub-directories mismatch");
-					tmpDir.Delete(true);
-					return false;
-				}
-			}
-		}
-		else
-		{
-			_logger.LogInformation("No manifest found");
-			_logger.LogInformation("Attempting to infer manifest from directory structure");
-
-			string[]? options;
-			if (subDirs.Length > 0)
-			{
-				_logger.LogInformation("Found {} sub-directories that will be added as options", subDirs.Length);
-				options = dirNames;
-				option = 0;
-			}
-			else
-			{
-				_logger.LogInformation("No sub-directories found");
-				options = null;
-			}
-
-			_logger.LogInformation("Writing generate manifest");
-			manifest = new ModManifest
-			{
-				Guid = GetFreeGuid(),
-				Name = file.Name[..^file.Extension.Length],
-				Description = "Locally imported mod",
-				Options = options
-			};
-			var genManifest = new FileInfo(Path.Combine(tmpDir.FullName, "manifest.json"));
-			manifest.Serialize(genManifest);
-		}
-		*/
 
 		var man = await _manifestService.FromDirectoryAsync(tmpDir);
 		
@@ -352,12 +234,28 @@ internal sealed partial class ModStore
 			{
 				case ModManifest.ManifestVersion.Legacy:
 					{
+						_logger.LogInformation("Mod \"{}\" has legacy manifest", mod.Manifest.Name);
+
 						var man = mod.Manifest.Legacy;
+						var enabled = mod.EnabledOptions;
 						var selected = mod.SelectedOptions;
 
 						if (man.Options is not null)
 						{
+							if (selected.Length != man.Options.Count)
+							{
+								_logger.LogError("Option counts are not equal");
+								continue;
+							}
 
+							if (selected is not int[] { Length: 1 })
+							{
+								_logger.LogError("Options have the wrong count");
+								continue;
+							}
+
+							var dir = new DirectoryInfo(Path.Combine(mod.Directory.FullName, man.Options[selected[0]]));
+							AddFilesFromDir(dir);
 						}
 						else
 							AddFilesFromDir(mod.Directory);
@@ -366,13 +264,53 @@ internal sealed partial class ModStore
 
 				case ModManifest.ManifestVersion.V1:
 					{
+						_logger.LogInformation("Mod \"{}\" has V1 manifest", mod.Manifest.Name);
+
 						var man = mod.Manifest.V1;
-						var enabled = mod.EnabedOptions;
+						var enabled = mod.EnabledOptions;
 						var selected = mod.SelectedOptions;
 
 						if (man.Options is not null)
 						{
+							if (enabled.Length != man.Options.Count)
+							{
+								_logger.LogError("Enabled option counts are not equal");
+								continue;
+							}
 
+							if (selected.Length != man.Options.Count)
+							{
+								_logger.LogError("Selected option counts are not equal");
+								continue;
+							}
+
+							_logger.LogInformation("Making include list");
+							for (int i = 0; i < enabled.Length; i++)
+							{
+								if (!enabled[i])
+									continue;
+
+								var opt = man.Options[i];
+
+								if (opt.Include is string[] incs)
+									foreach (var inc in incs)
+									{
+										var dir = new DirectoryInfo(Path.Combine(mod.Directory.FullName, inc));
+										_logger.LogInformation("Adding \"{}\"", dir.FullName);
+										AddFilesFromDir(dir);
+									}
+
+								if (opt.SubOptions is ModSubOption[] subs)
+								{
+									var sub = subs[selected[i]];
+									foreach (var inc in sub.Include)
+									{
+										var dir = new DirectoryInfo(Path.Combine(mod.Directory.FullName, inc));
+										_logger.LogInformation("Adding \"{}\"", dir.FullName);
+										AddFilesFromDir(dir);
+									}
+								}
+							}
 						}
 						else
 							AddFilesFromDir(mod.Directory);
@@ -382,56 +320,6 @@ internal sealed partial class ModStore
 				case ModManifest.ManifestVersion.Unknown:
 					throw new NotSupportedException();
 			}
-
-			/*
-			_logger.LogInformation("Looking for option");
-			DirectoryInfo modDir;
-			if (mod.Option == -1)
-			{
-				modDir = mod.Directory;
-				_logger.LogInformation("No options found using root");
-			}
-			else
-			{
-				modDir = new DirectoryInfo(Path.Combine(mod.Directory.FullName, mod.Manifest.Options![mod.Option]));
-				_logger.LogInformation("Option \"{}\" selected", modDir.Name);
-			}
-
-			var files = modDir.GetFiles().Where(static f => GetPatchFileRegex().IsMatch(f.Name)).ToArray();
-			_logger.LogInformation("Found {} files", files.Length);
-			var names = new HashSet<string>();
-			for (int i = 0; i < files.Length; i++)
-				names.Add(files[i].Name[0..16]);
-			_logger.LogInformation("Grouped into {}", names.Count);
-
-			foreach (var name in names)
-			{
-				var indexes = new HashSet<int>();
-				foreach(var file in files)
-				{
-					var match = GetPatchIndexRegex().Match(file.Name);
-					indexes.Add(int.Parse(match.Groups[1].ValueSpan));
-				}
-				_logger.LogInformation("Found {} different indexes", indexes.Count);
-
-				foreach (var index in indexes)
-				{
-					FileInfo? patchFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_{index}$"));
-					FileInfo? gpuFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_{index}.gpu_resources$"));
-					FileInfo? streamFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_{index}.stream$"));
-
-					if (!groups.ContainsKey(name))
-						groups.Add(name, []);
-					groups[name].Add(new PatchFileTriplet
-					{
-						Patch = patchFile,
-						GpuResources = gpuFile,
-						Stream = streamFile
-					});
-				}
-			}
-			*/
-
 		}
 
 		_logger.LogInformation("Copying files");

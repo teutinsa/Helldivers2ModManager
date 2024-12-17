@@ -118,8 +118,19 @@
 										  Margin="3"
 										  Width="150"
 										  Visibility="{Binding OptionsVisible}"
-										  ItemsSource="{Binding Options}"
-										  SelectedIndex="{Binding SelectedOption}"/>
+										  ItemsSource="{Binding LegacyOptions}"
+										  SelectedIndex="{Binding LegacySelectedOption}"/>
+								<Button Grid.Column="2"
+										Grid.Row="0"
+										Margin="3"
+										Width="50"
+										Foreground="White"
+										Content="Edit"
+										VerticalContentAlignment="Center"
+										Padding="0"
+										Visibility="{Binding EditVisible}"
+										Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Page}}}"
+										CommandParameter="{Binding}"/>
 								<CheckBox Grid.Column="2"
 										  Grid.Row="1"
 										  IsChecked="{Binding Enabled}"
@@ -176,5 +187,135 @@
 				</ItemsControl.ItemsPanel>
 			</ItemsControl>
 		</ScrollViewer>
+		<Border Grid.Row="0"
+				Grid.Column="0"
+				Grid.RowSpan="2"
+				Grid.ColumnSpan="2"
+				Background="#6000"
+				Padding="50 100"
+				Visibility="{Binding EditVisibility}"
+				d:Visibility="Hidden">
+			<Border Background="Black"
+					BorderBrush="DarkGray"
+					BorderThickness="3">
+				<Grid Margin="3">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="*"/>
+						<RowDefinition Height="Auto"/>
+					</Grid.RowDefinitions>
+					<TextBlock Grid.Row="0"
+							   Text="{Binding EditMod.Name}"
+							   Foreground="White"
+							   HorizontalAlignment="Center"
+							   FontSize="24"/>
+					<ScrollViewer Grid.Row="1"
+								  HorizontalScrollBarVisibility="Disabled"
+								  VerticalScrollBarVisibility="Visible">
+						<ItemsControl ItemsSource="{Binding EditMod.Options}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate DataType="vms:ModOptionViewModel">
+									<Border Background="Black"
+											Margin="0 0 0 5">
+										<Grid Margin="3">
+											<Grid.ColumnDefinitions>
+												<ColumnDefinition Width="Auto"/>
+												<ColumnDefinition Width="*"/>
+												<ColumnDefinition Width="Auto"/>
+											</Grid.ColumnDefinitions>
+											<Grid.RowDefinitions>
+												<RowDefinition Height="Auto"/>
+												<RowDefinition Height="Auto"/>
+											</Grid.RowDefinitions>
+											<Image Grid.Column="0"
+												   Grid.Row="0"
+												   Width="120"
+												   Height="120"
+												   Visibility="{Binding ImageVisibility}"
+												   Source="{Binding Image}"
+												   Stretch="Uniform"
+												   Margin="0 0 3 0"/>
+											<StackPanel Grid.Column="1"
+														Grid.Row="0">
+												<TextBlock Text="{Binding Name}"
+														   Foreground="White"
+														   FontSize="18"
+														   VerticalAlignment="Top"/>
+												<TextBlock Text="{Binding Description}"
+														   Foreground="White"
+														   FontFamily="../Resources/Fonts/#FS Sinclair Regular"
+														   FontSize="12"
+														   Margin="3"
+														   VerticalAlignment="Top"/>
+											</StackPanel>
+											<CheckBox Grid.Column="2"
+													  Grid.Row="0"
+													  IsChecked="{Binding Enabled}"
+													  Width="30"
+													  Height="30"
+													  VerticalAlignment="Top"/>
+											<ComboBox Grid.Column="0"
+													  Grid.ColumnSpan="3"
+													  Grid.Row="1"
+													  Visibility="{Binding SubOptionVisibility}"
+													  ItemsSource="{Binding SubOptions}"
+													  SelectedIndex="{Binding SelectedSubOption}"
+													  HorizontalContentAlignment="Stretch"
+													  VerticalContentAlignment="Stretch">
+												<ComboBox.ItemTemplate>
+													<DataTemplate DataType="vms:ModSubOptionViewModel">
+														<Border Background="Black">
+															<Grid>
+																<Grid.ColumnDefinitions>
+																	<ColumnDefinition Width="Auto"/>
+																	<ColumnDefinition Width="*"/>
+																</Grid.ColumnDefinitions>
+																<Image Grid.Column="0"
+																	   Source="{Binding Image}"
+																	   Visibility="{Binding ImageVisibility}"
+																	   Width="100"
+																	   Height="100"
+																	   Margin="0 0 3 0"
+																	   Stretch="Uniform"/>
+																<StackPanel Grid.Column="1">
+																	<TextBlock Text="{Binding Name}"
+																			   Foreground="White"
+																			   FontSize="18"
+																			   VerticalAlignment="Top"
+																			   Margin="0 0 0 3"/>
+																	<TextBlock Text="{Binding Description}"
+																			   Foreground="White"
+																			   FontFamily="../Resources/Fonts/#FS Sinclair Regular"
+																			   FontSize="12"
+																			   VerticalAlignment="Top"/>
+																</StackPanel>
+															</Grid>
+														</Border>
+													</DataTemplate>
+												</ComboBox.ItemTemplate>
+											</ComboBox>
+										</Grid>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+							<ItemsControl.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel/>
+								</ItemsPanelTemplate>
+							</ItemsControl.ItemsPanel>
+						</ItemsControl>
+					</ScrollViewer>
+					<StackPanel Grid.Row="2"
+								Grid.Column="0"
+								Grid.ColumnSpan="3"
+								Orientation="Horizontal"
+								HorizontalAlignment="Right">
+						<Button Content="OK"
+								Padding="10 0"
+								Command="{Binding EditDoneCommand}"/>
+					</StackPanel>
+				</Grid>
+			</Border>
+		</Border>
 	</Grid>
 </Page>

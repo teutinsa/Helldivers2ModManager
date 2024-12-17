@@ -91,7 +91,7 @@ internal sealed class ModManifestLegacyService(ILogger<ModManifestLegacyService>
 			return;
 
 		var man = manifest as ModManifestLegacy ?? throw new SerializationException($"This service can only serialize `{typeof(ModManifestLegacy)}`");
-		var stream = dest.OpenWrite();
+		var stream = dest.Create();
 		var writer = new Utf8JsonWriter(stream);
 
 		try

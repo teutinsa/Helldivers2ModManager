@@ -2,7 +2,7 @@
 
 internal sealed class NexusData
 {
-	public required int ModId { get; init; }
+	public required uint ModId { get; init; }
 
 	public required Version Version { get; init; }
 }
