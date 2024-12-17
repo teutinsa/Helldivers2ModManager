@@ -125,8 +125,7 @@
 				"object",
 				"null"
 			],
-			"items": {
-				"type": "object",
+			"properties": {
 				"properties": {
 					"ModId": {
 						"description": "The ID given to your mod by Nexus.",
@@ -136,12 +135,12 @@
 						"description": "The version of the mod for this manifest.",
 						"type": "string"
 					}
-				},
-				"required": [
-					"ModId",
-					"Version"
-				]
-			}
+				}
+			},
+			"required": [
+				"ModId",
+				"Version"
+			]
 		}
 	},
 	"required": [
