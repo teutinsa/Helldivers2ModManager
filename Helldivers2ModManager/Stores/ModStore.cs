@@ -188,6 +188,10 @@ internal sealed partial class ModStore
 		void AddFilesFromDir(DirectoryInfo dir)
 		{
 			var files = dir.GetFiles().Where(static f => GetPatchFileRegex().IsMatch(f.Name)).ToArray();
+
+			foreach (var file in files)
+				_logger.LogDebug("Adding file \"{}\"", file.FullName);
+
 			var names = new HashSet<string>();
 			for (int i = 0; i < files.Length; i++)
 				names.Add(files[i].Name[0..16]);
@@ -242,12 +246,6 @@ internal sealed partial class ModStore
 
 						if (man.Options is not null)
 						{
-							if (selected.Length != man.Options.Count)
-							{
-								_logger.LogError("Option counts are not equal");
-								continue;
-							}
-
 							if (selected is not int[] { Length: 1 })
 							{
 								_logger.LogError("Options have the wrong count");

@@ -86,7 +86,6 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	private static readonly JsonSerializerOptions s_jsonOptions = new()
 	{
 		AllowTrailingCommas = true,
-		WriteIndented = true,
 		ReadCommentHandling = JsonCommentHandling.Skip
 	};
 	private static readonly ProcessStartInfo s_gameStartInfo = new("steam://run/553850") { UseShellExecute = true };
