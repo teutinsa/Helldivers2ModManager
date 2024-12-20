@@ -69,7 +69,7 @@ Meaning that you're mod is just a couple patch files with no sub folder.
  └── manifest.json
 ```
 ```json
-manifest.json
+//manifest.json
 {
     "Version": 1,
     "Guid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
