@@ -213,6 +213,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			},
 			_ => throw new InvalidOperationException()
 		}).ToArray();
+		enabledFile.Directory?.Create();
 		using var stream = enabledFile.Open(FileMode.Create, FileAccess.Write, FileShare.None);
 		await JsonSerializer.SerializeAsync(stream, list, s_jsonOptions);
 
