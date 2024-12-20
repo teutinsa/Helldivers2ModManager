@@ -11,8 +11,8 @@
 		<Platforms>AnyCPU;x64</Platforms>
 		<PlatformTarget>x64</PlatformTarget>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
-		<AssemblyVersion>1.2.0.0</AssemblyVersion>
-		<FileVersion>1.2.0.0</FileVersion>
+		<AssemblyVersion>1.2.0.1</AssemblyVersion>
+		<FileVersion>1.2.0.1</FileVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
