@@ -35,8 +35,8 @@
 		<md:MarkdownScrollViewer Grid.Row="0"
 								 Foreground="White"
 								 MarkdownStyleName="Sasabune"
-								 Source="../Resources/Text/Help.md"
-								 IsHitTestVisible="False"/>
+								 Source="..\Resources\Text\Help.md"
+								 ClickAction="OpenBrowser"/>
 		<Grid Grid.Row="1">
 			<Button Content="Back"
 					Command="{Binding BackCommand}"

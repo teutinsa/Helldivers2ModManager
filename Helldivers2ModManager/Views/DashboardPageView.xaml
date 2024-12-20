@@ -6,6 +6,7 @@
 	  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	  xmlns:dd="urn:gong-wpf-dragdrop"
 	  xmlns:vms="clr-namespace:Helldivers2ModManager.ViewModels"
+	  xmlns:local="clr-namespace:Helldivers2ModManager"
 	  mc:Ignorable="d"
 	  d:DataContext="{d:DesignInstance vms:DashboardPageViewModel}"
 	  d:Background="Black"
@@ -305,7 +306,8 @@
 													  ItemsSource="{Binding SubOptions}"
 													  SelectedIndex="{Binding SelectedSubOption}"
 													  HorizontalContentAlignment="Stretch"
-													  VerticalContentAlignment="Stretch">
+													  VerticalContentAlignment="Stretch"
+													  local:ComboBoxScrollBehavior.DisableScroll="True">
 												<ComboBox.ItemTemplate>
 													<DataTemplate DataType="vms:ModSubOptionViewModel">
 														<Border Background="Black">
