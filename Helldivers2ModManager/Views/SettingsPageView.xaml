@@ -144,18 +144,6 @@
 						   Foreground="White"
 						   Margin="0 10 0 0"
 						   Text="Utilities"/>
-				<Button Grid.Column="1"
-						Content="Hard Purge"
-						Style="{DynamicResource CancelButton}"
-						Command="{Binding HardPurgeCommand}"
-						HorizontalAlignment="Left"/>
-				<TextBlock Grid.Column="0"
-						   FontSize="12"
-						   FontFamily="Sanserif"
-						   Foreground="DarkGray"
-						   Margin="0 0 0 5">
-					This will delete all patch files regardless if the have been installed with this manager or not!
-				</TextBlock>
 				<Button Content="Reset"
 						Style="{DynamicResource CancelButton}"
 						Command="{Binding ResetCommand}"
@@ -167,6 +155,54 @@
 						   Margin="0 0 0 5">
 					This will this will reset all the setting to their default values!
 				</TextBlock>
+				<TextBlock FontSize="24"
+						   Foreground="White"
+						   Margin="0 10 0 0"
+						   Text="Dev Options"
+						   TextDecorations="Underline"/>
+				<TextBlock FontSize="18"
+						   Foreground="White"
+						   Margin="0 5 0 0"
+						   Text="Skip List"/>
+				<TextBlock Grid.Column="0"
+						   FontSize="12"
+						   FontFamily="Sanserif"
+						   Foreground="DarkGray"
+						   Margin="0 0 0 5">
+					This skips the 0th index of all specified files during deployment.
+				</TextBlock>
+				<ListBox Width="300"
+						 MinHeight="50"
+						 ItemsSource="{Binding SkipList}"
+						 HorizontalAlignment="Left"
+						 BorderBrush="LightGray"
+						 BorderThickness="3"
+						 Background="Black"
+						 SelectedIndex="{Binding SelectedSkip}">
+					<ListBox.ItemTemplate>
+						<DataTemplate DataType="{x:Type sys:String}">
+							<TextBlock Text="{Binding}"
+									   Foreground="White"
+									   FontFamily="Consolas"/>
+						</DataTemplate>
+					</ListBox.ItemTemplate>
+				</ListBox>
+				<StackPanel Orientation="Horizontal">
+					<Button Command="{Binding AddSkipCommand}"
+							Margin="0 3 3 3"
+							Padding="10 0">
+						<TextBlock Text="+"
+								   FontSize="24"
+								   FontFamily="../Resources/Fonts/#FS Sinclair Medium"/>
+					</Button>
+					<Button Command="{Binding RemoveSkipCommand}"
+							Margin="0 3 3 3"
+							Padding="10 0">
+						<TextBlock Text="-"
+								   FontSize="24"
+								   FontFamily="../Resources/Fonts/#FS Sinclair Medium"/>
+					</Button>
+				</StackPanel>
 			</StackPanel>
 		</ScrollViewer>
 		<Grid Grid.Row="1">

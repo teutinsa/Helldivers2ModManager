@@ -18,46 +18,56 @@
 			<ColumnDefinition Width="*"/>
 		</Grid.ColumnDefinitions>
 		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="*"/>
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 		<StackPanel Grid.Row="0"
+					Grid.RowSpan="2"
 					Grid.Column="0">
 			<Button Content="Add"
 					Command="{Binding AddCommand}"/>
+			<!--
 			<Button Content="Browse"
-					Command="{Binding BrowseCommand}"
-					IsEnabled="False"/>
+					Command="{Binding BrowseCommand}"/>
 			<Button Content="Create"
-					IsEnabled="False"
 					Command="{Binding CreateCommand}"/>
+			<Button Content="Export"
+					Command="{Binding ExportCommand}"/>
+			<Button Content="Import"
+					Command="{Binding ImportCommand}"/>
+			-->
 			<Button Content="Report Bug"
 					Command="{Binding ReportBugCommand}"/>
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+				<Button Grid.Column="0"
+						Command="{Binding GithubCommand}">
+					<Image Source="..\Resources\Images\github_icon.png"
+						   Height="30"/>
+				</Button>
+				<Button Grid.Column="1"
+						Command="{Binding DiscordCommand}"
+						ToolTip="Need help? Join the community!">
+					<Image Source="..\Resources\Images\discord_icon.png"
+						   Height="30"/>
+				</Button>
+			</Grid>
 		</StackPanel>
-		<Button Grid.Row="1"
+		<Button Grid.Row="2"
 				Grid.Column="0"
 				Content="Settings"
 				Command="{Binding SettingsCommand}"/>
-		<StackPanel Grid.Row="1"
+		<StackPanel Grid.Row="2"
 					Grid.Column="1"
 					Orientation="Horizontal"
 					HorizontalAlignment="Right">
-			<Button Command="{Binding GithubCommand}">
-				<Image Source="..\Resources\Images\github_icon.png"
-					   Height="30"/>
-			</Button>
-			<Button Command="{Binding DiscordCommand}">
-				<Image Source="..\Resources\Images\discord_icon.png"
-					   Height="30"/>
-			</Button>
-			<Button Content="Export"
-					IsEnabled="False"
-					Command="{Binding ExportCommand}"/>
-			<Button Content="Import"
-					IsEnabled="False"
-					Command="{Binding ImportCommand}"/>
 			<Button Content="Run"
-					Command="{Binding RunCommand}"/>
+					Command="{Binding RunCommand}"
+					ToolTip="Runs the game through steam."/>
 			<Button Content="Purge"
 					Style="{DynamicResource CancelButton}"
 					Command="{Binding PurgeCommand}"/>
@@ -65,7 +75,32 @@
 					Style="{DynamicResource ConfirmButton}"
 					Command="{Binding DeployCommand}"/>
 		</StackPanel>
-		<ScrollViewer Grid.Row="0"
+		<Grid Grid.Row="0"
+			  Grid.Column="1">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="Auto"/>
+			</Grid.ColumnDefinitions>
+			<TextBlock Grid.Column="0"
+					   Text="Search:"
+					   Foreground="White"
+					   FontSize="24"
+					   VerticalAlignment="Center"
+					   Margin="3"/>
+			<TextBox Grid.Column="1"
+					 FontFamily="../Resources/Fonts/#FS Sinclair Regular"
+					 FontSize="20"
+					 Margin="3"
+					 Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+			<Button Grid.Column="2"
+					Command="{Binding ClearSearchCommand}">
+				<Path Stroke="White"
+					  StrokeThickness="2"
+					  Data="M5,0 L0,5 L5,10 M0,5 L10,5"/>
+			</Button>
+		</Grid>
+		<ScrollViewer Grid.Row="1"
 					  Grid.Column="1"
 					  Margin="3"
 					  Background="Transparent"
@@ -73,8 +108,8 @@
 					  HorizontalScrollBarVisibility="Disabled"
 					  VerticalScrollBarVisibility="Visible">
 			<ItemsControl ItemsSource="{Binding Mods}"
-						  dd:DragDrop.IsDragSource="True"
-						  dd:DragDrop.IsDropTarget="True">
+						  dd:DragDrop.IsDragSource="{Binding IsSearchEmpty}"
+						  dd:DragDrop.IsDropTarget="{Binding IsSearchEmpty}">
 				<ItemsControl.ItemTemplate>
 					<DataTemplate DataType="vms:ModViewModel">
 						<Border Height="70"
@@ -142,6 +177,7 @@
 											Grid.RowSpan="2"
 											Orientation="Horizontal"
 											HorizontalAlignment="Right">
+									<!--
 									<Grid>
 										<Grid.RowDefinitions>
 											<RowDefinition Height="*"/>
@@ -162,6 +198,7 @@
 												  Data="M0,0 L5,5 L10,0"/>
 										</Button>
 									</Grid>
+									-->
 									<Button Width="{Binding Path=ActualHeight, RelativeSource={RelativeSource Mode=Self}}"
 											Padding="5"
 											VerticalContentAlignment="Stretch"
@@ -326,6 +363,7 @@
 								HorizontalAlignment="Right">
 						<Button Content="OK"
 								Padding="10 0"
+								Style="{DynamicResource PrimaryButton}"
 								Command="{Binding EditDoneCommand}"/>
 					</StackPanel>
 				</Grid>

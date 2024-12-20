@@ -13,7 +13,7 @@ internal sealed class ModData(DirectoryInfo dir, ModManifest manifest)
 	public bool[] EnabledOptions { get; } = manifest.Version switch
 	{
 		ModManifest.ManifestVersion.Legacy => [],
-		ModManifest.ManifestVersion.V1 => new bool[manifest.V1.Options is null ? 0 : manifest.V1.Options.Count],
+		ModManifest.ManifestVersion.V1 => Enumerable.Repeat(true, manifest.V1.Options is null ? 0 : manifest.V1.Options.Count).ToArray(),
 		ModManifest.ManifestVersion.Unknown => throw new NotSupportedException(),
 		_ => throw new NotImplementedException()
 	};

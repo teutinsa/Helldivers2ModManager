@@ -1,8 +1,8 @@
-﻿using System.IO;
-using System.Text.Json;
+﻿using Microsoft.Extensions.Logging;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.Logging;
-using System.Windows.Controls;
+using System.IO;
+using System.Text.Json;
 
 namespace Helldivers2ModManager.Stores;
 
@@ -18,6 +18,8 @@ internal sealed class SettingsStore
 
 	public float Opacity { get; set; }
 
+	public ObservableCollection<string> SkipList { get; set; }
+
 	public event EventHandler? SettingsChanged;
 
 	private static readonly FileInfo s_settingFile = new("settings.json");
@@ -27,7 +29,7 @@ internal sealed class SettingsStore
 		Load();
 	}
 
-	[MemberNotNull(nameof(TempDirectory), nameof(GameDirectory), nameof(StorageDirectory), nameof(LogLevel), nameof(Opacity))]
+	[MemberNotNull(nameof(TempDirectory), nameof(GameDirectory), nameof(StorageDirectory), nameof(LogLevel), nameof(Opacity), nameof(SkipList))]
 	public void Load()
 	{
 		Reset();
@@ -51,6 +53,10 @@ internal sealed class SettingsStore
 						LogLevel = (LogLevel)prop.GetInt32();
 					if (root.TryGetProperty(nameof(Opacity), out prop))
 						Opacity = prop.GetSingle();
+					var arr = root.OptionalStringArrayProp(nameof(SkipList));
+					if (arr is not null)
+						foreach (var str in arr)
+							SkipList.Add(str);
 				}
 			}
 			catch(JsonException)
@@ -58,7 +64,7 @@ internal sealed class SettingsStore
 		}
 	}
 
-	[MemberNotNull(nameof(TempDirectory), nameof(GameDirectory), nameof(StorageDirectory), nameof(LogLevel), nameof(Opacity))]
+	[MemberNotNull(nameof(TempDirectory), nameof(GameDirectory), nameof(StorageDirectory), nameof(LogLevel), nameof(Opacity), nameof(SkipList))]
 	public void Reset()
 	{
 		TempDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Temp", "Helldivers2ModManager");
@@ -66,6 +72,7 @@ internal sealed class SettingsStore
 		StorageDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Helldivers2ModManager");
 		LogLevel = LogLevel.Warning;
 		Opacity = 0.8f;
+		SkipList = [];
 	}
 
 	public void Save()
@@ -80,6 +87,11 @@ internal sealed class SettingsStore
 		writer.WriteString(nameof(StorageDirectory), StorageDirectory);
 		writer.WriteNumber(nameof(LogLevel), (int)LogLevel);
 		writer.WriteNumber(nameof(Opacity), Opacity);
+
+		writer.WriteStartArray(nameof(SkipList));
+		foreach (var item in SkipList)
+			writer.WriteStringValue(item);
+		writer.WriteEndArray();
 
 		writer.WriteEndObject();
 		

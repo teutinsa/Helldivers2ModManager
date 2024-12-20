@@ -102,6 +102,10 @@
 			</Style.Triggers>
 		</Style>
 
+		<Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+			<Setter Property="BorderBrush" Value="Yellow"/>
+		</Style>
+
 		<Style x:Key="ConfirmButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
 			<Setter Property="BorderBrush" Value="#0F6"/>
 			<Style.Triggers>

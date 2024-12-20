@@ -6,7 +6,9 @@
 	  xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
 	  xmlns:local="clr-namespace:Helldivers2ModManager.Views"
 	  xmlns:vms="clr-namespace:Helldivers2ModManager.ViewModels"
-	  mc:Ignorable="d" 
+	  xmlns:cvms="clr-namespace:Helldivers2ModManager.ViewModels.Create"
+	  xmlns:cviews="clr-namespace:Helldivers2ModManager.Views.Create"
+	  mc:Ignorable="d"
 	  d:DataContext="{d:DesignInstance vms:CreatePageViewModel}"
 	  d:Background="Black"
 	  d:DesignWidth="800"
@@ -23,91 +25,31 @@
 				   Foreground="Yellow"
 				   FontSize="24"
 				   HorizontalAlignment="Center"/>
-		<ScrollViewer Grid.Row="1"
-					  VerticalScrollBarVisibility="Auto"
-					  HorizontalScrollBarVisibility="Disabled">
-			<StackPanel Margin="3">
-				<Label Content="Name"
-					   FontSize="16"/>
-				<TextBlock Text="The display name of your mod."
-						   Foreground="Gray"
-						   Margin="0 0 0 3"
-						   FontFamily="Sanserif"/>
-				<TextBox Text="{Binding ModName, UpdateSourceTrigger=PropertyChanged}"
-					     FontSize="16"
-					     Margin="0 0 0 5"/>
-				<Label Content="Description"
-					   FontSize="16"/>
-				<TextBlock Text="A short description of your mod."
-						   Foreground="Gray"
-						   Margin="0 0 0 3"
-						   FontFamily="Sanserif"/>
-				<TextBox Text="{Binding ModDescription, UpdateSourceTrigger=PropertyChanged}"
-					     FontSize="16"
-					     AcceptsReturn="True"
-					     Margin="0 0 0 5"/>
-				<Label Content="Content"
-					   FontSize="16"/>
-				<TextBlock Text="Right click on the elements below to define the structure of your mod."
-						   Foreground="Gray"
-						   Margin="0 0 0 3"
-						   FontFamily="Sanserif"/>
-				<TreeView MinHeight="50"
-						  Margin="0 0 0 5"
-						  ItemsSource="{Binding Content}">
-					<TreeView.ItemTemplate>
-						<DataTemplate DataType="vms:ContentViewModel">
-							<TreeViewItem Header="{Binding Name}"
-										  ToolTip="{Binding ToolTip}"
-										  FontFamily="Sanserif"
-										  ItemsSource="{Binding}">
-								<TreeViewItem.ContextMenu>
-									<ContextMenu>
-										<MenuItem Header="Add Files"
-												  Command="{Binding AddFilesCommand}"/>
-										<MenuItem Header="Add Option"
-												  Command="{Binding AddOptionCommand}"/>
-										<Separator/>
-										<MenuItem Header="Remove"
-												  Command="{Binding RemoveCommand}"/>
-									</ContextMenu>
-								</TreeViewItem.ContextMenu>
-							</TreeViewItem>
-						</DataTemplate>
-					</TreeView.ItemTemplate>
-				</TreeView>
-				<Label Content="Output File"
-					   FontSize="16"/>
-				<TextBlock Foreground="Gray"
-						   Margin="0 0 0 3"
-						   FontFamily="Sanserif">
-					The output file name of your mod.
-					<LineBreak/>
-					(Click "..." to browse)
-				</TextBlock>
-				<Grid>
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*"/>
-						<ColumnDefinition Width="Auto"/>
-					</Grid.ColumnDefinitions>
-					<TextBox Grid.Column="0"
-							 Text="{Binding OutputFile}"
-							 IsReadOnly="True"
-							 VerticalAlignment="Center"
-							 FontSize="16"/>
-					<Button Grid.Column="1"
-							Content="..."
-							Command="{Binding BrowseOutputCommand}"/>
-				</Grid>
-			</StackPanel>
-		</ScrollViewer>
+		<Frame Grid.Row="1"
+			   Content="{Binding CurrentPage}"
+			   NavigationUIVisibility="Hidden">
+			<Frame.Resources>
+				<DataTemplate DataType="{x:Type cvms:IntroPageViewModel}">
+					<cviews:IntroPageView/>
+				</DataTemplate>
+				<DataTemplate DataType="{x:Type cvms:ChoosePageViewModel}">
+					<cviews:ChoosePageView/>
+				</DataTemplate>
+			</Frame.Resources>
+		</Frame>
 		<Grid Grid.Row="2">
 			<Button Content="Cancel"
 					HorizontalAlignment="Left"
 					Command="{Binding CancelCommand}"/>
-			<Button Content="Create"
-					HorizontalAlignment="Right"
-					Command="{Binding CreateCommand}"/>
+			<StackPanel Orientation="Horizontal"
+						HorizontalAlignment="Right">
+				<Button Content="Back"
+						HorizontalAlignment="Right"
+						Command="{Binding BackCommand}"/>
+				<Button Content="Next"
+						HorizontalAlignment="Right"
+						Command="{Binding NextCommand}"/>
+			</StackPanel>
 		</Grid>
 	</Grid>
 </Page>

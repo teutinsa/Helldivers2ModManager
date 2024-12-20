@@ -1,0 +1,22 @@
+﻿<Page x:Class="Helldivers2ModManager.Views.Create.IntroPageView"
+	  x:ClassModifier="internal"
+	  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+	  xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+	  xmlns:local="clr-namespace:Helldivers2ModManager.Views.Create"
+	  mc:Ignorable="d" 
+	  d:DesignHeight="500"
+	  d:DesignWidth="800"
+	  d:Background="Black">
+	<StackPanel Margin="5">
+		<TextBlock Foreground="White"
+				   FontFamily="Sanserif"
+				   FontSize="16"
+				   TextWrapping="Wrap">
+			Welcome to the mod creation wizard.
+			This tool will assist and guide you through the process of creating a mod.
+			Press "Next" to continue.
+		</TextBlock>
+	</StackPanel>
+</Page>

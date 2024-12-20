@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using SharpCompress;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -81,7 +82,9 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 
 	public override string Title => "Mods";
 
-	public ObservableCollection<ModViewModel> Mods { get; }
+	public IReadOnlyList<ModViewModel> Mods { get; private set; }
+
+	public bool IsSearchEmpty => string.IsNullOrEmpty(SearchText);
 
 	private static readonly JsonSerializerOptions s_jsonOptions = new()
 	{
@@ -97,10 +100,13 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	private readonly Lazy<NavigationStore> _navStore;
 	private readonly ModStore _modStore;
 	private readonly SettingsStore _settingsStore;
+	private readonly ObservableCollection<ModViewModel> _mods;
 	[ObservableProperty]
 	private Visibility _editVisibility = Visibility.Hidden;
 	[ObservableProperty]
 	private ModViewModel? _editMod;
+	[ObservableProperty]
+	private string _searchText = string.Empty;
 
 	static DashboardPageViewModel()
 	{
@@ -114,7 +120,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		_navStore = new(_provider.GetRequiredService<NavigationStore>);
 		_modStore = modStore;
 		_settingsStore = settingsStore;
-		Mods = [];
+		_mods = [];
 
 		var enabledFile = new FileInfo(Path.Combine(_settingsStore.StorageDirectory, "enabled.json"));
 		ListTuple[]? list = null;
@@ -144,7 +150,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			switch (mod.Manifest.Version)
 			{
 				case ModManifest.ManifestVersion.Legacy:
-					Mods.Add(new ModViewModel(mod) { Enabled = item.Enabled, LegacySelectedOption = item.Selected[0] });
+					_mods.Add(new ModViewModel(mod) { Enabled = item.Enabled, LegacySelectedOption = item.Selected[0] });
 					break;
 
 				case ModManifest.ManifestVersion.V1:
@@ -152,14 +158,74 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 						var vm = new ModViewModel(mod) { Enabled = item.Enabled };
 						Array.Copy(item.Toggled, vm.Data.EnabledOptions, Math.Min(vm.Data.EnabledOptions.Length, item.Toggled.Length));
 						Array.Copy(item.Selected, vm.Data.SelectedOptions, Math.Min(vm.Data.SelectedOptions.Length, item.Selected.Length));
-						Mods.Add(vm);
+						_mods.Add(vm);
 					}
 					break;
 			}
 		}
-		_modStore.Mods.Where(m => !list.Where(itm => itm.Guid == m.Manifest.Guid).Any()).ToArray().ForEach(m => Mods.Add(new ModViewModel(m)));
+		_modStore.Mods.Where(m => !list.Where(itm => itm.Guid == m.Manifest.Guid).Any()).ToArray().ForEach(m => _mods.Add(new ModViewModel(m)));
 
-		_modStore.ModAdded += (_, e) => Mods.Add(new ModViewModel(e.Mod) { Enabled = true });
+		_modStore.ModAdded += (_, e) =>
+		{
+			_mods.Add(new ModViewModel(e.Mod) { Enabled = true });
+			SearchText = string.Empty;
+		};
+
+		Mods = _mods;
+	}
+
+	protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+	{
+		if (e.PropertyName == nameof(SearchText))
+		{
+			OnPropertyChanged(nameof(IsSearchEmpty));
+			ClearSearchCommand.NotifyCanExecuteChanged();
+			UpdateView();
+		}
+
+		base.OnPropertyChanged(e);
+	}
+
+	private async Task SaveEnabled()
+	{
+		WeakReferenceMessenger.Default.Send(new MessageBoxProgressMessage()
+		{
+			Title = "Saving mod configuration",
+			Message = "Please wait democratically."
+		});
+
+		var enabledFile = new FileInfo(Path.Combine(_settingsStore.StorageDirectory, "enabled.json"));
+		var list = _mods.Select(static m => m.Data.Manifest.Version switch
+		{
+			ModManifest.ManifestVersion.Legacy => new ListTuple
+			{
+				Guid = m.Guid,
+				Enabled = m.Enabled,
+				Toggled = [],
+				Selected = [m.LegacySelectedOption]
+			},
+			ModManifest.ManifestVersion.V1 => new ListTuple
+			{
+				Guid = m.Guid,
+				Enabled = m.Enabled,
+				Toggled = m.Data.EnabledOptions,
+				Selected = m.Data.SelectedOptions
+			},
+			_ => throw new InvalidOperationException()
+		}).ToArray();
+		using var stream = enabledFile.Open(FileMode.Create, FileAccess.Write, FileShare.None);
+		await JsonSerializer.SerializeAsync(stream, list, s_jsonOptions);
+
+		WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
+	}
+
+	private void UpdateView()
+	{
+		if (IsSearchEmpty)
+			Mods = _mods;
+		else
+			Mods = _mods.Where(vm => vm.Name.Contains(SearchText)).ToArray();
+		OnPropertyChanged(nameof(Mods));
 	}
 
 	[RelayCommand(AllowConcurrentExecutions = false)]
@@ -217,9 +283,11 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		Process.Start(s_reportStartInfo);
 	}
 
-	[RelayCommand]
-	void Settings()
+	[RelayCommand(AllowConcurrentExecutions = false)]
+	async Task Settings()
 	{
+		await SaveEnabled();
+		
 		_navStore.Value.Navigate<SettingsPageViewModel>();
 	}
 
@@ -231,7 +299,9 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			Title = "Purging Mods",
 			Message = "Please wait democratically."
 		});
+
 		await _modStore.PurgeAsync();
+
 		WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
 	}
 
@@ -253,34 +323,14 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			Message = "Please wait democratically."
 		});
 
-		var mods = Mods.Where(static vm => vm.Enabled).ToArray();
+		var mods = _mods.Where(static vm => vm.Enabled).ToArray();
 		var guids = mods.Select(static vm => vm.Guid).ToArray();
 
 		try
 		{
 			await Task.Run(() => _modStore.DeployAsync(guids));
 
-			var enabledFile = new FileInfo(Path.Combine(_settingsStore.StorageDirectory, "enabled.json"));
-			var list = Mods.Select(static m => m.Data.Manifest.Version switch
-			{
-				ModManifest.ManifestVersion.Legacy => new ListTuple
-				{
-					Guid = m.Guid,
-					Enabled = m.Enabled,
-					Toggled = [],
-					Selected = [m.LegacySelectedOption]
-				},
-				ModManifest.ManifestVersion.V1 => new ListTuple
-				{
-					Guid = m.Guid,
-					Enabled = m.Enabled,
-					Toggled = m.Data.EnabledOptions,
-					Selected = m.Data.SelectedOptions
-				},
-				_ => throw new InvalidOperationException()
-			}).ToArray();
-			using var stream = enabledFile.Open(FileMode.Create, FileAccess.Write, FileShare.None);
-			await JsonSerializer.SerializeAsync(stream, list, s_jsonOptions);
+			await SaveEnabled();
 
 			WeakReferenceMessenger.Default.Send(new MessageBoxInfoMessage()
 			{
@@ -300,27 +350,27 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	[RelayCommand]
 	void MoveUp(ModViewModel modVm)
 	{
-		var index = Mods.IndexOf(modVm);
+		var index = _mods.IndexOf(modVm);
 		if (index <= 0)
 			return;
-		Mods.Move(index, index - 1);
+		_mods.Move(index, index - 1);
 
 	}
 
 	[RelayCommand]
 	void MoveDown(ModViewModel modVm)
 	{
-		var index = Mods.IndexOf(modVm);
-		if (index >= Mods.Count - 1)
+		var index = _mods.IndexOf(modVm);
+		if (index >= _mods.Count - 1)
 			return;
-		Mods.Move(index, index + 1);
+		_mods.Move(index, index + 1);
 	}
 
 	[RelayCommand]
 	void Remove(ModViewModel modVm)
 	{
 		if (_modStore.Remove(modVm.Data))
-			Mods.Remove(modVm);
+			_mods.Remove(modVm);
 	}
 
 	[RelayCommand]
@@ -356,5 +406,16 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	{
 		EditVisibility = Visibility.Hidden;
 		EditMod = null;
+	}
+
+	bool CanClearSearch()
+	{
+		return !IsSearchEmpty;
+	}
+
+	[RelayCommand(CanExecute = nameof(CanClearSearch))]
+	void ClearSearch()
+	{
+		SearchText = string.Empty;
 	}
 }

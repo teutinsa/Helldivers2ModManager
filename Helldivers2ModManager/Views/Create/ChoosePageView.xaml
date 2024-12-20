@@ -1,0 +1,38 @@
+﻿<Page x:Class="Helldivers2ModManager.Views.Create.ChoosePageView"
+	  x:ClassModifier="internal"
+	  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+	  xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+	  xmlns:local="clr-namespace:Helldivers2ModManager.Views.Create"
+	  xmlns:cvms="clr-namespace:Helldivers2ModManager.ViewModels.Create"
+	  mc:Ignorable="d"
+	  d:DesignHeight="500"
+	  d:DesignWidth="800"
+	  d:Background="Black"
+	  d:DataContext="{x:Type cvms:ChoosePageViewModel}">
+	<StackPanel Margin="5">
+		<TextBlock Foreground="White"
+				   FontFamily="Sanserif"
+				   FontSize="16"
+				   TextWrapping="Wrap"
+				   Margin="0 0 0 5">
+			Lets start with a simple question:
+			<LineBreak/>
+			Will your mod have options to choose from?
+		</TextBlock>
+		<RadioButton GroupName="HasOptions"
+					 Foreground="White"
+					 FontSize="16"
+					 Content="Yes"
+					 IsChecked="{Binding HasOptions}"
+					 Margin="0 0 0 5"
+					 VerticalContentAlignment="Center"/>
+		<RadioButton GroupName="HasOptions"
+					 Foreground="White"
+					 FontSize="16"
+					 Content="No"
+					 IsChecked="{Binding HasNoOptions}"
+					 VerticalContentAlignment="Center"/>
+	</StackPanel>
+</Page>

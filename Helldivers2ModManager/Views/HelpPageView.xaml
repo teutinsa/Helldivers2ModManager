@@ -5,6 +5,7 @@
 	  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
 	  xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
 	  xmlns:local="clr-namespace:Helldivers2ModManager.Views"
+	  xmlns:md="https://github.com/whistyun/MdXaml"
 	  mc:Ignorable="d"
 	  d:DataContext="{d:DesignInstance vms:HelpPageViewModel}"
 	  d:Background="Black"
@@ -31,87 +32,11 @@
 			<RowDefinition Height="*"/>
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
-		<ScrollViewer Grid.Row="0"
-					  VerticalScrollBarVisibility="Auto"
-					  HorizontalScrollBarVisibility="Disabled">
-			<StackPanel Margin="5">
-				<TextBlock Style="{StaticResource Heading}"
-						   FontSize="48"
-						   Text="Help"/>
-				<TextBlock Style="{StaticResource Text}">
-					If you do not want to read you can look at the 
-					<Hyperlink Foreground="Yellow"
-							   NavigateUri="https://www.youtube.com/watch?v=R26Gv-ZiG-k"
-							   RequestNavigate="Hyperlink_RequestNavigate">
-						YouTube tutorial
-					</Hyperlink>
-					made by our good friend of the modding community
-					<Hyperlink Foreground="Yellow"
-							   NavigateUri="https://next.nexusmods.com/profile/ArcanePoro"
-							   RequestNavigate="Hyperlink_RequestNavigate">
-						ArcanePoro.
-					</Hyperlink>
-				</TextBlock>
-				<Separator/>
-				<TextBlock Style="{StaticResource Heading}"
-						   Text="First time setup"/>
-				<TextBlock Style="{StaticResource Text}">
-					The first thing you'll want to do when you start the manager up
-					for the fist time is setup your paths.
-					<LineBreak/>
-					The most important of which is the path to your game installation.
-					Most commonly this would be something like:
-					<LineBreak/>
-					<Italic Foreground="DarkGray">
-						"Steam\steamapps\common\Helldivers 2"
-					</Italic>
-				</TextBlock>
-				<Separator/>
-				<TextBlock Style="{StaticResource Heading}"
-						   Text="Adding mods"/>
-				<TextBlock Style="{StaticResource Text}">
-					To add a mod download any ZIP file form the
-					<Hyperlink Foreground="Yellow"
-							   NavigateUri="https://www.nexusmods.com/helldivers2"
-							   RequestNavigate="Hyperlink_RequestNavigate">
-						Nexus.
-					</Hyperlink>
-					Then use the "Add" button and select the ZIP.
-					After that make sure that the check box of the mod is ticked
-					to make sure it's enabled.
-				</TextBlock>
-				<Separator/>
-				<TextBlock Style="{StaticResource Heading}"
-						   Text="Load order"/>
-				<TextBlock Style="{StaticResource Text}">
-					The load order is important!
-					<LineBreak/>
-					The so called load order is defined by the order the mods are in the list.
-					The further they are down the later they get loaded.
-					If you have multiple mods that replace the B-01 armor,
-					which ever mod get's loaded last will show up in game
-					as it overrides the previous ones.
-				</TextBlock>
-				<Separator/>
-				<TextBlock Style="{StaticResource Heading}"
-						   Text="My mods don't work"/>
-				<TextBlock Style="{StaticResource Text}">
-					What if your mods don't work?
-					<LineBreak/>
-					Some mods that don't contains a manifest and/or have an unconventional
-					structure may not be correctly deployed buy the manager.
-					In this case it's recommended to take a further look at the mods
-					Nexus page and look for installation instructions.
-					You may need to re-zip some patch files to make it work.
-					If you want an example you should definitely look at the
-					<Hyperlink Foreground="Yellow"
-							   NavigateUri="https://www.youtube.com/watch?v=R26Gv-ZiG-k"
-							   RequestNavigate="Hyperlink_RequestNavigate">
-						YouTube tutorial.
-					</Hyperlink>
-				</TextBlock>
-			</StackPanel>
-		</ScrollViewer>
+		<md:MarkdownScrollViewer Grid.Row="0"
+								 Foreground="White"
+								 MarkdownStyleName="Sasabune"
+								 Source="../Resources/Text/Help.md"
+								 IsHitTestVisible="False"/>
 		<Grid Grid.Row="1">
 			<Button Content="Back"
 					Command="{Binding BackCommand}"

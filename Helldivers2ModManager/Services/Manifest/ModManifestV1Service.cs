@@ -48,7 +48,7 @@ internal sealed class ModManifestV1Service(ModManifestLegacyService service) : I
 		if (file is not null)
 			return await FromFileAsync(file, cancellationToken);
 		else
-			return await InferrFromDirectoryAsync(directory, cancellationToken);
+			return await InferFromDirectoryAsync(directory, cancellationToken);
 	}
 
 	public async Task<object?> FromFileAsync(FileInfo file, CancellationToken cancellationToken = default)
@@ -59,6 +59,9 @@ internal sealed class ModManifestV1Service(ModManifestLegacyService service) : I
 
 		if (root.TryGetProperty("Version", out var prop))
 		{
+			if (prop.GetInt32() != 1)
+				throw new NotSupportedException("Manifest version not supported!");
+
 			var guid = Guid.Parse(root.ExpectStringProp("Guid"));
 			var name = root.ExpectStringProp("Name");
 			var description = root.ExpectStringProp("Description");
@@ -136,9 +139,9 @@ internal sealed class ModManifestV1Service(ModManifestLegacyService service) : I
 			return await _service.FromFileAsync(file, cancellationToken);
 	}
 
-	public Task<object?> InferrFromDirectoryAsync(DirectoryInfo directory, CancellationToken cancellationToken = default)
+	public Task<object?> InferFromDirectoryAsync(DirectoryInfo directory, CancellationToken cancellationToken = default)
 	{
-		return _service.InferrFromDirectoryAsync(directory, cancellationToken);
+		return _service.InferFromDirectoryAsync(directory, cancellationToken);
 	}
 
 	public async Task ToFileAsync(object manifest, FileInfo dest, CancellationToken cancellationToken = default)

@@ -1,15 +1,18 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Helldivers2ModManager.Components;
 using Helldivers2ModManager.Stores;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Windows;
 
 namespace Helldivers2ModManager.ViewModels;
 
-internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewModel> logger, NavigationStore navStore, SettingsStore settingsStore) : PageViewModelBase
+internal sealed partial class SettingsPageViewModel : PageViewModelBase
 {
 	public override string Title => "Settings";
 
@@ -74,10 +77,23 @@ internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewMode
 		}
 	}
 
-	private readonly ILogger<SettingsPageViewModel> _logger = logger;
-	private readonly NavigationStore _navStore = navStore;
-	private readonly SettingsStore _settingsStore = settingsStore;
+	public ObservableCollection<string> SkipList => _settingsStore.SkipList;
+
+	private readonly ILogger<SettingsPageViewModel> _logger;
+	private readonly NavigationStore _navStore;
+	private readonly SettingsStore _settingsStore;
 	private bool _storageDirChanged = false;
+	[ObservableProperty]
+	private int _selectedSkip = -1;
+
+	public SettingsPageViewModel(ILogger<SettingsPageViewModel> logger, NavigationStore navStore, SettingsStore settingsStore)
+	{
+		_logger = logger;
+		_navStore = navStore;
+		_settingsStore = settingsStore;
+
+		SkipList.CollectionChanged += SkipList_CollectionChanged;
+	}
 
 	private bool ValidateSettings()
 	{
@@ -111,6 +127,19 @@ internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewMode
 		return true;
 	}
 
+	protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+	{
+		if (e.PropertyName == nameof(SelectedSkip))
+			RemoveSkipCommand.NotifyCanExecuteChanged();
+
+		base.OnPropertyChanged(e);
+	}
+
+	private void SkipList_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+	{
+		RemoveSkipCommand.NotifyCanExecuteChanged();
+	}
+
 	[RelayCommand]
 	void Ok()
 	{
@@ -128,10 +157,20 @@ internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewMode
 	[RelayCommand]
 	void Reset()
 	{
-		_settingsStore.Reset();
-		OnPropertyChanged(nameof(GameDir));
-		OnPropertyChanged(nameof(TempDir));
-		OnPropertyChanged(nameof(StorageDir));
+		WeakReferenceMessenger.Default.Send(new MessageBoxConfirmMessage
+		{
+			Title = "Reset?",
+			Message = "Do you really want to reset your settings?",
+			Confirm = () =>
+			{
+				_settingsStore.Reset();
+				OnPropertyChanged(nameof(GameDir));
+				OnPropertyChanged(nameof(TempDir));
+				OnPropertyChanged(nameof(StorageDir));
+				OnPropertyChanged(nameof(LogLevel));
+				OnPropertyChanged(nameof(Opacity));
+			}
+		});
 	}
 
 	[RelayCommand]
@@ -238,7 +277,7 @@ internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewMode
 		var dataDir = new DirectoryInfo(Path.Combine(_settingsStore.GameDirectory, "data"));
 		
 		var files = dataDir.EnumerateFiles("*.patch_*").ToArray();
-		_logger.LogInformation("Found {} patch files", files.Length);
+		_logger.LogDebug("Found {} patch files", files.Length);
 
 		foreach (var file in files)
 		{
@@ -247,5 +286,37 @@ internal sealed partial class SettingsPageViewModel(ILogger<SettingsPageViewMode
 		}
 
 		_logger.LogInformation("Hard purge complete");
+	}
+
+	[RelayCommand]
+	void AddSkip()
+	{
+		WeakReferenceMessenger.Default.Send(new MessageBoxInputMessage
+		{
+			Title = "File name?",
+			Message = "Please enter the 16 character name of an archive file you want to skip patch 0 for.",
+			MaxLength = 16,
+			Confirm = (str) =>
+			{
+				if (str.Length == 16)
+					SkipList.Add(str);
+				else
+					WeakReferenceMessenger.Default.Send(new MessageBoxInfoMessage
+					{
+						Message = "Archive file names can only be 16 characters long."
+					});
+			}
+		});
+	}
+
+	bool CanRemoveSkip()
+	{
+		return SelectedSkip != -1;
+	}
+
+	[RelayCommand(CanExecute = nameof(CanRemoveSkip))]
+	void RemoveSkip()
+	{
+		SkipList.RemoveAt(SelectedSkip);
 	}
 }

@@ -321,14 +321,18 @@ internal sealed partial class ModStore
 		}
 
 		_logger.LogInformation("Copying files");
-		var installedFiles = new List<string>();
 		foreach (var (name, list) in groups)
 		{
+			int offset = 0;
+			if (_settingsStore.SkipList.Contains(name))
+				offset = 1;
+
 			for (int i = 0; i < list.Count; i++)
 			{
 				var triplet = list[i];
+				var index = i + offset;
 
-				var newPatchPath = Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{i}");
+				var newPatchPath = Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{index}");
 				FileInfo pathDest;
 				if (triplet.Patch is not null)
 				{
@@ -339,9 +343,8 @@ internal sealed partial class ModStore
 					pathDest = new FileInfo(newPatchPath);
 					pathDest.Create().Dispose();
 				}
-				installedFiles.Add(pathDest.FullName);
 
-				var newGpuResourcesPath = Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{i}.gpu_resources");
+				var newGpuResourcesPath = Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{index}.gpu_resources");
 				FileInfo gpuResourceDest;
 				if (triplet.GpuResources is not null)
 				{
@@ -352,9 +355,8 @@ internal sealed partial class ModStore
 					gpuResourceDest = new FileInfo(newGpuResourcesPath);
 					gpuResourceDest.Create().Dispose();
 				}
-				installedFiles.Add(gpuResourceDest.FullName);
 
-				var newStreamPath = Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{i}.stream");
+				var newStreamPath = Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{index}.stream");
 				FileInfo streamDest;
 				if (triplet.Stream is not null)
 				{
@@ -365,18 +367,15 @@ internal sealed partial class ModStore
 					streamDest = new FileInfo(newStreamPath);
 					streamDest.Create().Dispose();
 				}
-				installedFiles.Add(streamDest.FullName);
 			}
 		}
-
-		_logger.LogInformation("Saving installed file list");
-		await File.WriteAllLinesAsync(Path.Combine(_settingsStore.StorageDirectory, "installed.txt"), installedFiles);
 
 		_logger.LogInformation("Deployment success");
 	}
 
 	public async Task PurgeAsync()
 	{
+		/*
 		_logger.LogInformation("Purging mods");
 		var path = Path.Combine(_settingsStore.StorageDirectory, "installed.txt");
 
@@ -395,6 +394,26 @@ internal sealed partial class ModStore
 		}
 
 		_logger.LogInformation("Purge complete");
+		*/
+
+		_logger.LogInformation("Purging mods");
+
+		await Task.Run(() =>
+		{
+			var dataDir = new DirectoryInfo(Path.Combine(_settingsStore.GameDirectory, "data"));
+
+			var files = dataDir.EnumerateFiles("*.patch_*").ToArray();
+			_logger.LogDebug("Found {} patch files", files.Length);
+
+			foreach (var file in files)
+			{
+				_logger.LogTrace("Deleting \"{}\"", file.Name);
+				if (file.Exists)
+					file.Delete();
+			}
+
+			_logger.LogInformation("Purge complete");
+		});
 	}
 
 	private void OnModAdded(ModEventArgs e)

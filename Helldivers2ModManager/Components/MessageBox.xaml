@@ -34,18 +34,41 @@
 									 Color="White"/>
 				</TextBlock.Foreground>
 			</TextBlock>
-			<TextBlock Grid.Row="1"
-					   x:Name="message"
-					   Foreground="WhiteSmoke"
-					   Margin="3"
-					   FontSize="16"
-					   FontFamily="Sanserif"
-					   TextWrapping="Wrap"/>
+			<Grid Grid.Row="1">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+				<TextBlock Grid.Row="0"
+						   x:Name="message"
+						   Foreground="WhiteSmoke"
+						   Margin="3"
+						   FontSize="16"
+						   FontFamily="Sanserif"
+						   TextWrapping="Wrap"/>
+				<TextBox Grid.Row="1"
+						 x:Name="input"
+						 Margin="3"/>
+			</Grid>
 			<Button Grid.Row="2"
-					x:Name="button"
+					x:Name="cancelButton"
+					Content="Cancel"
+					HorizontalAlignment="Left"
+					Click="CancelButton_Click"/>
+			<Button Grid.Row="2"
+					x:Name="okButton"
 					Content="OK"
 					HorizontalAlignment="Right"
-					Click="Button_Click"/>
+					Click="OkButton_Click"/>
+			<Grid Grid.Row="2"
+				  x:Name="yesNoStack">
+				<Button Content="Yes"
+						Click="YesButton_Click"
+						HorizontalAlignment="Left"/>
+				<Button Content="No"
+						Click="NoButton_Click"
+						HorizontalAlignment="Right"/>
+			</Grid>
 			<ProgressBar Grid.Row="2"
 						 x:Name="progress"
 						 IsIndeterminate="True"

@@ -15,7 +15,7 @@ internal interface IModManifestService
 
 	Task<object?> FromFileAsync(FileInfo file, CancellationToken cancellationToken = default);
 
-	Task<object?> InferrFromDirectoryAsync(DirectoryInfo directory, CancellationToken cancellationToken = default);
+	Task<object?> InferFromDirectoryAsync(DirectoryInfo directory, CancellationToken cancellationToken = default);
 
 	Task<object?> FromDirectoryAsync(DirectoryInfo directory, CancellationToken cancellationToken = default);
 

@@ -29,7 +29,7 @@ internal sealed class ModManifestLegacyService(ILogger<ModManifestLegacyService>
 		if (file is not null)
 			return await FromFileAsync(file, cancellationToken);
 		else
-			return await InferrFromDirectoryAsync(directory, cancellationToken);
+			return await InferFromDirectoryAsync(directory, cancellationToken);
 	}
 
 	public async Task<object?> FromFileAsync(FileInfo file, CancellationToken cancellationToken = default)
@@ -54,7 +54,7 @@ internal sealed class ModManifestLegacyService(ILogger<ModManifestLegacyService>
 		};
 	}
 
-	public Task<object?> InferrFromDirectoryAsync(DirectoryInfo directory, CancellationToken cancellationToken = default)
+	public Task<object?> InferFromDirectoryAsync(DirectoryInfo directory, CancellationToken cancellationToken = default)
 	{
 		if (cancellationToken.IsCancellationRequested)
 			return null!;
