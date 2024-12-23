@@ -51,7 +51,10 @@ internal sealed partial class ModStore
 			{
 				var file = dirs[i].GetFiles("manifest.json").FirstOrDefault();
 				if (file is null)
+				{
+					tasks[i] = Task.FromResult<object?>(null);
 					continue;
+				}
 				tasks[i] = Task.Run(async () => await _manifestService.FromFileAsync(file));
 			}
 

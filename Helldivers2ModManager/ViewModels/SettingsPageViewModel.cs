@@ -79,6 +79,17 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 
 	public ObservableCollection<string> SkipList => _settingsStore.SkipList;
 
+	public bool CaseSensitiveSearch
+	{
+		get => _settingsStore.CaseSensitiveSearch;
+		set
+		{
+			OnPropertyChanging();
+			_settingsStore.CaseSensitiveSearch = value;
+			OnPropertyChanged();
+		}
+	}
+
 	private readonly ILogger<SettingsPageViewModel> _logger;
 	private readonly NavigationStore _navStore;
 	private readonly SettingsStore _settingsStore;

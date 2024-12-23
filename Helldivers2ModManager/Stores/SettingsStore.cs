@@ -20,6 +20,8 @@ internal sealed class SettingsStore
 
 	public ObservableCollection<string> SkipList { get; set; }
 
+	public bool CaseSensitiveSearch { get; set; }
+
 	public event EventHandler? SettingsChanged;
 
 	private static readonly FileInfo s_settingFile = new("settings.json");
@@ -57,6 +59,8 @@ internal sealed class SettingsStore
 					if (arr is not null)
 						foreach (var str in arr)
 							SkipList.Add(str);
+					if (root.TryGetProperty(nameof(CaseSensitiveSearch), out prop))
+						CaseSensitiveSearch = prop.GetBoolean();
 				}
 			}
 			catch(JsonException)
@@ -73,6 +77,7 @@ internal sealed class SettingsStore
 		LogLevel = LogLevel.Warning;
 		Opacity = 0.8f;
 		SkipList = [];
+		CaseSensitiveSearch = false;
 	}
 
 	public void Save()
@@ -87,6 +92,7 @@ internal sealed class SettingsStore
 		writer.WriteString(nameof(StorageDirectory), StorageDirectory);
 		writer.WriteNumber(nameof(LogLevel), (int)LogLevel);
 		writer.WriteNumber(nameof(Opacity), Opacity);
+		writer.WriteBoolean(nameof(CaseSensitiveSearch), CaseSensitiveSearch);
 
 		writer.WriteStartArray(nameof(SkipList));
 		foreach (var item in SkipList)

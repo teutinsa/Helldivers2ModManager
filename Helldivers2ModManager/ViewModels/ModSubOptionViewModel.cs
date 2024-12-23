@@ -23,7 +23,7 @@ internal sealed class ModSubOptionViewModel(ModViewModel vm, int idx, int subIdx
 				var bmp = new BitmapImage();
 				bmp.BeginInit();
 				bmp.UriSource = new Uri(Path.Combine(_vm.Data.Directory.FullName, path));
-				bmp.CacheOption = BitmapCacheOption.OnLoad;
+				bmp.CacheOption = BitmapCacheOption.None;
 				bmp.EndInit();
 				return bmp;
 			}

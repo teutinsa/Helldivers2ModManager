@@ -226,7 +226,13 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		if (IsSearchEmpty)
 			Mods = _mods;
 		else
-			Mods = _mods.Where(vm => vm.Name.Contains(SearchText)).ToArray();
+			Mods = _mods.Where(vm =>
+			{
+				if (_settingsStore.CaseSensitiveSearch)
+					return vm.Name.Contains(SearchText, StringComparison.InvariantCulture);
+				else
+					return vm.Name.Contains(SearchText, StringComparison.InvariantCultureIgnoreCase);
+			}).ToArray();
 		OnPropertyChanged(nameof(Mods));
 	}
 

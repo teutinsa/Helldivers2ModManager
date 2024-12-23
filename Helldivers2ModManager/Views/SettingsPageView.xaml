@@ -143,6 +143,33 @@
 				<TextBlock FontSize="24"
 						   Foreground="White"
 						   Margin="0 10 0 0"
+						   Text="Search"/>
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+					</Grid.RowDefinitions>
+					<CheckBox Grid.Row="0"
+							  Grid.Column="0"
+							  Width="30"
+							  Height="30"
+							  IsChecked="{Binding CaseSensitiveSearch}"
+							  Margin="0 0 5 0"/>
+					<TextBlock Grid.Row="0"
+							   Grid.Column="1"
+							   FontSize="12"
+							   FontFamily="Sanserif"
+							   Foreground="DarkGray"
+							   Text="Case Sensitive"
+							   VerticalAlignment="Center"/>
+				</Grid>
+				<TextBlock FontSize="24"
+						   Foreground="White"
+						   Margin="0 10 0 0"
 						   Text="Utilities"/>
 				<Button Content="Reset"
 						Style="{DynamicResource CancelButton}"
