@@ -2,6 +2,8 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Helldivers2ModManager.Components;
+using Helldivers2ModManager.Exceptions;
+using Helldivers2ModManager.Extensions;
 using Helldivers2ModManager.Models;
 using Helldivers2ModManager.Stores;
 using Microsoft.Extensions.DependencyInjection;
@@ -345,9 +347,35 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 				Message = "Deployment successful."
 			});
 		}
-		catch(Exception ex)
+		catch(DeployException ex)
 		{
 			_logger.LogWarning(ex, "Deployment failed");
+			if (ex.Mod is ModData mod)
+			{
+				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+				{
+					Message = $"Something is wrong with this mod: \"{mod.Manifest.Name}\"\n\n{ex.Message}\n\t{ex.InnerException?.Message}"
+				});
+			}
+			else if (ex.FileTriplet.HasValue)
+			{
+				var triplet = ex.FileTriplet.Value;
+				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+				{
+					Message = $"{ex.Message}\n\t{ex.InnerException?.Message}"
+				});
+			}
+			else
+			{
+				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+				{
+					Message = $"{ex.Message}\n\t{ex.InnerException?.Message}"
+				});
+			}
+		}
+		catch(Exception ex)
+		{
+			_logger.LogError(ex, "Unknown deployment error");
 			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
 			{
 				Message = ex.Message
@@ -362,7 +390,6 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		if (index <= 0)
 			return;
 		_mods.Move(index, index - 1);
-
 	}
 
 	[RelayCommand]

@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Runtime.Serialization;
 using System.Text.Json;
+using Helldivers2ModManager.Extensions;
 using Helldivers2ModManager.Models;
 
 namespace Helldivers2ModManager.Services.Manifest;

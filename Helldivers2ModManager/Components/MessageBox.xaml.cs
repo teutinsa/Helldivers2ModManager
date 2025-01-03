@@ -1,4 +1,6 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿// Ignore Spelling: Helldivers
+
+using CommunityToolkit.Mvvm.Messaging;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -143,6 +145,7 @@ namespace Helldivers2ModManager.Components
 			Reset();
 
 			_confirmAction = message.Confirm;
+			_abortAction = message.Abort;
 
 			title.Text = message.Title;
 			brush.Color = Colors.Yellow;

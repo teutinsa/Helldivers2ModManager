@@ -1,8 +1,13 @@
-﻿using Helldivers2ModManager.Models;
+﻿// Ignore Spelling: Gpu Guids
+
+using Helldivers2ModManager.Exceptions;
+using Helldivers2ModManager.Extensions;
+using Helldivers2ModManager.Models;
 using Helldivers2ModManager.Services;
 using Microsoft.Extensions.Logging;
 using SharpCompress.Archives;
 using System.IO;
+using System.Security;
 using System.Text.RegularExpressions;
 
 namespace Helldivers2ModManager.Stores;
@@ -16,7 +21,7 @@ internal delegate void ModEventHandler(object sender, ModEventArgs e);
 
 internal sealed partial class ModStore
 {
-	private readonly struct PatchFileTriplet
+	public readonly struct PatchFileTriplet
 	{
 		public FileInfo? Patch { get; init; }
 
@@ -100,7 +105,7 @@ internal sealed partial class ModStore
 		await Task.Run(() => ArchiveFactory.Open(file.FullName).ExtractToDirectory(tmpDir.FullName));
 
 		var man = await _manifestService.FromDirectoryAsync(tmpDir);
-		
+
 		if (man is null)
 			return false;
 
@@ -161,9 +166,10 @@ internal sealed partial class ModStore
 	/// </summary>
 	/// <param name="modGuids">The mods <see cref="Guid"/>s to deploy.</param>
 	/// <exception cref="InvalidOperationException">Thrown if the Helldivers 2 path is not set.</exception>
+	/// <exception cref="NotSupportedException">Thrown if the manifest version is unknown.</exception>
+	/// <exception cref="DeployException">Thrown if any other error happens during deployment.</exception>
 	public async Task DeployAsync(Guid[] modGuids)
 	{
-
 		if (string.IsNullOrEmpty(_settingsStore.GameDirectory))
 		{
 			_logger.LogError("Helldivers 2 path not set!");
@@ -176,53 +182,86 @@ internal sealed partial class ModStore
 			return;
 		}
 
-		await PurgeAsync();
+		try
+		{
+			await PurgeAsync();
+		}
+		catch (PurgeException ex)
+		{
+			throw new DeployException(ex);
+		}
 
 		_logger.LogInformation("Starting deployment of {} mods", modGuids.Length);
 
-		var stageDir = new DirectoryInfo(Path.Combine(_settingsStore.TempDirectory, "Staging"));
-		_logger.LogInformation("Creating clean staging directory \"{}\"", stageDir.FullName);
-		if (stageDir.Exists)
-			stageDir.Delete(true);
-		stageDir.Create();
+		try
+		{
+			var stageDir = new DirectoryInfo(Path.Combine(_settingsStore.TempDirectory, "Staging"));
+			_logger.LogInformation("Creating clean staging directory \"{}\"", stageDir.FullName);
+			if (stageDir.Exists)
+				stageDir.Delete(true);
+			stageDir.Create();
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			throw new DeployException(ex);
+		}
+		catch (DirectoryNotFoundException ex)
+		{
+			throw new DeployException(ex);
+		}
+		catch (SecurityException ex)
+		{
+			throw new DeployException(ex);
+		}
+		catch (IOException ex)
+		{
+			throw new DeployException(ex);
+		}
 
 		var groups = new Dictionary<string, List<PatchFileTriplet>>();
 
 		void AddFilesFromDir(DirectoryInfo dir)
 		{
-			var files = dir.GetFiles().Where(static f => GetPatchFileRegex().IsMatch(f.Name)).ToArray();
-
-			foreach (var file in files)
-				_logger.LogDebug("Adding file \"{}\"", file.FullName);
-
-			var names = new HashSet<string>();
-			for (int i = 0; i < files.Length; i++)
-				names.Add(files[i].Name[0..16]);
-
-			foreach (var name in names)
+			try
 			{
-				var indexes = new HashSet<int>();
+				var files = dir.GetFiles().Where(static f => GetPatchFileRegex().IsMatch(f.Name)).ToArray();
+
 				foreach (var file in files)
-				{
-					var match = GetPatchIndexRegex().Match(file.Name);
-					indexes.Add(int.Parse(match.Groups[1].ValueSpan));
-				}
+					_logger.LogDebug("Adding file \"{}\"", file.FullName);
 
-				foreach (var index in indexes)
-				{
-					FileInfo? patchFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_{index}$"));
-					FileInfo? gpuFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_{index}.gpu_resources$"));
-					FileInfo? streamFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_{index}.stream$"));
+				var names = new HashSet<string>();
+				for (int i = 0; i < files.Length; i++)
+					names.Add(files[i].Name[0..16]);
 
-					if (!groups.ContainsKey(name))
-						groups.Add(name, []);
-					groups[name].Add(new PatchFileTriplet
+				foreach (var name in names)
+				{
+					var indexes = new HashSet<int>();
+					foreach (var file in files)
 					{
-						Patch = patchFile,
-						GpuResources = gpuFile,
-						Stream = streamFile
-					});
+						var match = GetPatchIndexRegex().Match(file.Name);
+						indexes.Add(int.Parse(match.Groups[1].ValueSpan));
+					}
+
+					foreach (var index in indexes)
+					{
+						FileInfo? patchFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_{index}$"));
+						FileInfo? gpuFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_{index}.gpu_resources$"));
+						FileInfo? streamFile = files.FirstOrDefault(f => Regex.IsMatch(f.Name, @$"^{name}\.patch_{index}.stream$"));
+
+						if (!groups.ContainsKey(name))
+							groups.Add(name, []);
+						groups[name].Add(new PatchFileTriplet
+						{
+							Patch = patchFile,
+							GpuResources = gpuFile,
+							Stream = streamFile
+						});
+					}
 				}
+			}
+			catch (DirectoryNotFoundException ex)
+			{
+				throw new AddFilesException(ex);
 			}
 		}
 
@@ -235,91 +274,103 @@ internal sealed partial class ModStore
 				_logger.LogWarning("Mod with guid {} not found, skipping", guid);
 				continue;
 			}
-			_logger.LogInformation("Working on \"{}\"", mod.Manifest.Name);
 
-			switch (mod.Manifest.Version)
+			try
 			{
-				case ModManifest.ManifestVersion.Legacy:
-					{
-						_logger.LogInformation("Mod \"{}\" has legacy manifest", mod.Manifest.Name);
+				_logger.LogInformation("Working on \"{}\"", mod.Manifest.Name);
 
-						var man = mod.Manifest.Legacy;
-						var enabled = mod.EnabledOptions;
-						var selected = mod.SelectedOptions;
-
-						if (man.Options is not null)
+				switch (mod.Manifest.Version)
+				{
+					case ModManifest.ManifestVersion.Legacy:
 						{
-							if (selected is not int[] { Length: 1 })
+							_logger.LogInformation("Mod \"{}\" has legacy manifest", mod.Manifest.Name);
+
+							var man = mod.Manifest.Legacy;
+							var enabled = mod.EnabledOptions;
+							var selected = mod.SelectedOptions;
+
+							if (man.Options is not null)
 							{
-								_logger.LogError("Options have the wrong count");
-								continue;
-							}
-
-							var dir = new DirectoryInfo(Path.Combine(mod.Directory.FullName, man.Options[selected[0]]));
-							AddFilesFromDir(dir);
-						}
-						else
-							AddFilesFromDir(mod.Directory);
-					}
-					break;
-
-				case ModManifest.ManifestVersion.V1:
-					{
-						_logger.LogInformation("Mod \"{}\" has V1 manifest", mod.Manifest.Name);
-
-						var man = mod.Manifest.V1;
-						var enabled = mod.EnabledOptions;
-						var selected = mod.SelectedOptions;
-
-						if (man.Options is not null)
-						{
-							if (enabled.Length != man.Options.Count)
-							{
-								_logger.LogError("Enabled option counts are not equal");
-								continue;
-							}
-
-							if (selected.Length != man.Options.Count)
-							{
-								_logger.LogError("Selected option counts are not equal");
-								continue;
-							}
-
-							_logger.LogInformation("Making include list");
-							for (int i = 0; i < enabled.Length; i++)
-							{
-								if (!enabled[i])
-									continue;
-
-								var opt = man.Options[i];
-
-								if (opt.Include is string[] incs)
-									foreach (var inc in incs)
-									{
-										var dir = new DirectoryInfo(Path.Combine(mod.Directory.FullName, inc));
-										_logger.LogInformation("Adding \"{}\"", dir.FullName);
-										AddFilesFromDir(dir);
-									}
-
-								if (opt.SubOptions is ModSubOption[] subs)
+								if (selected is not int[] { Length: 1 })
 								{
-									var sub = subs[selected[i]];
-									foreach (var inc in sub.Include)
+									_logger.LogError("Options have the wrong count");
+									continue;
+								}
+
+								var dir = new DirectoryInfo(Path.Combine(mod.Directory.FullName, man.Options[selected[0]]));
+								AddFilesFromDir(dir);
+							}
+							else
+								AddFilesFromDir(mod.Directory);
+						}
+						break;
+
+					case ModManifest.ManifestVersion.V1:
+						{
+							_logger.LogInformation("Mod \"{}\" has V1 manifest", mod.Manifest.Name);
+
+							var man = mod.Manifest.V1;
+							var enabled = mod.EnabledOptions;
+							var selected = mod.SelectedOptions;
+
+							if (man.Options is not null)
+							{
+								if (enabled.Length != man.Options.Count)
+								{
+									_logger.LogError("Enabled option counts are not equal");
+									continue;
+								}
+
+								if (selected.Length != man.Options.Count)
+								{
+									_logger.LogError("Selected option counts are not equal");
+									continue;
+								}
+
+								_logger.LogInformation("Making include list");
+								for (int i = 0; i < enabled.Length; i++)
+								{
+									if (!enabled[i])
+										continue;
+
+									var opt = man.Options[i];
+
+									if (opt.Include is string[] incs)
+										foreach (var inc in incs)
+										{
+											var dir = new DirectoryInfo(Path.Combine(mod.Directory.FullName, inc));
+											_logger.LogInformation("Adding \"{}\"", dir.FullName);
+											AddFilesFromDir(dir);
+										}
+
+									if (opt.SubOptions is ModSubOption[] subs)
 									{
-										var dir = new DirectoryInfo(Path.Combine(mod.Directory.FullName, inc));
-										_logger.LogInformation("Adding \"{}\"", dir.FullName);
-										AddFilesFromDir(dir);
+										var sub = subs[selected[i]];
+										foreach (var inc in sub.Include)
+										{
+											var dir = new DirectoryInfo(Path.Combine(mod.Directory.FullName, inc));
+											_logger.LogInformation("Adding \"{}\"", dir.FullName);
+											AddFilesFromDir(dir);
+										}
 									}
 								}
 							}
+							else
+								AddFilesFromDir(mod.Directory);
 						}
-						else
-							AddFilesFromDir(mod.Directory);
-					}
-					break;
+						break;
 
-				case ModManifest.ManifestVersion.Unknown:
-					throw new NotSupportedException();
+					case ModManifest.ManifestVersion.Unknown:
+						throw new NotSupportedException("Unknown manifest version!");
+				}
+			}
+			catch (AddFilesException ex)
+			{
+				throw new DeployException(mod, ex);
+			}
+			catch (IndexOutOfRangeException ex)
+			{
+				throw new DeployException(mod, ex);
 			}
 		}
 
@@ -335,40 +386,67 @@ internal sealed partial class ModStore
 				var triplet = list[i];
 				var index = i + offset;
 
-				var newPatchPath = Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{index}");
-				FileInfo pathDest;
-				if (triplet.Patch is not null)
+				try
 				{
-					pathDest = triplet.Patch.CopyTo(newPatchPath);
-				}
-				else
-				{
-					pathDest = new FileInfo(newPatchPath);
-					pathDest.Create().Dispose();
-				}
+					var newPatchPath = Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{index}");
+					FileInfo pathDest;
+					if (triplet.Patch is not null)
+					{
+						pathDest = triplet.Patch.CopyTo(newPatchPath);
+					}
+					else
+					{
+						pathDest = new FileInfo(newPatchPath);
+						pathDest.Create().Dispose();
+					}
 
-				var newGpuResourcesPath = Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{index}.gpu_resources");
-				FileInfo gpuResourceDest;
-				if (triplet.GpuResources is not null)
-				{
-					gpuResourceDest = triplet.GpuResources.CopyTo(newGpuResourcesPath);
-				}
-				else
-				{
-					gpuResourceDest = new FileInfo(newGpuResourcesPath);
-					gpuResourceDest.Create().Dispose();
-				}
+					var newGpuResourcesPath = Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{index}.gpu_resources");
+					FileInfo gpuResourceDest;
+					if (triplet.GpuResources is not null)
+					{
+						gpuResourceDest = triplet.GpuResources.CopyTo(newGpuResourcesPath);
+					}
+					else
+					{
+						gpuResourceDest = new FileInfo(newGpuResourcesPath);
+						gpuResourceDest.Create().Dispose();
+					}
 
-				var newStreamPath = Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{index}.stream");
-				FileInfo streamDest;
-				if (triplet.Stream is not null)
-				{
-					streamDest = triplet.Stream.CopyTo(newStreamPath);
+					var newStreamPath = Path.Combine(_settingsStore.GameDirectory, "data", $"{name}.patch_{index}.stream");
+					FileInfo streamDest;
+					if (triplet.Stream is not null)
+					{
+						streamDest = triplet.Stream.CopyTo(newStreamPath);
+					}
+					else
+					{
+						streamDest = new FileInfo(newStreamPath);
+						streamDest.Create().Dispose();
+					}
 				}
-				else
+				catch (SecurityException ex)
 				{
-					streamDest = new FileInfo(newStreamPath);
-					streamDest.Create().Dispose();
+					throw new DeployException(triplet, ex);
+				}
+				catch (UnauthorizedAccessException ex)
+				{
+					throw new DeployException(triplet, ex);
+				}
+				catch (PathTooLongException ex)
+				{
+					throw new DeployException(triplet, ex);
+				}
+				catch (DirectoryNotFoundException ex)
+				{
+					throw new DeployException(triplet, ex);
+				}
+				catch (IOException ex)
+				{
+					throw new DeployException(triplet, ex);
+				}
+				catch (NotSupportedException ex)
+				{
+					throw new DeployException(triplet, ex);
 				}
 			}
 		}
@@ -403,19 +481,47 @@ internal sealed partial class ModStore
 
 		await Task.Run(() =>
 		{
-			var dataDir = new DirectoryInfo(Path.Combine(_settingsStore.GameDirectory, "data"));
-
-			var files = dataDir.EnumerateFiles("*.patch_*").ToArray();
-			_logger.LogDebug("Found {} patch files", files.Length);
-
-			foreach (var file in files)
+			try
 			{
-				_logger.LogTrace("Deleting \"{}\"", file.Name);
-				if (file.Exists)
-					file.Delete();
-			}
+				var dataDir = new DirectoryInfo(Path.Combine(_settingsStore.GameDirectory, "data"));
 
-			_logger.LogInformation("Purge complete");
+				var files = dataDir.EnumerateFiles("*.patch_*").ToArray();
+				_logger.LogDebug("Found {} patch files", files.Length);
+
+				foreach (var file in files)
+				{
+					_logger.LogTrace("Deleting \"{}\"", file.Name);
+					if (file.Exists)
+					{
+						try
+						{
+							file.Delete();
+						}
+						catch(IOException ex)
+						{
+							throw new PurgeException(file, ex);
+						}
+						catch (SecurityException ex)
+						{
+							throw new PurgeException(file, ex);
+						}
+						catch (UnauthorizedAccessException ex)
+						{
+							throw new PurgeException(file, ex);
+						}
+					}
+				}
+
+				_logger.LogInformation("Purge complete");
+			}
+			catch(DirectoryNotFoundException ex)
+			{
+				throw new PurgeException(ex);
+			}
+			catch (SecurityException ex)
+			{
+				throw new PurgeException(ex);
+			}
 		});
 	}
 

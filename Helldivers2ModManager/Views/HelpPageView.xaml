@@ -6,6 +6,7 @@
 	  xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
 	  xmlns:local="clr-namespace:Helldivers2ModManager.Views"
 	  xmlns:md="https://github.com/whistyun/MdXaml"
+	  xmlns:ae="http://icsharpcode.net/sharpdevelop/avalonedit"
 	  mc:Ignorable="d"
 	  d:DataContext="{d:DesignInstance vms:HelpPageViewModel}"
 	  d:Background="Black"
@@ -34,9 +35,20 @@
 		</Grid.RowDefinitions>
 		<md:MarkdownScrollViewer Grid.Row="0"
 								 Foreground="White"
-								 MarkdownStyleName="Sasabune"
 								 Source="..\Resources\Text\Help.md"
-								 ClickAction="OpenBrowser"/>
+								 ClickAction="OpenBrowser">
+			<md:MarkdownScrollViewer.MarkdownStyle>
+				<Style TargetType="FlowDocument"
+					   BasedOn="{x:Static md:MarkdownStyle.Sasabune}">
+					<Setter Property="FontFamily" Value="..\Resources\Fonts\#FS Sinclair Regular"/>
+					<Style.Resources>
+						<Style TargetType="ae:TextArea">
+							<Setter Property="FontFamily" Value="Consolas"/>
+						</Style>
+					</Style.Resources>
+				</Style>
+			</md:MarkdownScrollViewer.MarkdownStyle>
+		</md:MarkdownScrollViewer>
 		<Grid Grid.Row="1">
 			<Button Content="Back"
 					Command="{Binding BackCommand}"

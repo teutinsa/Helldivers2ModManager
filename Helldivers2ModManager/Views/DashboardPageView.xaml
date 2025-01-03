@@ -66,15 +66,32 @@
 					Grid.Column="1"
 					Orientation="Horizontal"
 					HorizontalAlignment="Right">
-			<Button Content="Run"
-					Command="{Binding RunCommand}"
-					ToolTip="Runs the game through steam."/>
 			<Button Content="Purge"
 					Style="{DynamicResource CancelButton}"
-					Command="{Binding PurgeCommand}"/>
+					Command="{Binding PurgeCommand}">
+				<Button.ToolTip>
+					<TextBlock Text="Removes all patch files from the games data directory."
+							   FontFamily="../Resources/Fonts/#FS Sinclair Regular"
+							   Margin="5 0"/>
+				</Button.ToolTip>
+			</Button>
 			<Button Content="Deploy"
 					Style="{DynamicResource ConfirmButton}"
-					Command="{Binding DeployCommand}"/>
+					Command="{Binding DeployCommand}">
+				<Button.ToolTip>
+					<TextBlock Text="Installs all selected mods patch files into the games data directory."
+							   FontFamily="../Resources/Fonts/#FS Sinclair Regular"
+							   Margin="5 0"/>
+				</Button.ToolTip>
+			</Button>
+			<Button Content="Launch HD2"
+					Command="{Binding RunCommand}">
+				<Button.ToolTip>
+					<TextBlock Text="Runs the game through steam."
+							   FontFamily="../Resources/Fonts/#FS Sinclair Regular"
+							   Margin="5 0"/>
+				</Button.ToolTip>
+			</Button>
 		</StackPanel>
 		<Grid Grid.Row="0"
 			  Grid.Column="1">

@@ -1,7 +1,7 @@
 ﻿using System.Runtime.Serialization;
 using System.Text.Json;
 
-namespace Helldivers2ModManager;
+namespace Helldivers2ModManager.Extensions;
 
 internal static class JsonExtensions
 {

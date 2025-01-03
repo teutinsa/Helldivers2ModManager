@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Helldivers2ModManager.Extensions;
+using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;

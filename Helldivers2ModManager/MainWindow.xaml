@@ -57,7 +57,6 @@
 								</Grid.RowDefinitions>
 								<Grid Grid.Row="0">
 									<Grid.ColumnDefinitions>
-										<ColumnDefinition Width="Auto"/>
 										<ColumnDefinition Width="*"/>
 										<ColumnDefinition Width="Auto"/>
 									</Grid.ColumnDefinitions>
@@ -71,9 +70,9 @@
 										<TextBlock Text="{Binding Version}"
 												   FontSize="20"
 												   Foreground="White"
-												   Margin="5"/>
+												   Margin="5 0 0 0"/>
 									</StackPanel>
-									<StackPanel Grid.Column="2"
+									<StackPanel Grid.Column="1"
 												Orientation="Horizontal"
 												VerticalAlignment="Top"
 												HorizontalAlignment="Right">

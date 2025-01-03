@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<OutputType>WinExe</OutputType>
+		<OutputType>Exe</OutputType>
 		<TargetFramework>net8.0-windows</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
@@ -45,6 +45,7 @@
 		<PackageReference Include="CommunityToolkit.Common" Version="8.4.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="gong-wpf-dragdrop" Version="4.0.0" />
+		<PackageReference Include="LanguageExt.Core" Version="4.4.9" />
 		<PackageReference Include="MdXaml" Version="1.27.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
 		<PackageReference Include="SharpCompress" Version="0.38.0" />
@@ -61,6 +62,10 @@
 
 	<ItemGroup>
 	  <SplashScreen Include="Resources\Images\logo_splash.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Extensions\" />
 	</ItemGroup>
 
 </Project>

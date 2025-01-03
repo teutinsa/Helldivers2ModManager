@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace Helldivers2ModManager;
+namespace Helldivers2ModManager.Extensions;
 
 internal static class IOExtensions
 {
