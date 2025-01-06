@@ -45,6 +45,12 @@ internal sealed class ModManifestLegacyService(ILogger<ModManifestLegacyService>
 		var iconPath = root.OptionalStringProp("IconPath");
 		var options = root.OptionalStringArrayProp("Options");
 
+		if (iconPath is not null && Path.IsPathRooted(iconPath))
+		{
+			_logger.LogWarning("Icon path \"{}\" for \"{}\" is not relative, replacing with null", iconPath, name);
+			iconPath = null;
+		}
+
 		return new ModManifestLegacy
 		{
 			Guid = guid,

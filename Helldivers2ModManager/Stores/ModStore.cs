@@ -54,13 +54,20 @@ internal sealed partial class ModStore
 			var tasks = new Task<object?>[dirs.Length];
 			for (int i = 0; i < tasks.Length; i++)
 			{
-				var file = dirs[i].GetFiles("manifest.json").FirstOrDefault();
-				if (file is null)
+				try
 				{
-					tasks[i] = Task.FromResult<object?>(null);
-					continue;
+					var file = dirs[i].GetFiles("manifest.json").FirstOrDefault();
+					if (file is null)
+						tasks[i] = Task.FromResult<object?>(null);
+					else
+						tasks[i] = Task.Run(async () => await _manifestService.FromFileAsync(file));
 				}
-				tasks[i] = Task.Run(async () => await _manifestService.FromFileAsync(file));
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, "Error during mod store initialization");
+					_logger.LogError("Skipping \"{}\" due to previous errors", dirs[i].Name);
+					tasks[i] = Task.FromResult<object?>(null);
+				}
 			}
 
 			var manifests = Task.WhenAll(tasks).GetAwaiter().GetResult();

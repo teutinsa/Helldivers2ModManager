@@ -15,7 +15,7 @@ internal partial class App : Application
 {
 	public static readonly Version Version = new(1, 2, 1, 0);
 
-	public static readonly string? VersionAddition = "(Error Preview 2)";
+	public static readonly string? VersionAddition = null;
 
 	public static new App Current => (App)Application.Current;
 
@@ -27,7 +27,7 @@ internal partial class App : Application
 	{
 #if !DEBUG
 		AppDomain.CurrentDomain.UnhandledException += (_, e) => LogUnhandledException(e.ExceptionObject as Exception);
-		Current.DispatcherUnhandledException += (_, e) => LogUnhandledException(e.Exception);
+		DispatcherUnhandledException += (_, e) => LogUnhandledException(e.Exception);
 		TaskScheduler.UnobservedTaskException += (_, e) => LogUnhandledException(e.Exception);
 #endif
 

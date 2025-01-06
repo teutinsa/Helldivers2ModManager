@@ -3,10 +3,11 @@ using System.Runtime.Serialization;
 using System.Text.Json;
 using Helldivers2ModManager.Extensions;
 using Helldivers2ModManager.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Helldivers2ModManager.Services.Manifest;
 
-internal sealed class ModManifestV1Service(ModManifestLegacyService service) : IModManifestService
+internal sealed class ModManifestV1Service(ILogger<ModManifestV1Service> logger, ModManifestLegacyService service) : IModManifestService
 {
 	/*
 	{
@@ -41,6 +42,7 @@ internal sealed class ModManifestV1Service(ModManifestLegacyService service) : I
 		} | null
 	}
 	*/
+	private readonly ILogger<ModManifestV1Service> _logger = logger;
 	private readonly ModManifestLegacyService _service = service;
 
 	public async Task<object?> FromDirectoryAsync(DirectoryInfo directory, CancellationToken cancellationToken = default)
@@ -93,6 +95,12 @@ internal sealed class ModManifestV1Service(ModManifestLegacyService service) : I
 							var subInclude = subElms[j].ExpectStringArrayProp("Include");
 							var subImage = subElms[j].OptionalStringProp("Image");
 
+							if (subImage is not null && Path.IsPathRooted(subImage))
+							{
+								_logger.LogWarning("Image path \"{}\" for sub option \"{}\" of \"{}\" is not relative, replacing with null", subImage, subName, name);
+								subImage = null;
+							}
+
 							subOptions[j] = new ModSubOption
 							{
 								Name = subName,
@@ -101,6 +109,12 @@ internal sealed class ModManifestV1Service(ModManifestLegacyService service) : I
 								Image = subImage
 							};
 						}
+					}
+
+					if (optImage is not null && Path.IsPathRooted(optImage))
+					{
+						_logger.LogWarning("Image path \"{}\" for option \"{}\" of \"{}\" is not relative, replacing with null", optImage, optName, name);
+						optImage = null;
 					}
 
 					options[i] = new ModOption
@@ -124,6 +138,12 @@ internal sealed class ModManifestV1Service(ModManifestLegacyService service) : I
 					ModId = modId,
 					Version = Version.Parse(version.TrimStart('v', 'V'))
 				};
+			}
+
+			if (iconPath is not null && Path.IsPathRooted(iconPath))
+			{
+				_logger.LogWarning("Icon path \"{}\" for \"{}\" is not relative, replacing with null", iconPath, name);
+				iconPath = null;
 			}
 
 			return new ModManifestV1
