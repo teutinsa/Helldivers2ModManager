@@ -8,7 +8,7 @@
 		<UseWPF>true</UseWPF>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<ApplicationIcon>Resources\Images\icon.ico</ApplicationIcon>
-		<Platforms>x64</Platforms>
+		<Platforms>AnyCPU;x64</Platforms>
 		<PlatformTarget>x64</PlatformTarget>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<AssemblyVersion>1.2.1.0</AssemblyVersion>
@@ -16,7 +16,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <None Remove="DirectoryInfoExtensions.cs~RF211c16b9.TMP" />
 	  <None Remove="Resources\Fonts\Blockletter.otf" />
 	  <None Remove="Resources\Fonts\FS Sinclair Bold.otf" />
 	  <None Remove="Resources\Fonts\FS Sinclair Medium.otf" />
@@ -28,7 +27,6 @@
 	  <None Remove="Resources\Images\logo_splash.png" />
 	  <None Remove="Resources\Images\remove.png" />
 	  <None Remove="Resources\Text\Help.md" />
-	  <None Remove="Views\CreatePageView.xaml~RF7da6ba9.TMP" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -63,9 +61,8 @@
 	<ItemGroup>
 	  <SplashScreen Include="Resources\Images\logo_splash.png" />
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Extensions\" />
-	</ItemGroup>
-
+	
+	<Target Name="Sign Publish" AfterTargets="Publish">
+		<Exec Command='"C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64\signtool.exe" sign /a /fd SHA256 .\bin\publish\single-file\Helldivers2ModManager.exe'/>
+	</Target>
 </Project>

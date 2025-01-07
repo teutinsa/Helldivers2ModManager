@@ -34,7 +34,7 @@
 						   Foreground="White"
 						   Text="Game Directory"/>
 				<TextBlock FontSize="12"
-						   FontFamily="Sanserif"
+						   FontFamily="..\Resources\Fonts\#FS Sinclair Regular"
 						   Foreground="DarkGray">
 					This is the games directory where you want the mods to be installed.
 					<LineBreak/>
@@ -58,12 +58,12 @@
 						   Margin="0 10 0 0"
 						   Text="Storage Directory"/>
 				<TextBlock FontSize="12"
-						   FontFamily="Sanserif"
+						   FontFamily="..\Resources\Fonts\#FS Sinclair Regular"
 						   Foreground="DarkGray">
 					This is where files about all the managed mods are stored.
 				</TextBlock>
 				<TextBlock FontSize="12"
-						   FontFamily="Sanserif"
+						   FontFamily="..\Resources\Fonts\#FS Sinclair Regular"
 						   Foreground="Red">
 					Purge before changing this as a record of the installed files is stored in this!
 				</TextBlock>
@@ -85,7 +85,7 @@
 						   Margin="0 10 0 0"
 						   Text="Temporary Directory"/>
 				<TextBlock FontSize="12"
-						   FontFamily="Sanserif"
+						   FontFamily="..\Resources\Fonts\#FS Sinclair Regular"
 						   Foreground="DarkGray">
 					This is the directory where all temporary files will be stored. Examples are:
 					<LineBreak/>
@@ -113,7 +113,7 @@
 						   Margin="0 10 0 0"
 						   Text="Opacity"/>
 				<TextBlock FontSize="12"
-						   FontFamily="Sanserif"
+						   FontFamily="..\Resources\Fonts\#FS Sinclair Regular"
 						   Foreground="DarkGray">
 					Change the opacity of the window background.
 				</TextBlock>
@@ -130,7 +130,7 @@
 						   Margin="0 10 0 0"
 						   Text="Log Level"/>
 				<TextBlock FontSize="12"
-						   FontFamily="Sanserif"
+						   FontFamily="..\Resources\Fonts\#FS Sinclair Regular"
 						   Foreground="DarkGray">
 					This sets the level of messages which should be logged to the log file.
 					The option set and anything below it will be captured an logged.
@@ -162,7 +162,7 @@
 					<TextBlock Grid.Row="0"
 							   Grid.Column="1"
 							   FontSize="12"
-							   FontFamily="Sanserif"
+							   FontFamily="..\Resources\Fonts\#FS Sinclair Regular"
 							   Foreground="DarkGray"
 							   Text="Case Sensitive"
 							   VerticalAlignment="Center"/>
@@ -177,7 +177,7 @@
 						HorizontalAlignment="Left"/>
 				<TextBlock Grid.Column="0"
 						   FontSize="12"
-						   FontFamily="Sanserif"
+						   FontFamily="..\Resources\Fonts\#FS Sinclair Regular"
 						   Foreground="DarkGray"
 						   Margin="0 0 0 5">
 					This will this will reset all the setting to their default values!
@@ -193,7 +193,7 @@
 						   Text="Skip List"/>
 				<TextBlock Grid.Column="0"
 						   FontSize="12"
-						   FontFamily="Sanserif"
+						   FontFamily="..\Resources\Fonts\#FS Sinclair Regular"
 						   Foreground="DarkGray"
 						   Margin="0 0 0 5">
 					This skips the 0th index of all specified files during deployment.

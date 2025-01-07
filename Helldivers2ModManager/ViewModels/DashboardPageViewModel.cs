@@ -304,6 +304,15 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	[RelayCommand(AllowConcurrentExecutions = false)]
 	async Task Purge()
 	{
+		if (string.IsNullOrEmpty(_settingsStore.GameDirectory))
+		{
+			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+			{
+				Message = "Unable to purge! Helldivers 2 Path not set. Please go to settings."
+			});
+			return;
+		}
+
 		WeakReferenceMessenger.Default.Send(new MessageBoxProgressMessage()
 		{
 			Title = "Purging Mods",

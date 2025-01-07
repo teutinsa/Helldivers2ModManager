@@ -8,28 +8,28 @@ internal sealed class PurgeException : Exception
     public FileInfo? File { get; }
 
     public PurgeException(FileInfo file, IOException exception)
-        : base(null, exception)
+        : base($"The file \"{file.FullName}\" is still open!", exception)
     {
         File = file;
     }
 
     public PurgeException(FileInfo file, SecurityException exception)
-        : base(null, exception)
+        : base($"The manager does not have the required permission to delete the file \"{file.FullName}\"!", exception)
     {
         File = file;
     }
 
     public PurgeException(FileInfo file, UnauthorizedAccessException exception)
-        : base(null, exception)
+        : base("The path is a directory!", exception)
     {
         File = file;
     }
 
     public PurgeException(DirectoryNotFoundException exception)
-        : base(null, exception)
+        : base("The path is invalid!", exception)
     { }
 
     public PurgeException(SecurityException exception)
-        : base(null, exception)
+        : base("The manager does not have the required permission!", exception)
     { }
 }
