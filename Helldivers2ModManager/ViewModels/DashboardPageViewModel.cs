@@ -290,7 +290,21 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	[SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This is a command of a view model and should not be static.")]
 	void ReportBug()
 	{
-		Process.Start(s_reportStartInfo);
+		WeakReferenceMessenger.Default.Send(new MessageBoxConfirmMessage
+		{
+			Title = "How to report bugs",
+			Message = """
+			If you want to report a bug please include the latest log file.
+				- If you report a crash or an error, describe what you did until the error occurred.
+				- If you want to report a bug of a mod not deploying, specify your mod list and the mod that caused the error.
+				- If you want to report a bug of a mod not working correctly, this is not the place for that.
+
+			If your issue is more specific feel free to join the Modding Discord.
+
+			Continue?
+			""",
+			Confirm = static () => Process.Start(s_reportStartInfo)
+		});
 	}
 
 	[RelayCommand(AllowConcurrentExecutions = false)]

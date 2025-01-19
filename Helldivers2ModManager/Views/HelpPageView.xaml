@@ -13,21 +13,6 @@
 	  d:DesignWidth="800"
 	  d:DesignHeight="600"
 	  Title="{Binding Title}">
-	<Page.Resources>
-		<Style TargetType="TextBlock" x:Key="Heading">
-			<Setter Property="Foreground" Value="White"/>
-			<Setter Property="FontSize" Value="32"/>
-			<Setter Property="HorizontalAlignment" Value="Center"/>
-			<Setter Property="TextDecorations" Value="Underline"/>
-			<Setter Property="FontFamily" Value="..\Resources\Fonts\#Blockletter"/>
-		</Style>
-		<Style TargetType="TextBlock" x:Key="Text">
-			<Setter Property="Foreground" Value="White"/>
-			<Setter Property="FontSize" Value="14"/>
-			<Setter Property="TextWrapping" Value="Wrap"/>
-			<Setter Property="FontFamily" Value="Sanserif"/>
-		</Style>
-	</Page.Resources>
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="*"/>

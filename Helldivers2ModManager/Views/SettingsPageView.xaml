@@ -44,12 +44,16 @@
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="*"/>
 						<ColumnDefinition Width="Auto"/>
+						<ColumnDefinition Width="Auto"/>
 					</Grid.ColumnDefinitions>
 					<TextBox Text="{Binding GameDir, Mode=OneWay}"
 							 IsReadOnly="True"
 							 FontSize="18"
 							 VerticalAlignment="Center"/>
 					<Button Grid.Column="1"
+							Content="Auto detect"
+							Command="{Binding DetectGameCommand}"/>
+					<Button Grid.Column="2"
 							Content="..."
 							Command="{Binding BrowseGameCommand}"/>
 				</Grid>

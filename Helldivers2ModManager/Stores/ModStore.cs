@@ -56,16 +56,30 @@ internal sealed partial class ModStore
 			{
 				try
 				{
+					var dirName = dirs[i].Name;
 					var file = dirs[i].GetFiles("manifest.json").FirstOrDefault();
 					if (file is null)
+					{
 						tasks[i] = Task.FromResult<object?>(null);
+						_logger.LogWarning("No manifest found in \"{}\"", dirs[i].FullName);
+					}
 					else
-						tasks[i] = Task.Run(async () => await _manifestService.FromFileAsync(file));
+						tasks[i] = Task.Run(async () =>
+						{
+							try
+							{
+								return await _manifestService.FromFileAsync(file);
+							}
+							catch (Exception ex)
+							{
+								_logger.LogError(ex, "Error during manifest reading of \"{}\"", dirName);
+								return null;
+							}
+						});
 				}
 				catch (Exception ex)
 				{
 					_logger.LogError(ex, "Error during mod store initialization");
-					_logger.LogError("Skipping \"{}\" due to previous errors", dirs[i].Name);
 					tasks[i] = Task.FromResult<object?>(null);
 				}
 			}
@@ -81,7 +95,6 @@ internal sealed partial class ModStore
 					_mods.Add(new ModData(dirs[i], new ModManifest(man)));
 				else
 				{
-					_logger.LogWarning("No manifest found in \"{}\"", dir.FullName);
 					_logger.LogWarning("Skipping \"{}\"", dir.Name);
 				}
 			}

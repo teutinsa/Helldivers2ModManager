@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Windows;
 
@@ -106,6 +107,46 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 		SkipList.CollectionChanged += SkipList_CollectionChanged;
 	}
 
+	private static bool ValidateGameDir(DirectoryInfo dir, [NotNullWhen(false)] out string? error)
+	{
+		if (!dir.Exists)
+		{
+			error = "The selected Helldivers 2 folder does not exist!";
+			return false;
+		}
+
+		if (dir is not DirectoryInfo { Name: "Helldivers 2" })
+		{
+			error = "The selected Helldivers 2 folder does not reside in a valid directory!";
+			return false;
+		}
+
+		var subDirs = dir.EnumerateDirectories();
+		if (!subDirs.Any(static d => d.Name == "data"))
+		{
+			error = "The selected Helldivers 2 root path does not contain a directory named \"data\"!";
+			return false;
+		}
+		if (!subDirs.Any(static d => d.Name == "tools"))
+		{
+			error = "The selected Helldivers 2 root path does not contain a directory named \"tools\"!";
+			return false;
+		}
+		if (subDirs.FirstOrDefault(static d => d.Name == "bin") is not DirectoryInfo binDir)
+		{
+			error = "The selected Helldivers 2 root path does not contain a directory named \"bin\"!";
+			return false;
+		}
+		if (!binDir.GetFiles("helldivers2.exe").Any())
+		{
+			error = "The selected Helldivers 2 path does not contain a file named \"helldivers2.exe\" in a folder called \"bin\"!";
+			return false;
+		}
+
+		error = null;
+		return true;
+	}
+
 	private bool ValidateSettings()
 	{
 		if (string.IsNullOrEmpty(GameDir))
@@ -202,49 +243,13 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 				newDir = newDir.Parent;
 			}
 
-			if (newDir is not DirectoryInfo { Name: "Helldivers 2" })
-			{
-				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+			if (ValidateGameDir(newDir, out var error))
+				GameDir = newDir.FullName;
+			else
+				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage
 				{
-					Message = "The selected Helldivers 2 folder does not reside in a valid directory!"
+					Message = error
 				});
-				return;
-			}
-
-			var subDirs = newDir.EnumerateDirectories();
-			if (!subDirs.Any(static dir => dir.Name == "data"))
-			{
-				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
-				{
-					Message = "The selected Helldivers 2 root path does not contain a directory named \"data\"!"
-				});
-				return;
-			}
-			if (!subDirs.Any(static dir => dir.Name == "tools"))
-			{
-				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
-				{
-					Message = "The selected Helldivers 2 root path does not contain a directory named \"tools\"!"
-				});
-				return;
-			}
-			if (!subDirs.Any(static dir => dir.Name == "bin"))
-			{
-				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
-				{
-					Message = "The selected Helldivers 2 root path does not contain a directory named \"bin\"!"
-				});
-				return;
-			}
-
-			GameDir = newDir.FullName;
-		}
-		else
-		{
-			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
-			{
-				Message = "The selected path is not a valid Helldivers 2 root!"
-			});
 		}
 	}
 
@@ -329,5 +334,47 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 	void RemoveSkip()
 	{
 		SkipList.RemoveAt(SelectedSkip);
+	}
+
+	[RelayCommand]
+	async Task DetectGame()
+	{
+		WeakReferenceMessenger.Default.Send(new MessageBoxProgressMessage
+		{
+			Title = "Looking for game",
+			Message = "Please wait democratically."
+		});
+
+		var (result, path) = await Task.Run<(bool, string?)>(static () =>
+		{
+			foreach(var drive in Environment.GetLogicalDrives())
+			{
+				string path;
+				if (drive == "C:\\")
+				{
+					path = Path.Combine(drive, "Program Files (x86)", "Steam", "steamapps", "common", "Helldivers 2");
+					if (ValidateGameDir(new DirectoryInfo(path), out _))
+						return (true, path);
+				}
+
+				path = Path.Combine(drive, "Steam", "steamapps", "common", "Helldivers 2");
+				if (ValidateGameDir(new DirectoryInfo(path), out _))
+					return (true, path);
+
+				path = Path.Combine(drive, "SteamLibrary", "steamapps", "common", "Helldivers 2");
+				if (ValidateGameDir(new DirectoryInfo(path), out _))
+					return (true, path);
+			}
+
+			return (false, null);
+		});
+
+		if (result)
+			WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
+		else
+			WeakReferenceMessenger.Default.Send(new MessageBoxInfoMessage
+			{
+				Message = "Your Helldivers 2 game could not be found automatically. Please set it manually."
+			});
 	}
 }

@@ -15,7 +15,7 @@ internal partial class App : Application
 {
 	public static readonly Version Version = new(1, 2, 1, 0);
 
-	public static readonly string? VersionAddition = "(Purge error test)";
+	public static readonly string? VersionAddition = null;
 
 	public static new App Current => (App)Application.Current;
 
