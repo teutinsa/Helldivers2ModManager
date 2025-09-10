@@ -2,9 +2,11 @@
 using CommunityToolkit.Mvvm.Input;
 using Helldivers2ModManager.Stores;
 using System.Windows.Media;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Helldivers2ModManager.ViewModels;
 
+[RegisterService(ServiceLifetime.Transient)]
 internal sealed partial class MainViewModel : ObservableObject
 {
 	public string Title => $"HD2 Mod Manager {Version} - {CurrentViewModel.Title}";
@@ -16,23 +18,14 @@ internal sealed partial class MainViewModel : ObservableObject
 	public string Version => string.IsNullOrEmpty(App.VersionAddition) ? $"v{App.Version}" : $"v{App.Version} {App.VersionAddition}";
 
 	private readonly NavigationStore _navigationStore;
-	private readonly SettingsStore _settingsStore;
 	private readonly SolidColorBrush _background;
 
-	public MainViewModel(NavigationStore navigationStore, SettingsStore settingsStore)
+	public MainViewModel(NavigationStore navigationStore)
 	{
 		_navigationStore = navigationStore;
-		_settingsStore = settingsStore;
-		_background = new SolidColorBrush(Color.FromScRgb(_settingsStore.Opacity, 0, 0, 0));
+		_background = new SolidColorBrush(Color.FromScRgb(0.7f, 0, 0, 0));
 
 		_navigationStore.Navigated += NavigationStore_Navigated;
-		_settingsStore.SettingsChanged += SettingsStore_SettingsChanged;
-	}
-
-	private void SettingsStore_SettingsChanged(object? sender, EventArgs e)
-	{
-		_background.Color = Color.FromScRgb(_settingsStore.Opacity, 0, 0, 0);
-		OnPropertyChanged(nameof(Background));
 	}
 
 	private void NavigationStore_Navigated(object? sender, EventArgs e)

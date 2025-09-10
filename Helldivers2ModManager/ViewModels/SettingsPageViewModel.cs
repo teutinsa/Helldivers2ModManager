@@ -19,33 +19,33 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 
 	public string GameDir
 	{
-		get => _settingsStore.GameDirectory;
+		get => _settingsService.GameDirectory;
 		set
 		{
 			OnPropertyChanging();
-			_settingsStore.GameDirectory = value;
+			_settingsService.GameDirectory = value;
 			OnPropertyChanged();
 		}
 	}
 
 	public string TempDir
 	{
-		get => _settingsStore.TempDirectory;
+		get => _settingsService.TempDirectory;
 		set
 		{
 			OnPropertyChanging();
-			_settingsStore.TempDirectory = value;
+			_settingsService.TempDirectory = value;
 			OnPropertyChanged();
 		}
 	}
 
 	public string StorageDir
 	{
-		get => _settingsStore.StorageDirectory;
+		get => _settingsService.StorageDirectory;
 		set
 		{
 			OnPropertyChanging();
-			_settingsStore.StorageDirectory = value;
+			_settingsService.StorageDirectory = value;
 			OnPropertyChanged();
 
 			_storageDirChanged = true;
@@ -58,51 +58,51 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 
 	public LogLevel LogLevel
 	{
-		get => _settingsStore.LogLevel;
+		get => _settingsService.LogLevel;
 		set
 		{
 			OnPropertyChanging();
-			_settingsStore.LogLevel = value;
+			_settingsService.LogLevel = value;
 			OnPropertyChanged();
 		}
 	}
 
 	public float Opacity
 	{
-		get => _settingsStore.Opacity;
+		get => _settingsService.Opacity;
 		set
 		{
 			OnPropertyChanging();
-			_settingsStore.Opacity = value;
+			_settingsService.Opacity = value;
 			OnPropertyChanged();
 		}
 	}
 
-	public ObservableCollection<string> SkipList => _settingsStore.SkipList;
+	public ObservableCollection<string> SkipList => _settingsService.SkipList;
 
 	public bool CaseSensitiveSearch
 	{
-		get => _settingsStore.CaseSensitiveSearch;
+		get => _settingsService.CaseSensitiveSearch;
 		set
 		{
 			OnPropertyChanging();
-			_settingsStore.CaseSensitiveSearch = value;
+			_settingsService.CaseSensitiveSearch = value;
 			OnPropertyChanged();
 		}
 	}
 
 	private readonly ILogger<SettingsPageViewModel> _logger;
 	private readonly NavigationStore _navStore;
-	private readonly SettingsStore _settingsStore;
+	private readonly SettingsService _settingsService;
 	private bool _storageDirChanged = false;
 	[ObservableProperty]
 	private int _selectedSkip = -1;
 
-	public SettingsPageViewModel(ILogger<SettingsPageViewModel> logger, NavigationStore navStore, SettingsStore settingsStore)
+	public SettingsPageViewModel(ILogger<SettingsPageViewModel> logger, NavigationStore navStore, SettingsService settingsService)
 	{
 		_logger = logger;
 		_navStore = navStore;
-		_settingsStore = settingsStore;
+		_settingsService = settingsService;
 
 		SkipList.CollectionChanged += SkipList_CollectionChanged;
 	}
@@ -198,7 +198,7 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 		if (!ValidateSettings())
 			return;
 
-		_settingsStore.Save();
+		_settingsService.Save();
 
 		if (_storageDirChanged)
 			Application.Current.Shutdown();
@@ -215,7 +215,7 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 			Message = "Do you really want to reset your settings?",
 			Confirm = () =>
 			{
-				_settingsStore.Reset();
+				_settingsService.Reset();
 				OnPropertyChanged(nameof(GameDir));
 				OnPropertyChanged(nameof(TempDir));
 				OnPropertyChanged(nameof(StorageDir));
@@ -286,11 +286,11 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 	{
 		_logger.LogInformation("Hard purging patch files");
 		
-		var path = Path.Combine(_settingsStore.StorageDirectory, "installed.txt");
+		var path = Path.Combine(_settingsService.StorageDirectory, "installed.txt");
 		if (File.Exists(path))
 			File.Delete(path);
 
-		var dataDir = new DirectoryInfo(Path.Combine(_settingsStore.GameDirectory, "data"));
+		var dataDir = new DirectoryInfo(Path.Combine(_settingsService.GameDirectory, "data"));
 		
 		var files = dataDir.EnumerateFiles("*.patch_*").ToArray();
 		_logger.LogDebug("Found {} patch files", files.Length);
