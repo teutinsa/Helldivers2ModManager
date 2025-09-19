@@ -1,6 +1,6 @@
 namespace Helldivers2ModManager.Models;
 
-public enum ManifestVersion
+internal enum ManifestVersion
 {
     Legacy = -1,
     V1 = 1,

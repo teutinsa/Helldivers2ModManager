@@ -1,8 +1,9 @@
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace Helldivers2ModManager.Models;
 
-public interface IModManifest
+internal interface IModManifest
 {
     ManifestVersion Version { get; }
     
@@ -14,7 +15,7 @@ public interface IModManifest
     
     public string? IconPath { get; }
     
-    static abstract IModManifest Deserialize(JsonElement root);
+    static abstract IModManifest Deserialize(JsonElement root, ILogger? logger = null);
     
     void Serialize(Utf8JsonWriter writer);
 }

@@ -2,7 +2,7 @@ using System.IO;
 
 namespace Helldivers2ModManager.Models;
 
-public sealed class ModData(DirectoryInfo dir, IModManifest manifest)
+internal sealed class ModData(DirectoryInfo dir, IModManifest manifest)
 {
     public DirectoryInfo Directory { get; } = dir;
 
