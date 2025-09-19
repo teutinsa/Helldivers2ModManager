@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Windows;
+using Helldivers2ModManager.Stores;
+using Helldivers2ModManager.ViewModels;
 
 namespace Helldivers2ModManager;
 
@@ -31,6 +33,7 @@ internal partial class App : Application
 		HostApplicationBuilder builder = new();
 
 		AddServices(builder.Services);
+		builder.Services.AddSingleton<NavigationStore>(static services => new NavigationStore(services, services.GetRequiredService<DashboardPageViewModel>()));
 		builder.Services.AddLogging(log =>
 		{
 #if DEBUG
@@ -66,10 +69,29 @@ internal partial class App : Application
 
 		foreach (var (type, attr) in tuples)
 		{
-			var desc = attr.Contract is null
-				? new ServiceDescriptor(type, attr.Lifetime)
-				: new ServiceDescriptor(attr.Contract, type, attr.Lifetime);
-			services.Add(desc);
+			switch (attr.Lifetime)
+			{
+				case ServiceLifetime.Singleton:
+					if (attr.Contract is null)
+						services.AddSingleton(type);
+					else
+						services.AddSingleton(attr.Contract, type);
+					break;
+				
+				case ServiceLifetime.Scoped:
+					if (attr.Contract is null)
+						services.AddScoped(type);
+					else
+						services.AddScoped(attr.Contract, type);
+					break;
+				
+				case ServiceLifetime.Transient:
+					if (attr.Contract is null)
+						services.AddTransient(type);
+					else
+						services.AddTransient(attr.Contract, type);
+					break;
+			}
 		}
 	}
 	

@@ -60,11 +60,6 @@
 	<ItemGroup>
 	  <SplashScreen Include="Resources\Images\logo_splash.png" />
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Models\" />
-	  <Folder Include="Services\Manifest\" />
-	</ItemGroup>
 	
 	<Target Name="Sign Publish" AfterTargets="Publish">
 		<Exec Command='"C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64\signtool.exe" sign /a /fd SHA256 .\bin\publish\single-file\Helldivers2ModManager.exe'/>

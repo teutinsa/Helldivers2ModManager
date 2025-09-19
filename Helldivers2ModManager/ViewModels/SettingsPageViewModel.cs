@@ -10,9 +10,12 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Windows;
+using Helldivers2ModManager.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Helldivers2ModManager.ViewModels;
 
+[RegisterService(ServiceLifetime.Transient)]
 internal sealed partial class SettingsPageViewModel : PageViewModelBase
 {
 	public override string Title => "Settings";
@@ -47,12 +50,6 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 			OnPropertyChanging();
 			_settingsService.StorageDirectory = value;
 			OnPropertyChanged();
-
-			_storageDirChanged = true;
-			WeakReferenceMessenger.Default.Send(new MessageBoxInfoMessage()
-			{
-				Message = "Storage directory changed. The application needs to be restarted and will quit once you hit \"OK\"."
-			});
 		}
 	}
 
@@ -94,7 +91,6 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 	private readonly ILogger<SettingsPageViewModel> _logger;
 	private readonly NavigationStore _navStore;
 	private readonly SettingsService _settingsService;
-	private bool _storageDirChanged = false;
 	[ObservableProperty]
 	private int _selectedSkip = -1;
 
@@ -193,17 +189,33 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 	}
 
 	[RelayCommand]
-	void Ok()
+	async Task Ok()
 	{
 		if (!ValidateSettings())
 			return;
 
-		_settingsService.Save();
+		WeakReferenceMessenger.Default.Send(new MessageBoxProgressMessage
+		{
+			Title = "Saving Settings",
+			Message = "Please wait democratically."
+		});
+		
+		try
+		{
+			await _settingsService.SaveAsync();
+			WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
+		}
+		catch (Exception ex)
+		{
+			_logger.LogWarning(ex, "Failed to save settings");
+			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+			{
+				Message = ex.Message
+			});
+			return;
+		}
 
-		if (_storageDirChanged)
-			Application.Current.Shutdown();
-		else
-			_navStore.Navigate<DashboardPageViewModel>();
+		_navStore.Navigate<DashboardPageViewModel>();
 	}
 
 	[RelayCommand]

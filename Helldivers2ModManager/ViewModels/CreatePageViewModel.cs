@@ -1,10 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using Helldivers2ModManager.Stores;
 using Helldivers2ModManager.ViewModels.Create;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Helldivers2ModManager.ViewModels;
 
+[RegisterService(ServiceLifetime.Transient)]
 internal sealed partial class CreatePageViewModel : PageViewModelBase
 {
 	public override string Title => "Create";
