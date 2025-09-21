@@ -102,9 +102,9 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 		SkipList.CollectionChanged += SkipList_CollectionChanged;
 
 		if (MessageBox.IsRegistered)
-			Init();
+			_ = Init();
 		else
-			MessageBox.Registered += (_, _) => Init();
+			MessageBox.Registered += (_, _) => _ = Init();
 	}
 
 	private static bool ValidateGameDir(DirectoryInfo dir, [NotNullWhen(false)] out string? error)

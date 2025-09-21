@@ -155,6 +155,7 @@ internal sealed class SettingsService
 
 		_logger.LogInformation("Initializing settings service (readonly = {})", @readonly);
 		
+		s_file.Refresh();
 		if (!s_file.Exists)
 			return false;
 

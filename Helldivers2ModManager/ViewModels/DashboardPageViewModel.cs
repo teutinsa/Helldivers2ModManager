@@ -59,9 +59,9 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		Mods = _mods;
 
 		if (MessageBox.IsRegistered)
-			Init();
+			_ = Init();
 		else
-			MessageBox.Registered += (_, _) => Init();
+			MessageBox.Registered += (_, _) => _ = Init();
 	}
 
 	protected override void OnPropertyChanged(PropertyChangedEventArgs e)
@@ -203,15 +203,15 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		UpdateView();
 
 		if (problems.Length > 0)
-			ShowProblems(problems);
+			ShowProblems(problems, "Problems with loading mods:");
 		Initialized = true;
 		_logger.LogInformation("Initialization successful");
 	}
 
-	private void ShowProblems(ModProblem[] problems)
+	private void ShowProblems(ModProblem[] problems, string prefix, bool error = false)
 	{
 		var sb = new StringBuilder();
-		sb.AppendLine("Problems with loading mods:");
+		sb.AppendLine(prefix);
 
 		var errors = problems.Where(static p => p.IsError).ToArray();
 		if (errors.Length != 0)
@@ -259,10 +259,16 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			}
 		}
 
-		WeakReferenceMessenger.Default.Send(new MessageBoxWarningMessage
-		{
-			Message = sb.ToString(),
-		});
+		if (error)
+			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage
+			{
+				Message = sb.ToString(),
+			});
+		else
+			WeakReferenceMessenger.Default.Send(new MessageBoxWarningMessage
+			{
+				Message = sb.ToString(),
+			});
 	}
 
 	private void ModService_ModAdded(ModData mod)
@@ -302,7 +308,13 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			{
 				var problems = await _modService.TryAddModFromArchiveAsync(new FileInfo(dialog.FileName));
 				if (problems.Length > 0)
-					ShowProblems(problems);
+				{
+					var error = problems.Any(static p => p.IsError);
+					var prefix = error
+						? "Mod adding failed due to problems:"
+						: "Mod added with warnings:";
+					ShowProblems(problems, prefix, error);
+				}
 				else
 					WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
 			}
