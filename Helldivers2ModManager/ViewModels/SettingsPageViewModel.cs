@@ -9,7 +9,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Windows;
 using Helldivers2ModManager.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,7 +21,7 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 
 	public string GameDir
 	{
-		get => _settingsService.GameDirectory;
+		get => _settingsService.Initialized ? _settingsService.GameDirectory : string.Empty;
 		set
 		{
 			OnPropertyChanging();
@@ -33,7 +32,7 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 
 	public string TempDir
 	{
-		get => _settingsService.TempDirectory;
+		get => _settingsService.Initialized ? _settingsService.TempDirectory : string.Empty;
 		set
 		{
 			OnPropertyChanging();
@@ -44,7 +43,7 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 
 	public string StorageDir
 	{
-		get => _settingsService.StorageDirectory;
+		get => _settingsService.Initialized ? _settingsService.StorageDirectory : string.Empty;
 		set
 		{
 			OnPropertyChanging();
@@ -55,7 +54,7 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 
 	public LogLevel LogLevel
 	{
-		get => _settingsService.LogLevel;
+		get => _settingsService.Initialized ? _settingsService.LogLevel : LogLevel.Warning;
 		set
 		{
 			OnPropertyChanging();
@@ -66,7 +65,7 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 
 	public float Opacity
 	{
-		get => _settingsService.Opacity;
+		get => _settingsService.Initialized ? _settingsService.Opacity : 0.8f;
 		set
 		{
 			OnPropertyChanging();
@@ -75,11 +74,11 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 		}
 	}
 
-	public ObservableCollection<string> SkipList => _settingsService.SkipList;
+	public ObservableCollection<string> SkipList => _settingsService.Initialized ? _settingsService.SkipList : [];
 
 	public bool CaseSensitiveSearch
 	{
-		get => _settingsService.CaseSensitiveSearch;
+		get => _settingsService.Initialized ? _settingsService.CaseSensitiveSearch : false;
 		set
 		{
 			OnPropertyChanging();
@@ -101,6 +100,11 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 		_settingsService = settingsService;
 
 		SkipList.CollectionChanged += SkipList_CollectionChanged;
+
+		if (MessageBox.IsRegistered)
+			Init();
+		else
+			MessageBox.Registered += (_, _) => Init();
 	}
 
 	private static bool ValidateGameDir(DirectoryInfo dir, [NotNullWhen(false)] out string? error)
@@ -143,6 +147,14 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 		return true;
 	}
 
+	protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+	{
+		if (e.PropertyName == nameof(SelectedSkip))
+			RemoveSkipCommand.NotifyCanExecuteChanged();
+
+		base.OnPropertyChanged(e);
+	}
+
 	private bool ValidateSettings()
 	{
 		if (string.IsNullOrEmpty(GameDir))
@@ -175,12 +187,47 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 		return true;
 	}
 
-	protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+	private async Task Init()
 	{
-		if (e.PropertyName == nameof(SelectedSkip))
-			RemoveSkipCommand.NotifyCanExecuteChanged();
+		_logger.LogInformation("Loading settings...");
+		WeakReferenceMessenger.Default.Send(new MessageBoxProgressMessage
+		{
+			Title = "Loading settings",
+			Message = "Please wait democratically.",
+		});
+		try
+		{
+			if (!await _settingsService.InitAsync())
+				_settingsService.InitDefault();
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Loading settings failed");
+			WeakReferenceMessenger.Default.Send(new MessageBoxConfirmMessage
+			{
+				Title = "Loading settings failed!",
+				Message = "Do you want to reset your settings?",
+				Confirm = () =>
+				{
+					_settingsService.InitDefault();
+					Update();
+				},
+			});
+			return;
+		}
+		_logger.LogInformation("Settings loaded successfully");
+		WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
+	}
 
-		base.OnPropertyChanged(e);
+	private void Update()
+	{
+		OnPropertyChanged(nameof(GameDir));
+		OnPropertyChanged(nameof(TempDir));
+		OnPropertyChanged(nameof(StorageDir));
+		OnPropertyChanged(nameof(LogLevel));
+		OnPropertyChanged(nameof(Opacity));
+		OnPropertyChanged(nameof(SkipList));
+		OnPropertyChanged(nameof(CaseSensitiveSearch));
 	}
 
 	private void SkipList_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -194,26 +241,34 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 		if (!ValidateSettings())
 			return;
 
+		if (!_settingsService.Validate())
+		{
+			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+			{
+				Message = "Invalid settings!",
+			});
+			return;
+		}
+
 		WeakReferenceMessenger.Default.Send(new MessageBoxProgressMessage
 		{
 			Title = "Saving Settings",
 			Message = "Please wait democratically."
 		});
-		
 		try
 		{
 			await _settingsService.SaveAsync();
-			WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
 		}
 		catch (Exception ex)
 		{
 			_logger.LogWarning(ex, "Failed to save settings");
 			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
 			{
-				Message = ex.Message
+				Message = $"Failed to save settings!\n\n{ex.Message}",
 			});
 			return;
 		}
+		WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
 
 		_navStore.Navigate<DashboardPageViewModel>();
 	}
@@ -228,11 +283,7 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 			Confirm = () =>
 			{
 				_settingsService.Reset();
-				OnPropertyChanged(nameof(GameDir));
-				OnPropertyChanged(nameof(TempDir));
-				OnPropertyChanged(nameof(StorageDir));
-				OnPropertyChanged(nameof(LogLevel));
-				OnPropertyChanged(nameof(Opacity));
+				Update();
 			}
 		});
 	}

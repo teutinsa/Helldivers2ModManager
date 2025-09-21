@@ -79,14 +79,12 @@
 												Orientation="Horizontal"
 												VerticalAlignment="Top"
 												HorizontalAlignment="Right">
-										<!--
 										<Button Style="{StaticResource SystemButton}"
 												Click="HelpButton_Click">
 											<TextBlock Foreground="{Binding Path=Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"
 													   Text="?"
 													   FontSize="20"/>
 										</Button>
-										-->
 										<Button Style="{StaticResource SystemButton}"
 												Click="MinButton_Click">
 											<Path Stroke="{Binding Path=Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"

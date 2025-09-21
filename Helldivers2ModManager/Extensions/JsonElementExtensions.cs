@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace Helldivers2ModManager.Extensions;
 
-public static class JsonElementExtensions
+internal static class JsonElementExtensions
 {
     public static bool TryGetProperty(this JsonElement node, string propertyName, JsonValueKind valueKind, out JsonElement value)
     {

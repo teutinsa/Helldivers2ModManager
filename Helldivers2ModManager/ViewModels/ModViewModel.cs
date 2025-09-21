@@ -33,6 +33,20 @@ internal sealed partial class ModViewModel : ObservableObject
 
 	public string[]? LegacyOptions { get; }
 
+	public bool Enabled
+	{
+		get => _mod.Enabled;
+
+		set
+		{
+			if (_mod.Enabled == value)
+				return;
+			OnPropertyChanging();
+			_mod.Enabled = value;
+			OnPropertyChanged();
+		}
+	}
+
 	public int LegacySelectedOption
 	{
 		get => _mod.Manifest.Version == ManifestVersion.Legacy ? _mod.SelectedOptions[0] : -1;
@@ -50,13 +64,10 @@ internal sealed partial class ModViewModel : ObservableObject
 	public ModOptionViewModel[]? Options { get; }
 
 	private readonly ModData _mod;
-	[ObservableProperty]
-	private bool _enabled;
 
 	public ModViewModel(ModData mod)
 	{
 		_mod = mod;
-		_enabled = false;
 
 		switch (_mod.Manifest.Version)
 		{

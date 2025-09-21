@@ -50,4 +50,25 @@ internal static class ModManifest
             _ => throw new UnknownManifestVersionException()
         };
     }
+
+    public static IModManifest InferFromDirectory(DirectoryInfo dir, ILogger? logger = null)
+    {
+        var dirs = dir.GetDirectories();
+
+        if (dirs.Length == 0)
+            return new LegacyModManifest
+            {
+                Guid = Guid.NewGuid(),
+                Name = dir.Name,
+                Description = "A locally imported mod.",
+            };
+
+        return new LegacyModManifest
+		{
+			Guid = Guid.NewGuid(),
+			Name = dir.Name,
+			Description = "A locally imported mod.",
+            Options = dirs.Select(static d => d.Name).ToArray(),
+		};
+	}
 }

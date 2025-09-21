@@ -55,6 +55,10 @@ namespace Helldivers2ModManager.Components
 
 	internal partial class MessageBox : UserControl, IRecipient<MessageBoxInfoMessage>, IRecipient<MessageBoxWarningMessage>, IRecipient<MessageBoxErrorMessage>, IRecipient<MessageBoxProgressMessage>, IRecipient<MessageBoxHideMessage>, IRecipient<MessageBoxInputMessage>, IRecipient<MessageBoxConfirmMessage>
 	{
+		public static bool IsRegistered { get; private set; }
+
+		public static event EventHandler? Registered;
+		
 		private Action<string>? _inputAction;
 		private Action? _abortAction;
 		private Action? _confirmAction;
@@ -70,6 +74,12 @@ namespace Helldivers2ModManager.Components
 			WeakReferenceMessenger.Default.Register<MessageBoxHideMessage>(this);
 			WeakReferenceMessenger.Default.Register<MessageBoxInputMessage>(this);
 			WeakReferenceMessenger.Default.Register<MessageBoxConfirmMessage>(this);
+
+			if (!IsRegistered)
+			{
+				IsRegistered = true;
+				Registered?.Invoke(this, EventArgs.Empty);
+			}
 		}
 
 		public void Receive(MessageBoxInfoMessage message)

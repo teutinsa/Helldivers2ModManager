@@ -1,4 +1,4 @@
 namespace Helldivers2ModManager.Exceptions;
 
-public sealed class UnknownManifestVersionException : Exception
+internal sealed class UnknownManifestVersionException : Exception
 { }

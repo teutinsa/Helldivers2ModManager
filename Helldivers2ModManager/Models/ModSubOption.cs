@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Helldivers2ModManager.Models;
 
-public sealed class ModSubOption : IJsonSerializable<ModSubOption>
+internal sealed class ModSubOption : IJsonSerializable<ModSubOption>
 {
     public required string Name { get; init; }
     

@@ -1,8 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Helldivers2ModManager.Stores;
-using System.Windows.Media;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics;
+using System.Windows.Media;
 
 namespace Helldivers2ModManager.ViewModels;
 
@@ -17,6 +18,7 @@ internal sealed partial class MainViewModel : ObservableObject
 
 	public string Version => string.IsNullOrEmpty(App.VersionAddition) ? $"v{App.Version}" : $"v{App.Version} {App.VersionAddition}";
 
+	private static readonly ProcessStartInfo s_helpStartInfo = new(@"https://teutinsa.github.io/hd2mm-site/index.html") { UseShellExecute = true };
 	private readonly NavigationStore _navigationStore;
 	private readonly SolidColorBrush _background;
 
@@ -37,6 +39,6 @@ internal sealed partial class MainViewModel : ObservableObject
 	[RelayCommand]
 	void Help()
 	{
-		_navigationStore.Navigate<HelpPageViewModel>();
+		Process.Start(s_helpStartInfo);
 	}
 }

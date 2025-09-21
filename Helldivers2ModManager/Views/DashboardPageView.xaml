@@ -27,7 +27,8 @@
 					Grid.RowSpan="2"
 					Grid.Column="0">
 			<Button Content="Add"
-					Command="{Binding AddCommand}"/>
+					Command="{Binding AddCommand}"
+					IsEnabled="{Binding Initialized}"/>
 			<!--
 			<Button Content="Browse"
 					Command="{Binding BrowseCommand}"/>
@@ -68,7 +69,8 @@
 					HorizontalAlignment="Right">
 			<Button Content="Purge"
 					Style="{DynamicResource CancelButton}"
-					Command="{Binding PurgeCommand}">
+					Command="{Binding PurgeCommand}"
+					IsEnabled="{Binding Initialized}">
 				<Button.ToolTip>
 					<TextBlock Text="Removes all patch files from the games data directory."
 							   FontFamily="../Resources/Fonts/#FS Sinclair Regular"
@@ -77,7 +79,8 @@
 			</Button>
 			<Button Content="Deploy"
 					Style="{DynamicResource ConfirmButton}"
-					Command="{Binding DeployCommand}">
+					Command="{Binding DeployCommand}"
+					IsEnabled="{Binding Initialized}">
 				<Button.ToolTip>
 					<TextBlock Text="Installs all selected mods patch files into the games data directory."
 							   FontFamily="../Resources/Fonts/#FS Sinclair Regular"
@@ -85,7 +88,8 @@
 				</Button.ToolTip>
 			</Button>
 			<Button Content="Launch HD2"
-					Command="{Binding RunCommand}">
+					Command="{Binding RunCommand}"
+					IsEnabled="{Binding Initialized}">
 				<Button.ToolTip>
 					<TextBlock Text="Runs the game through steam."
 							   FontFamily="../Resources/Fonts/#FS Sinclair Regular"

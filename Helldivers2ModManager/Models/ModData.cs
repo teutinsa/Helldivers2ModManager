@@ -10,7 +10,7 @@ internal sealed class ModData(DirectoryInfo dir, IModManifest manifest)
 
     public bool Enabled { get; set; } = true;
 
-    public bool[] EnabledOptions { get; } = manifest.Version switch
+    public bool[] EnabledOptions { get; private set; } = manifest.Version switch
     {
         ManifestVersion.Legacy => [],
         ManifestVersion.V1 => Enumerable.Repeat(true, ((V1ModManifest)manifest).Options is null ? 0 : ((V1ModManifest)manifest).Options!.Count).ToArray(),
@@ -18,11 +18,29 @@ internal sealed class ModData(DirectoryInfo dir, IModManifest manifest)
         _ => throw new NotImplementedException()
     };
 
-    public int[] SelectedOptions { get; } = manifest.Version switch
+    public int[] SelectedOptions { get; private set; } = manifest.Version switch
     {
         ManifestVersion.Legacy => new int[1],
         ManifestVersion.V1 => new int[((V1ModManifest)manifest).Options is null ? 0 : ((V1ModManifest)manifest).Options!.Count],
         ManifestVersion.V2 => throw new NotSupportedException(),
         _ => throw new NotImplementedException()
     };
+
+    public void ApplyData(in EnabledData data)
+    {
+        Enabled = data.Enabled;
+        EnabledOptions = data.Toggled;
+		SelectedOptions = data.Selected;
+    }
+
+    public EnabledData ToEnabledData()
+    {
+        return new EnabledData
+        {
+            Guid = Manifest.Guid,
+            Enabled = Enabled,
+            Toggled = EnabledOptions,
+            Selected = SelectedOptions,
+        };
+    }
 }
