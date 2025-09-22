@@ -32,10 +32,10 @@
 		<DataTemplate DataType="{x:Type vms:CreatePageViewModel}">
 			<views:CreatePageView/>
 		</DataTemplate>
-		-->
 		<DataTemplate DataType="{x:Type vms:HelpPageViewModel}">
 			<views:HelpPageView/>
 		</DataTemplate>
+		-->
 	</Window.Resources>
 	
 	<Window.Style>
@@ -44,7 +44,7 @@
 			<Setter Property="SnapsToDevicePixels" Value="True"/>
 			<Setter Property="BorderBrush" Value="DarkGray"/>
 			<!--<Setter Property="Background" Value="#C000"/>-->
-			<Setter Property="BorderThickness" Value="3"/>
+			<Setter Property="BorderThickness" Value="4"/>
 			<Setter Property="Template">
 				<Setter.Value>
 					<ControlTemplate TargetType="Window">
@@ -133,6 +133,6 @@
 	<WindowChrome.WindowChrome>
 		<WindowChrome CaptionHeight="65"
 					  CornerRadius="0"
-					  ResizeBorderThickness="3"/>
+					  ResizeBorderThickness="5"/>
 	</WindowChrome.WindowChrome>
 </Window>

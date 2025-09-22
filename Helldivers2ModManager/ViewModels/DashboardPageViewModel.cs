@@ -206,6 +206,10 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			ShowProblems(problems, "Problems with loading mods:");
 		Initialized = true;
 		_logger.LogInformation("Initialization successful");
+
+#if DEBUG && FALSE
+		ShowProblems(Enum.GetValues<ModProblemKind>().Select(static k => new ModProblem { Directory = new DirectoryInfo(@"C:\ModStorage\Test"), Kind = k }), "Problem test:", true);
+#endif
 	}
 
 	private void ShowProblems(IEnumerable<ModProblem> problems, string prefix, bool error = false)
@@ -228,10 +232,12 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 				{
 					ModProblemKind.CantParseManifest => "Can't parse manifest!",
 					ModProblemKind.UnknownManifestVersion => "Unknown manifest version!",
-					ModProblemKind.OutOfSupportManifest => $"Unsupported manifest version! Please update.\n\t\t\tManager version {App.Version} does not support this version of the manifest.",
+					ModProblemKind.OutOfSupportManifest => $"Unsupported manifest version! Please update.\n\t\tManager version {App.Version} does not support this version of the manifest.",
 					ModProblemKind.Duplicate => "A mod with the same GUID was already added!",
-					ModProblemKind.InvalidPath => $"The include path \"{e.ExtraData}\" is invalid",
-					_ => "Unknow problem!"
+					ModProblemKind.InvalidPath => e.ExtraData is not null
+						? $"The include path \"{e.ExtraData}\" is invalid!"
+						: "A include path is invalid!",
+					_ => throw new NotImplementedException()
 				};
 				sb.AppendLine(desc);
 			}
@@ -250,10 +256,13 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 				sb.Append("\t\t");
 				string desc = w.Kind switch
 				{
-					ModProblemKind.NoManifestFound => "No manifest found in directory!",
+					ModProblemKind.NoManifestFound => error
+						? "No manifest found in directory!"
+						: "No manifest found in directory!\n\t\t\tAction: Deleting",
 					ModProblemKind.EmptyOptions => "Manifest contains empty options! This mod will likely do nothing.",
 					ModProblemKind.EmptySubOptions => "Manifest contains empty sub-options! This mod will likely not work as expected.",
-					_ => "Unknow problem!"
+					ModProblemKind.EmptyIncludes => "Manifest contains empty include lists! This mod my not do anything.",
+					_ => throw new NotImplementedException()
 				};
 				sb.AppendLine(desc);
 			}
