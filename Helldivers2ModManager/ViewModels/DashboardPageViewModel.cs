@@ -115,8 +115,8 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		});
 		try
 		{
-			if (!await _settingsService.InitAsync())
-				_settingsService.InitDefault();
+			if (!await _settingsService.InitAsync(true))
+				_settingsService.InitDefault(true);
 		}
 		catch (Exception ex)
 		{
@@ -208,7 +208,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		_logger.LogInformation("Initialization successful");
 	}
 
-	private void ShowProblems(ModProblem[] problems, string prefix, bool error = false)
+	private void ShowProblems(IEnumerable<ModProblem> problems, string prefix, bool error = false)
 	{
 		var sb = new StringBuilder();
 		sb.AppendLine(prefix);
@@ -250,7 +250,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 				sb.Append("\t\t");
 				string desc = w.Kind switch
 				{
-					ModProblemKind.NoManifestFound => "No manifest found in directory!\n\t\t\tAction: Deleting",
+					ModProblemKind.NoManifestFound => "No manifest found in directory!",
 					ModProblemKind.EmptyOptions => "Manifest contains empty options! This mod will likely do nothing.",
 					ModProblemKind.EmptySubOptions => "Manifest contains empty sub-options! This mod will likely not work as expected.",
 					_ => "Unknow problem!"

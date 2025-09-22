@@ -165,7 +165,7 @@ internal sealed partial class ModService
 		tmpDir.Create();
 
 		_logger.LogInformation("Extracting archive");
-		await Task.Run(() => ArchiveFactory.Open(file.FullName).ExtractToDirectory(tmpDir.FullName));
+		await Task.Run(() => ArchiveFactory.Open(file).ExtractToDirectory(tmpDir.FullName));
 
 		var manifestFile = new FileInfo(Path.Combine(tmpDir.FullName, "manifest.json"));
 
