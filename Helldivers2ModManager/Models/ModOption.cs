@@ -18,8 +18,8 @@ internal sealed class ModOption : IJsonSerializable<ModOption>
     
     public static ModOption Deserialize(JsonElement root, ILogger? logger = null)
     {
-        var name = root.GetProperty(nameof(Name)).GetString()!;
-        var description = root.GetProperty(nameof(Description)).GetString()!;
+        var name = root.GetProperty<string>(nameof(Name));
+        var description = root.GetProperty<string>(nameof(Description));
         List<string>? include = null;
         if (root.TryGetProperty(nameof(Include), JsonValueKind.Array, out var prop))
         {

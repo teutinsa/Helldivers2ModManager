@@ -7,7 +7,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2A0A466C-C7C7-4544-AF49-2D54CD76C10D}"
 	ProjectSection(SolutionItems) = preProject
 		LICENSE.txt = LICENSE.txt
-		mod_manifest_v1-schema.json = mod_manifest_v1-schema.json
 		README.md = README.md
 	EndProjectSection
 EndProject

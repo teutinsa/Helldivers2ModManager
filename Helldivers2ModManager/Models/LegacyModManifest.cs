@@ -20,9 +20,9 @@ internal sealed class LegacyModManifest : IModManifest
 
     public static IModManifest Deserialize(JsonElement root, ILogger? logger = null)
     {
-        var guid = Guid.Parse(root.GetProperty(nameof(Guid)).GetString()!);
-        var name = root.GetProperty(nameof(Name)).GetString()!;
-        var description = root.GetProperty(nameof(Description)).GetString()!;
+        var guid = Guid.Parse(root.GetProperty<string>(nameof(Guid)));
+        var name = root.GetProperty<string>(nameof(Name));
+        var description = root.GetProperty<string>(nameof(Description));
         string? iconPath = null;
         if (root.TryGetProperty(nameof(IconPath), JsonValueKind.String, out var prop))
             iconPath = prop.GetString()!;

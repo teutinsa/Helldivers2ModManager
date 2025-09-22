@@ -1,4 +1,5 @@
 using System.IO;
+using System.Runtime.Serialization;
 using System.Text.Json;
 using Helldivers2ModManager.Exceptions;
 using Helldivers2ModManager.Extensions;
@@ -18,7 +19,7 @@ internal static class ModManifest
     {
         foreach (var file in dir.EnumerateFiles())
             if (file.Name == "manifest.json")
-                return DeserializeFromFile(file);
+                return DeserializeFromFile(file, logger);
         throw new FileNotFoundException($"Could not find file `manifest.json` in `{dir.FullName}`!");
     }
     
@@ -26,7 +27,7 @@ internal static class ModManifest
     {
         using var stream = file.OpenRead();
         var doc = JsonDocument.Parse(stream, s_options);
-        return DeserializeFromDocument(doc);
+        return DeserializeFromDocument(doc, logger);
     }
 
     public static IModManifest DeserializeFromDocument(JsonDocument doc, ILogger? logger = null)
@@ -34,13 +35,18 @@ internal static class ModManifest
         var root = doc.RootElement;
         var version = ManifestVersion.Legacy;
         
-        if (root.TryGetProperty(nameof(IModManifest.Version), JsonValueKind.Number, out var value))
-            version = value.GetInt32() switch
-            {
-                1 => ManifestVersion.V1,
-                2 => ManifestVersion.V2,
-                _ => throw new UnknownManifestVersionException()
-            };
+        if (root.TryGetProperty(nameof(IModManifest.Version), JsonValueKind.Number, out var prop))
+        {
+            if (prop.TryGetInt32(out var value))
+                version = value switch
+                {
+                    1 => ManifestVersion.V1,
+                    2 => ManifestVersion.V2,
+                    _ => throw new UnknownManifestVersionException()
+                };
+            else
+                throw new SerializationException($"Could not convert value of property \"{nameof(IModManifest.Version)}\" to `{typeof(int).Name}`!");
+        }
 
         return version switch
         {
