@@ -1,3 +1,4 @@
+using System.Runtime.Serialization;
 using System.Text.Json;
 using Helldivers2ModManager.Extensions;
 using Microsoft.Extensions.Logging;
@@ -16,10 +17,13 @@ internal sealed class ModSubOption : IJsonSerializable<ModSubOption>
     
     public static ModSubOption Deserialize(JsonElement root, ILogger? logger = null)
     {
-        var name = root.GetProperty(nameof(Name)).GetString()!;
-        var description = root.GetProperty(nameof(Description)).GetString()!;
-        var prop = root.GetProperty(nameof(Include));
-        var include = new List<string>(prop.GetArrayLength());
+        var name = root.GetProperty<string>(nameof(Name));
+        var description = root.GetProperty<string>(nameof(Description));
+        if (!root.TryGetProperty(nameof(Include), out var prop))
+			throw new SerializationException($"Could not find property of name \"{nameof(Include)}\"!");
+		if (prop.ValueKind != JsonValueKind.Array)
+			throw new SerializationException($"Property \"{nameof(Include)}\" was not of expected type ´array´!");
+		var include = new List<string>(prop.GetArrayLength());
         foreach (var elm in prop.EnumerateArray())
             if (elm.ValueKind == JsonValueKind.String)
                 include.Add(elm.GetString()!);

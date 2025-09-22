@@ -329,7 +329,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			}
 			catch(Exception ex)
 			{
-				_logger.LogWarning(ex, "Failed to add mod");
+				_logger.LogError(ex, "Failed to add mod");
 				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
 				{
 					Message = ex.Message
