@@ -3,7 +3,7 @@ using System.Windows.Controls;
 
 namespace Helldivers2ModManager;
 
-public static class ComboBoxScrollBehavior
+internal static class ComboBoxScrollBehavior
 {
 	public static readonly DependencyProperty DisableScrollProperty = DependencyProperty.RegisterAttached("DisableScroll", typeof(bool), typeof(ComboBoxScrollBehavior), new PropertyMetadata(false, OnDisableScrollChanged));
 

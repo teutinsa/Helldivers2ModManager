@@ -11,7 +11,7 @@ internal static class FileLoggerExtensions
 {
 	public static ILoggingBuilder AddFile(this ILoggingBuilder builder, string name)
 	{
-		builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, FileLoggerProvider>(provider => new FileLoggerProvider(name, provider.GetRequiredService<SettingsStore>())));
+		builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, FileLoggerProvider>(provider => new FileLoggerProvider(name)));
 		return builder;
 	}
 }
@@ -21,21 +21,19 @@ internal sealed class FileLoggerProvider : ILoggerProvider
 {
 	private readonly FileStream _fileStream;
 	private readonly StreamWriter _stream;
-	private readonly SettingsStore _settingsStore;
 
-	public FileLoggerProvider(string name, SettingsStore settingsStore)
+	public FileLoggerProvider(string name)
 	{
 		if (!Directory.Exists("logs"))
 			Directory.CreateDirectory("logs");
 
 		_fileStream = new FileStream(Path.Combine("logs", $"{name}_{DateTime.UtcNow:dd-MM-yyyy_HH-mm-ss}.log"), FileMode.CreateNew, FileAccess.Write, FileShare.Read);
 		_stream = new StreamWriter(_fileStream);
-		_settingsStore = settingsStore;
 	}
 
 	public ILogger CreateLogger(string categoryName)
 	{
-		return new FileLogger(categoryName, _stream, _settingsStore);
+		return new FileLogger(categoryName, _stream);
 	}
 
 	public void Dispose()
@@ -45,11 +43,10 @@ internal sealed class FileLoggerProvider : ILoggerProvider
 	}
 }
 
-internal sealed class FileLogger(string name, StreamWriter stream, SettingsStore settingsStore) : ILogger
+internal sealed class FileLogger(string name, StreamWriter stream) : ILogger
 {
 	private readonly string _name = name;
 	private readonly StreamWriter _stream = stream;
-	private readonly SettingsStore _settingsStore = settingsStore;
 
 	public IDisposable? BeginScope<TState>(TState state) where TState : notnull
 	{
@@ -61,7 +58,7 @@ internal sealed class FileLogger(string name, StreamWriter stream, SettingsStore
 #if DEBUG
 		return true;
 #else
-		return logLevel != LogLevel.None && logLevel >= _settingsStore.LogLevel;
+		return logLevel != LogLevel.None && logLevel >= App.Current.LogLevel;
 #endif
 	}
 
@@ -72,7 +69,7 @@ internal sealed class FileLogger(string name, StreamWriter stream, SettingsStore
 
 		ArgumentNullException.ThrowIfNull(formatter);
 
-		string message = formatter.Invoke(state, exception);
+		var message = formatter.Invoke(state, exception);
 		if (string.IsNullOrEmpty(message))
 			return;
 

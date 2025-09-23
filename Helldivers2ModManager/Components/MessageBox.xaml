@@ -21,7 +21,7 @@
 		<Grid>
 			<Grid.RowDefinitions>
 				<RowDefinition Height="Auto"/>
-				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="*"/>
 				<RowDefinition Height="Auto"/>
 			</Grid.RowDefinitions>
 			<TextBlock Grid.Row="0"
@@ -36,16 +36,19 @@
 			</TextBlock>
 			<Grid Grid.Row="1">
 				<Grid.RowDefinitions>
-					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="*"/>
 					<RowDefinition Height="Auto"/>
 				</Grid.RowDefinitions>
-				<TextBlock Grid.Row="0"
-						   x:Name="message"
-						   Foreground="WhiteSmoke"
-						   Margin="3"
-						   FontSize="16"
-						   FontFamily="Sanserif"
-						   TextWrapping="Wrap"/>
+				<ScrollViewer Grid.Row="0"
+							  Margin="3"
+							  Padding="3"
+							  VerticalScrollBarVisibility="Auto"
+							  HorizontalScrollBarVisibility="Auto">
+					<TextBlock x:Name="message"
+							   Foreground="WhiteSmoke"
+							   FontSize="16"
+							   FontFamily="Sanserif"/>
+				</ScrollViewer>
 				<TextBox Grid.Row="1"
 						 x:Name="input"
 						 Margin="3"/>

@@ -1,41 +1,39 @@
 ﻿// Ignore Spelling: App
 
-using Helldivers2ModManager.Services;
-using Helldivers2ModManager.Services.Manifest;
-using Helldivers2ModManager.Stores;
-using Helldivers2ModManager.ViewModels;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Windows;
+using Helldivers2ModManager.Stores;
+using Helldivers2ModManager.ViewModels;
 
 namespace Helldivers2ModManager;
 
 internal partial class App : Application
 {
-	public static readonly Version Version = new(1, 2, 1, 0);
+	public static readonly Version Version = new(1, 3, 0, 0);
 
-	public static readonly string? VersionAddition = null;
+	public static readonly string? VersionAddition = "End of Life";
 
-	public static new App Current => (App)Application.Current;
+	public new static App Current => (App)Application.Current;
 
 	public IHost Host { get; }
+	
+	public LogLevel LogLevel { get; set; }
 
 	private readonly ILogger? _logger;
 
 	public App()
 	{
-#if !DEBUG
 		AppDomain.CurrentDomain.UnhandledException += (_, e) => LogUnhandledException(e.ExceptionObject as Exception);
 		DispatcherUnhandledException += (_, e) => LogUnhandledException(e.Exception);
 		TaskScheduler.UnobservedTaskException += (_, e) => LogUnhandledException(e.Exception);
-#endif
 
 		HostApplicationBuilder builder = new();
 
 		AddServices(builder.Services);
-		AddStores(builder.Services);
-		AddViewModels(builder.Services);
+		builder.Services.AddSingleton<NavigationStore>(static services => new NavigationStore(services, services.GetRequiredService<DashboardPageViewModel>()));
 		builder.Services.AddLogging(log =>
 		{
 #if DEBUG
@@ -62,28 +60,41 @@ internal partial class App : Application
 
 	private static void AddServices(IServiceCollection services)
 	{
-		services.AddTransient<NexusService>();
-		services.AddTransient<ModManifestLegacyService>();
-		services.AddTransient<ModManifestV1Service>();
-		services.AddTransient<IModManifestService, ModManifestV1Service>();
-	}
+		var tuples = Assembly.GetExecutingAssembly()
+			.GetTypes()
+			.Select(static type => (type, type.GetCustomAttribute<RegisterServiceAttribute>()))
+			.Where(static tuple => tuple.Item2 is not null)
+			.Cast<ValueTuple<Type, RegisterServiceAttribute>>()
+			.ToArray();
 
-	private static void AddStores(IServiceCollection services)
-	{
-		services.AddSingleton(static provider => new NavigationStore(provider, provider.GetRequiredService<DashboardPageViewModel>()));
-		services.AddSingleton<ModStore>();
-		services.AddSingleton<SettingsStore>();
+		foreach (var (type, attr) in tuples)
+		{
+			switch (attr.Lifetime)
+			{
+				case ServiceLifetime.Singleton:
+					if (attr.Contract is null)
+						services.AddSingleton(type);
+					else
+						services.AddSingleton(attr.Contract, type);
+					break;
+				
+				case ServiceLifetime.Scoped:
+					if (attr.Contract is null)
+						services.AddScoped(type);
+					else
+						services.AddScoped(attr.Contract, type);
+					break;
+				
+				case ServiceLifetime.Transient:
+					if (attr.Contract is null)
+						services.AddTransient(type);
+					else
+						services.AddTransient(attr.Contract, type);
+					break;
+			}
+		}
 	}
-
-	private static void AddViewModels(IServiceCollection services)
-	{
-		services.AddTransient<MainViewModel>();
-		services.AddTransient<DashboardPageViewModel>();
-		services.AddTransient<SettingsPageViewModel>();
-		services.AddTransient<CreatePageViewModel>();
-		services.AddTransient<HelpPageViewModel>();
-	}
-
+	
 	private void LogUnhandledException(Exception? ex)
 	{
 		if (_logger is null)

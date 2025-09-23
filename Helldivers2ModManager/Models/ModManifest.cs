@@ -1,57 +1,80 @@
-﻿namespace Helldivers2ModManager.Models;
+using System.IO;
+using System.Runtime.Serialization;
+using System.Text.Json;
+using Helldivers2ModManager.Exceptions;
+using Helldivers2ModManager.Extensions;
+using Microsoft.Extensions.Logging;
 
-internal sealed class ModManifest(object inner)
+namespace Helldivers2ModManager.Models;
+
+internal static class ModManifest
 {
-	public enum ManifestVersion
-	{
-		Unknown,
-		Legacy,
-		V1
+    private static readonly JsonDocumentOptions s_options = new()
+    {
+        AllowTrailingCommas = true,
+        CommentHandling = JsonCommentHandling.Skip,
+    };
+    
+    public static IModManifest DeserializeFromDirectory(DirectoryInfo dir, ILogger? logger = null)
+    {
+        foreach (var file in dir.EnumerateFiles())
+            if (file.Name == "manifest.json")
+                return DeserializeFromFile(file, logger);
+        throw new FileNotFoundException($"Could not find file `manifest.json` in `{dir.FullName}`!");
+    }
+    
+    public static IModManifest DeserializeFromFile(FileInfo file, ILogger? logger = null)
+    {
+        using var stream = file.OpenRead();
+        var doc = JsonDocument.Parse(stream, s_options);
+        return DeserializeFromDocument(doc, logger);
+    }
+
+    public static IModManifest DeserializeFromDocument(JsonDocument doc, ILogger? logger = null)
+    {
+        var root = doc.RootElement;
+        var version = ManifestVersion.Legacy;
+        
+        if (root.TryGetProperty(nameof(IModManifest.Version), JsonValueKind.Number, out var prop))
+        {
+            if (prop.TryGetInt32(out var value))
+                version = value switch
+                {
+                    1 => ManifestVersion.V1,
+                    2 => ManifestVersion.V2,
+                    _ => throw new UnknownManifestVersionException()
+                };
+            else
+                throw new SerializationException($"Could not convert value of property \"{nameof(IModManifest.Version)}\" to `{typeof(int).Name}`!");
+        }
+
+        return version switch
+        {
+            ManifestVersion.Legacy => LegacyModManifest.Deserialize(root, logger),
+            ManifestVersion.V1 => V1ModManifest.Deserialize(root),
+            ManifestVersion.V2 => throw new EndOfLifeException(),
+            _ => throw new UnknownManifestVersionException()
+        };
+    }
+
+    public static IModManifest InferFromDirectory(DirectoryInfo dir, ILogger? logger = null)
+    {
+        var dirs = dir.GetDirectories();
+
+        if (dirs.Length == 0)
+            return new LegacyModManifest
+            {
+                Guid = Guid.NewGuid(),
+                Name = dir.Name,
+                Description = "A locally imported mod.",
+            };
+
+        return new LegacyModManifest
+		{
+			Guid = Guid.NewGuid(),
+			Name = dir.Name,
+			Description = "A locally imported mod.",
+            Options = dirs.Select(static d => d.Name).ToArray(),
+		};
 	}
-
-	public object Inner => _inner;
-
-	public ManifestVersion Version => _inner switch
-	{
-		ModManifestLegacy _ => ManifestVersion.Legacy,
-		ModManifestV1 _ => ManifestVersion.V1,
-		_ => ManifestVersion.Unknown
-	};
-
-	public ModManifestLegacy Legacy => _inner as ModManifestLegacy ?? throw new InvalidOperationException($"Inner is not of type `{typeof(ModManifestLegacy)}`");
-
-	public ModManifestV1 V1 => _inner as ModManifestV1 ?? throw new InvalidOperationException($"Inner is not of type `{typeof(ModManifestV1)}`");
-
-	public Guid Guid => Version switch
-	{
-		ManifestVersion.Legacy => Legacy.Guid,
-		ManifestVersion.V1 => V1.Guid,
-		ManifestVersion.Unknown => throw new NotSupportedException(),
-		_ => throw new NotImplementedException()
-	};
-
-	public string Name => Version switch
-	{
-		ManifestVersion.Legacy => Legacy.Name,
-		ManifestVersion.V1 => V1.Name,
-		ManifestVersion.Unknown => throw new NotSupportedException(),
-		_ => throw new NotImplementedException()
-	};
-
-	public string Description => Version switch
-	{
-		ManifestVersion.Legacy => Legacy.Description,
-		ManifestVersion.V1 => V1.Description,
-		ManifestVersion.Unknown => throw new NotSupportedException(),
-		_ => throw new NotImplementedException()
-	};
-
-	public string? IconPath => Version switch
-	{
-		ManifestVersion.Legacy => Legacy.IconPath,
-		ManifestVersion.V1 => V1.IconPath,
-		_ => null
-	};
-
-	private readonly object _inner = inner;
 }

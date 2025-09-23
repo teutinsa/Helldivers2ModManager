@@ -3,22 +3,23 @@ using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Helldivers2ModManager.Models;
 
 namespace Helldivers2ModManager.ViewModels;
 
 internal sealed class ModSubOptionViewModel(ModViewModel vm, int idx, int subIdx) : ObservableObject
 {
-	public string Name => _vm.Data.Manifest.V1.Options![_idx].SubOptions![_subIdx].Name;
+	public string Name => ((V1ModManifest)_vm.Data.Manifest).Options![_idx].SubOptions![_subIdx].Name;
 
-	public string Description => _vm.Data.Manifest.V1.Options![_idx].SubOptions![_subIdx].Description;
+	public string Description => ((V1ModManifest)_vm.Data.Manifest).Options![_idx].SubOptions![_subIdx].Description;
 
-	public Visibility ImageVisibility => _vm.Data.Manifest.V1.Options![_idx].SubOptions![_subIdx].Image is not null ? Visibility.Visible : Visibility.Collapsed;
+	public Visibility ImageVisibility => ((V1ModManifest)_vm.Data.Manifest).Options![_idx].SubOptions![_subIdx].Image is not null ? Visibility.Visible : Visibility.Collapsed;
 
 	public ImageSource? Image
 	{
 		get
 		{
-			if (_vm.Data.Manifest.V1.Options![_idx].SubOptions![_subIdx].Image is string path)
+			if (((V1ModManifest)_vm.Data.Manifest).Options![_idx].SubOptions![_subIdx].Image is string path)
 			{
 				var bmp = new BitmapImage();
 				bmp.BeginInit();

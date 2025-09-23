@@ -2,178 +2,66 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Helldivers2ModManager.Components;
-using Helldivers2ModManager.Exceptions;
-using Helldivers2ModManager.Extensions;
 using Helldivers2ModManager.Models;
+using Helldivers2ModManager.Services;
 using Helldivers2ModManager.Stores;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
-using SharpCompress;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Text;
 using System.Windows;
+using MessageBox = Helldivers2ModManager.Components.MessageBox;
 
 namespace Helldivers2ModManager.ViewModels;
 
+[RegisterService(ServiceLifetime.Transient)]
 internal sealed partial class DashboardPageViewModel : PageViewModelBase
 {
-	private sealed class ListTupleJsonConverter : JsonConverter<ListTuple>
-	{
-		public override ListTuple Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-		{
-			var doc = JsonDocument.ParseValue(ref reader);
-			var root = doc.RootElement;
-			var guid = Guid.Parse(root.ExpectStringProp(nameof(ListTuple.Guid)));
-			var enabled = root.ExpectBoolean(nameof(ListTuple.Enabled));
-			bool[]? toggled;
-			int[]? seleceted;
-
-			if (root.TryGetProperty("Option", out var _))
-			{
-				toggled = [];
-				seleceted = [root.ExpectInt32Prop("Option")];
-			}
-			else
-			{
-				toggled = root.ExpectBooleanArrayProp(nameof(ListTuple.Toggled));
-				seleceted = root.ExpectIntArrayProp(nameof(ListTuple.Selected));
-			}
-
-			return new ListTuple
-			{
-				Guid = guid,
-				Enabled = enabled,
-				Toggled = toggled,
-				Selected = seleceted
-			};
-		}
-
-		public override void Write(Utf8JsonWriter writer, ListTuple value, JsonSerializerOptions options)
-		{
-			writer.WriteStartObject();
-			writer.WriteString(nameof(ListTuple.Guid), value.Guid.ToString());
-			writer.WriteBoolean(nameof(ListTuple.Enabled), value.Enabled);
-			writer.WriteStartArray(nameof(ListTuple.Toggled));
-			foreach (var x in value.Toggled)
-				writer.WriteBooleanValue(x);
-			writer.WriteEndArray();
-			writer.WriteStartArray(nameof(ListTuple.Selected));
-			foreach (var x in value.Selected)
-				writer.WriteNumberValue(x);
-			writer.WriteEndArray();
-			writer.WriteEndObject();
-		}
-	}
-
-	private readonly struct ListTuple
-	{
-		public required Guid Guid { get; init; }
-
-		public required bool Enabled { get; init; }
-
-		public required bool[] Toggled { get; init; }
-
-		public required int[] Selected { get; init; }
-	}
-
 	public override string Title => "Mods";
 
 	public IReadOnlyList<ModViewModel> Mods { get; private set; }
 
 	public bool IsSearchEmpty => string.IsNullOrEmpty(SearchText);
-
-	private static readonly JsonSerializerOptions s_jsonOptions = new()
-	{
-		AllowTrailingCommas = true,
-		ReadCommentHandling = JsonCommentHandling.Skip
-	};
+	
 	private static readonly ProcessStartInfo s_gameStartInfo = new("steam://run/553850") { UseShellExecute = true };
-	private static readonly ProcessStartInfo s_reportStartInfo = new("https://www.nexusmods.com/helldivers2/mods/109?tab=bugs") { UseShellExecute = true };
+	private static readonly ProcessStartInfo s_reportStartInfo = new("https://teutinsa.github.io/hd2mm-site/help/bug_reporting.html") { UseShellExecute = true };
 	private static readonly ProcessStartInfo s_discordStartInfo = new("https://discord.gg/helldiversmodding") { UseShellExecute = true };
 	private static readonly ProcessStartInfo s_githubStartInfo = new("https://github.com/teutinsa/Helldivers2ModManager") { UseShellExecute = true };
 	private readonly ILogger<DashboardPageViewModel> _logger;
-	private readonly IServiceProvider _provider;
 	private readonly Lazy<NavigationStore> _navStore;
-	private readonly ModStore _modStore;
-	private readonly SettingsStore _settingsStore;
-	private readonly ObservableCollection<ModViewModel> _mods;
+	private readonly ModService _modService;
+	private readonly SettingsService _settingsService;
+	private readonly ProfileService _profileService;
+	private ObservableCollection<ModViewModel> _mods;
 	[ObservableProperty]
 	private Visibility _editVisibility = Visibility.Hidden;
 	[ObservableProperty]
 	private ModViewModel? _editMod;
 	[ObservableProperty]
 	private string _searchText = string.Empty;
+	[ObservableProperty]
+	private bool _initialized = false;
 
-	static DashboardPageViewModel()
-	{
-		s_jsonOptions.Converters.Add(new ListTupleJsonConverter());
-	}
-
-	public DashboardPageViewModel(ILogger<DashboardPageViewModel> logger, IServiceProvider provider, ModStore modStore, SettingsStore settingsStore)
+	public DashboardPageViewModel(ILogger<DashboardPageViewModel> logger, IServiceProvider provider, SettingsService settingsService, ModService modService, ProfileService profileService)
 	{
 		_logger = logger;
-		_provider = provider;
-		_navStore = new(_provider.GetRequiredService<NavigationStore>);
-		_modStore = modStore;
-		_settingsStore = settingsStore;
+		_navStore = new(provider.GetRequiredService<NavigationStore>);
+		_settingsService = settingsService;
+		_modService = modService;
+		_profileService = profileService;
 		_mods = [];
 
-		var enabledFile = new FileInfo(Path.Combine(_settingsStore.StorageDirectory, "enabled.json"));
-		ListTuple[]? list = null;
-		if (enabledFile.Exists)
-		{
-			using var stream = enabledFile.OpenRead();
-			try
-			{
-				list = JsonSerializer.Deserialize<ListTuple[]>(stream, s_jsonOptions);
-			}
-			catch(Exception ex)
-			{
-				_logger.LogError(ex, "Unable to parse \"{}\"", enabledFile.FullName);
-			}
-		}
-		list ??= [];
-
-		_logger.LogInformation("Listing mods");
-		foreach (var item in list)
-		{
-			var mod = _modStore.GetModByGuid(item.Guid);
-			if (mod is null)
-			{
-				_logger.LogWarning("Mod {} not found, skipping", item.Guid);
-				continue;
-			}
-			switch (mod.Manifest.Version)
-			{
-				case ModManifest.ManifestVersion.Legacy:
-					_mods.Add(new ModViewModel(mod) { Enabled = item.Enabled, LegacySelectedOption = item.Selected[0] });
-					break;
-
-				case ModManifest.ManifestVersion.V1:
-					{
-						var vm = new ModViewModel(mod) { Enabled = item.Enabled };
-						Array.Copy(item.Toggled, vm.Data.EnabledOptions, Math.Min(vm.Data.EnabledOptions.Length, item.Toggled.Length));
-						Array.Copy(item.Selected, vm.Data.SelectedOptions, Math.Min(vm.Data.SelectedOptions.Length, item.Selected.Length));
-						_mods.Add(vm);
-					}
-					break;
-			}
-		}
-		_modStore.Mods.Where(m => !list.Where(itm => itm.Guid == m.Manifest.Guid).Any()).ToArray().ForEach(m => _mods.Add(new ModViewModel(m)));
-
-		_modStore.ModAdded += (_, e) =>
-		{
-			_mods.Add(new ModViewModel(e.Mod) { Enabled = true });
-			SearchText = string.Empty;
-		};
-
 		Mods = _mods;
+
+		if (MessageBox.IsRegistered)
+			_ = Init();
+		else
+			MessageBox.Registered += (_, _) => _ = Init();
 	}
 
 	protected override void OnPropertyChanged(PropertyChangedEventArgs e)
@@ -196,29 +84,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			Message = "Please wait democratically."
 		});
 
-		var enabledFile = new FileInfo(Path.Combine(_settingsStore.StorageDirectory, "enabled.json"));
-		var list = _mods.Select(static m => m.Data.Manifest.Version switch
-		{
-			ModManifest.ManifestVersion.Legacy => new ListTuple
-			{
-				Guid = m.Guid,
-				Enabled = m.Enabled,
-				Toggled = [],
-				Selected = [m.LegacySelectedOption]
-			},
-			ModManifest.ManifestVersion.V1 => new ListTuple
-			{
-				Guid = m.Guid,
-				Enabled = m.Enabled,
-				Toggled = m.Data.EnabledOptions,
-				Selected = m.Data.SelectedOptions
-			},
-			_ => throw new InvalidOperationException()
-		}).ToArray();
-		if (!enabledFile.Directory!.Exists)
-			enabledFile.Directory!.Create();
-		using var stream = enabledFile.Open(FileMode.Create, FileAccess.Write, FileShare.None);
-		await JsonSerializer.SerializeAsync(stream, list, s_jsonOptions);
+		await _profileService.SaveAsync(_settingsService, _mods.Select(static vm => vm.Data));
 
 		WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
 	}
@@ -230,12 +96,201 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		else
 			Mods = _mods.Where(vm =>
 			{
-				if (_settingsStore.CaseSensitiveSearch)
+				if (_settingsService.CaseSensitiveSearch)
 					return vm.Name.Contains(SearchText, StringComparison.InvariantCulture);
-				else
-					return vm.Name.Contains(SearchText, StringComparison.InvariantCultureIgnoreCase);
+				return vm.Name.Contains(SearchText, StringComparison.InvariantCultureIgnoreCase);
 			}).ToArray();
 		OnPropertyChanged(nameof(Mods));
+	}
+
+	private async Task Init()
+	{
+		_logger.LogInformation("Initializing dashboard...");
+
+		_logger.LogInformation("Loading settings...");
+		WeakReferenceMessenger.Default.Send(new MessageBoxProgressMessage
+		{
+			Title = "Loading settings",
+			Message = "Please wait democratically.",
+		});
+		try
+		{
+			if (!await _settingsService.InitAsync(true))
+				_settingsService.InitDefault(true);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Loading settings failed");
+			WeakReferenceMessenger.Default.Send(new MessageBoxConfirmMessage
+			{
+				Title = $"Loading settings failed!",
+				Message = "Go to settings now?",
+				Confirm = _navStore.Value.Navigate<SettingsPageViewModel>,
+			});
+			return;
+		}
+		_logger.LogInformation("Settings loaded successfully");
+		WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
+
+		_logger.LogInformation("Validating settings");
+		if (!_settingsService.Validate())
+		{
+			_logger.LogError("Settings invalid");
+			WeakReferenceMessenger.Default.Send(new MessageBoxConfirmMessage
+			{
+				Title = $"Settings invalid!",
+				Message = "Go to settings now?",
+				Confirm = _navStore.Value.Navigate<SettingsPageViewModel>,
+			});
+			return;
+		}
+		_logger.LogInformation("Settings valid");
+		
+		_logger.LogInformation("Loading mods...");
+		WeakReferenceMessenger.Default.Send(new MessageBoxProgressMessage
+		{
+			Title = "Loading mods",
+			Message = "Please wait democratically.",
+		});
+		ModProblem[] problems;
+		try
+		{
+			problems = await Task.Run(() => _modService.Init(_settingsService));
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Loading mods failed");
+			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage
+			{
+				Message = $"Loading mods failed!\n\n{ex}",
+			});
+			return;
+		}
+		_modService.ModAdded += ModService_ModAdded;
+		_modService.ModRemoved += ModService_ModRemoved;
+		if (problems.Length != 0)
+			_logger.LogWarning("Loaded mods with {} problems", problems.Length);
+		else
+			_logger.LogInformation("Mods loaded successfully");
+		WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
+
+		_logger.LogInformation("Loading profile...");
+		WeakReferenceMessenger.Default.Send(new MessageBoxProgressMessage
+		{
+			Title = "Loading profile",
+			Message = "Please wait democratically.",
+		});
+		IReadOnlyList<ModData>? result;
+		try
+		{
+			result = await _profileService.LoadAsync(_settingsService, _modService);
+			result ??= _profileService.InitDefault(_modService);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Loading profile failed");
+			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage
+			{
+				Message = $"Loading profile failed!\n\n{ex}",
+			});
+			return;
+		}
+		WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
+		_logger.LogInformation("Profile loaded successfully");
+
+		_logger.LogInformation("Applying profile");
+		_mods = new(result.Select(static data => new ModViewModel(data)).ToList());
+		UpdateView();
+
+		if (problems.Length > 0)
+			ShowProblems(problems, "Problems with loading mods:");
+		Initialized = true;
+		_logger.LogInformation("Initialization successful");
+
+#if DEBUG && FALSE
+		ShowProblems(Enum.GetValues<ModProblemKind>().Select(static k => new ModProblem { Directory = new DirectoryInfo(@"C:\ModStorage\Test"), Kind = k }), "Problem test:", true);
+#endif
+	}
+
+	private void ShowProblems(IEnumerable<ModProblem> problems, string prefix, bool error = false)
+	{
+		var sb = new StringBuilder();
+		sb.AppendLine(prefix);
+
+		var errors = problems.Where(static p => p.IsError).ToArray();
+		if (errors.Length != 0)
+		{
+			sb.AppendLine("Errors:");
+			foreach (var e in errors)
+			{
+				sb.Append("\t - \"");
+				sb.Append(e.Directory.FullName);
+				sb.AppendLine("\"");
+
+				sb.Append("\t\t");
+				string desc = e.Kind switch
+				{
+					ModProblemKind.CantParseManifest => "Can't parse manifest!",
+					ModProblemKind.UnknownManifestVersion => "Unknown manifest version!",
+					ModProblemKind.OutOfSupportManifest => $"Unsupported manifest version! Please update.\n\t\tManager version {App.Version} does not support this version of the manifest.",
+					ModProblemKind.Duplicate => "A mod with the same GUID was already added!",
+					ModProblemKind.InvalidPath => e.ExtraData is not null
+						? $"The include path \"{e.ExtraData}\" is invalid!"
+						: "A include path is invalid!",
+					_ => throw new NotImplementedException()
+				};
+				sb.AppendLine(desc);
+			}
+		}
+
+		var warnings = problems.Where(static p => !p.IsError).ToArray();
+		if (warnings.Length != 0)
+		{
+			sb.AppendLine("Warnings:");
+			foreach (var w in warnings)
+			{
+				sb.Append("\t - \"");
+				sb.Append(w.Directory.FullName);
+				sb.AppendLine("\"");
+
+				sb.Append("\t\t");
+				string desc = w.Kind switch
+				{
+					ModProblemKind.NoManifestFound => error
+						? "No manifest found in directory!"
+						: "No manifest found in directory!\n\t\t\tAction: Deleting",
+					ModProblemKind.EmptyOptions => "Manifest contains empty options! This mod will likely do nothing.",
+					ModProblemKind.EmptySubOptions => "Manifest contains empty sub-options! This mod will likely not work as expected.",
+					ModProblemKind.EmptyIncludes => "Manifest contains empty include lists! This mod my not do anything.",
+					_ => throw new NotImplementedException()
+				};
+				sb.AppendLine(desc);
+			}
+		}
+
+		if (error)
+			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage
+			{
+				Message = sb.ToString(),
+			});
+		else
+			WeakReferenceMessenger.Default.Send(new MessageBoxWarningMessage
+			{
+				Message = sb.ToString(),
+			});
+	}
+
+	private void ModService_ModAdded(ModData mod)
+	{
+		_mods.Add(new ModViewModel(mod));
+		SearchText = string.Empty;
+	}
+
+	private void ModService_ModRemoved(ModData mod)
+	{
+		var vm = _mods.First((vm) => vm.Data == mod);
+		if (vm is not null)
+			_mods.Remove(vm);
 	}
 
 	[RelayCommand(AllowConcurrentExecutions = false)]
@@ -253,19 +308,28 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 
 		if (dialog.ShowDialog() ?? false)
 		{
-			WeakReferenceMessenger.Default.Send(new MessageBoxProgressMessage()
+			WeakReferenceMessenger.Default.Send(new MessageBoxProgressMessage
 			{
 				Title = "Adding Mod",
 				Message = "Please wait democratically."
 			});
 			try
 			{
-				await _modStore.TryAddModFromArchiveAsync(new FileInfo(dialog.FileName));
-				WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
+				var problems = await _modService.TryAddModFromArchiveAsync(new FileInfo(dialog.FileName));
+				if (problems.Length > 0)
+				{
+					var error = problems.Any(static p => p.IsError);
+					var prefix = error
+						? "Mod adding failed due to problems:"
+						: "Mod added with warnings:";
+					ShowProblems(problems, prefix, error);
+				}
+				else
+					WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
 			}
 			catch(Exception ex)
 			{
-				_logger.LogWarning(ex, "Failed to add mod");
+				_logger.LogError(ex, "Failed to add mod");
 				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
 				{
 					Message = ex.Message
@@ -290,21 +354,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	[SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This is a command of a view model and should not be static.")]
 	void ReportBug()
 	{
-		WeakReferenceMessenger.Default.Send(new MessageBoxConfirmMessage
-		{
-			Title = "How to report bugs",
-			Message = """
-			If you want to report a bug please include the latest log file.
-				- If you report a crash or an error, describe what you did until the error occurred.
-				- If you want to report a bug of a mod not deploying, specify your mod list and the mod that caused the error.
-				- If you want to report a bug of a mod not working correctly, this is not the place for that.
-
-			If your issue is more specific feel free to join the Modding Discord.
-
-			Continue?
-			""",
-			Confirm = static () => Process.Start(s_reportStartInfo)
-		});
+		Process.Start(s_reportStartInfo);
 	}
 
 	[RelayCommand(AllowConcurrentExecutions = false)]
@@ -318,7 +368,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	[RelayCommand(AllowConcurrentExecutions = false)]
 	async Task Purge()
 	{
-		if (string.IsNullOrEmpty(_settingsStore.GameDirectory))
+		if (string.IsNullOrEmpty(_settingsService.GameDirectory))
 		{
 			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
 			{
@@ -333,7 +383,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			Message = "Please wait democratically."
 		});
 
-		await _modStore.PurgeAsync();
+		await _modService.PurgeAsync();
 
 		WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
 	}
@@ -341,7 +391,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	[RelayCommand(AllowConcurrentExecutions = false)]
 	async Task Deploy()
 	{
-		if (string.IsNullOrEmpty(_settingsStore.GameDirectory))
+		if (string.IsNullOrEmpty(_settingsService.GameDirectory))
 		{
 			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
 			{
@@ -361,40 +411,14 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 
 		try
 		{
-			await Task.Run(() => _modStore.DeployAsync(guids));
-
 			await SaveEnabled();
+
+			await _modService.DeployAsync(guids);
 
 			WeakReferenceMessenger.Default.Send(new MessageBoxInfoMessage()
 			{
 				Message = "Deployment successful."
 			});
-		}
-		catch(DeployException ex)
-		{
-			_logger.LogWarning(ex, "Deployment failed");
-			if (ex.Mod is ModData mod)
-			{
-				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
-				{
-					Message = $"Something is wrong with this mod: \"{mod.Manifest.Name}\"\n\n{ex.Message}\n\t{ex.InnerException?.Message}"
-				});
-			}
-			else if (ex.FileTriplet.HasValue)
-			{
-				var triplet = ex.FileTriplet.Value;
-				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
-				{
-					Message = $"{ex.Message}\n\t{ex.InnerException?.Message}"
-				});
-			}
-			else
-			{
-				WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
-				{
-					Message = $"{ex.Message}\n\t{ex.InnerException?.Message}"
-				});
-			}
 		}
 		catch(Exception ex)
 		{
@@ -425,10 +449,28 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	}
 
 	[RelayCommand]
-	void Remove(ModViewModel modVm)
+	async Task Remove(ModViewModel modVm)
 	{
-		if (_modStore.Remove(modVm.Data))
-			_mods.Remove(modVm);
+		WeakReferenceMessenger.Default.Send(new MessageBoxProgressMessage()
+		{
+			Title = "Removing Mod",
+			Message = "Please wait democratically."
+		});
+
+		try
+		{
+			await _modService.RemoveAsync(modVm.Data);
+
+			WeakReferenceMessenger.Default.Send(new MessageBoxHideMessage());
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Unknown mod removal error");
+			WeakReferenceMessenger.Default.Send(new MessageBoxErrorMessage()
+			{
+				Message = ex.Message
+			});
+		}
 	}
 
 	[RelayCommand]
