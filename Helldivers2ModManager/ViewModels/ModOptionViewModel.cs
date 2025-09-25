@@ -31,16 +31,15 @@ internal sealed class ModOptionViewModel(ModViewModel vm, int idx) : ObservableO
 	{
 		get
 		{
-			if (((V1ModManifest)_vm.Data.Manifest).Options![_idx].Image is string path)
-			{
-				var bmp = new BitmapImage();
-				bmp.BeginInit();
-				bmp.UriSource = new Uri(Path.Combine(_vm.Data.Directory.FullName, path));
-				bmp.CacheOption = BitmapCacheOption.None;
-				bmp.EndInit();
-				return bmp;
-			}
-			return null;
+			var path = ((V1ModManifest)_vm.Data.Manifest).Options![_idx].Image;
+			if (string.IsNullOrEmpty(path) || string.IsNullOrWhiteSpace(path))
+				return null;
+			var bmp = new BitmapImage();
+			bmp.BeginInit();
+			bmp.UriSource = new Uri(Path.Combine(_vm.Data.Directory.FullName, path));
+			bmp.CacheOption = BitmapCacheOption.None;
+			bmp.EndInit();
+			return bmp;
 		}
 	}
 

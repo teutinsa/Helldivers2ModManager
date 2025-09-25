@@ -19,16 +19,15 @@ internal sealed class ModSubOptionViewModel(ModViewModel vm, int idx, int subIdx
 	{
 		get
 		{
-			if (((V1ModManifest)_vm.Data.Manifest).Options![_idx].SubOptions![_subIdx].Image is string path)
-			{
-				var bmp = new BitmapImage();
-				bmp.BeginInit();
-				bmp.UriSource = new Uri(Path.Combine(_vm.Data.Directory.FullName, path));
-				bmp.CacheOption = BitmapCacheOption.None;
-				bmp.EndInit();
-				return bmp;
-			}
-			return null;
+			var path = ((V1ModManifest)_vm.Data.Manifest).Options![_idx].SubOptions![_subIdx].Image;
+			if (string.IsNullOrEmpty(path) || string.IsNullOrWhiteSpace(path))
+				return null;
+			var bmp = new BitmapImage();
+			bmp.BeginInit();
+			bmp.UriSource = new Uri(Path.Combine(_vm.Data.Directory.FullName, path));
+			bmp.CacheOption = BitmapCacheOption.None;
+			bmp.EndInit();
+			return bmp;
 		}
 	}
 

@@ -190,7 +190,12 @@ internal sealed partial class ModService
 			manifest = ModManifest.InferFromDirectory(tmpDir);
 
 			var stream = manifestFile.Open(FileMode.CreateNew, FileAccess.Write, FileShare.Read);
-			var writer = new Utf8JsonWriter(stream);
+			var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
+			{
+				IndentCharacter = '\t',
+				Indented = true,
+				IndentSize = 1,
+			});
 
 			manifest.Serialize(writer);
 
@@ -516,16 +521,28 @@ internal sealed partial class ModService
 					});
 				}
 
-				if (man.IconPath is not null && !File.Exists(Path.Combine(dir.FullName, man.IconPath)))
+				if (man.IconPath is not null)
 				{
-					error = true;
-					_logger.LogError("Manifest \"{}\" contains invalid path \"{}\"", manifestFile.FullName, man.IconPath);
-					problems.Add(new ModProblem
+					if (string.IsNullOrEmpty(man.IconPath) || string.IsNullOrWhiteSpace(man.IconPath))
 					{
-						Directory = dir,
-						Kind = ModProblemKind.InvalidPath,
-						ExtraData = man.IconPath,
-					});
+						_logger.LogWarning("Manifest \"{}\" contains empty icon path \"{}\"", manifestFile.FullName, man.IconPath);
+						problems.Add(new ModProblem
+						{
+							Directory = dir,
+							Kind = ModProblemKind.EmptyImagePath,
+							ExtraData = man.IconPath,
+						});
+					}
+					else if (!File.Exists(Path.Combine(dir.FullName, man.IconPath)))
+					{
+						_logger.LogWarning("Manifest \"{}\" contains invalid icon path \"{}\"", manifestFile.FullName, man.IconPath);
+						problems.Add(new ModProblem
+						{
+							Directory = dir,
+							Kind = ModProblemKind.InvalidImagePath,
+							ExtraData = man.IconPath,
+						});
+					}
 				}
 
 				foreach (var opt in opts)
@@ -575,30 +592,53 @@ internal sealed partial class ModService
 					});
 				}
 
-				if (man.IconPath is not null && !File.Exists(Path.Combine(dir.FullName, man.IconPath)))
+				if (man.IconPath is not null)
 				{
-					error = true;
-					_logger.LogError("Manifest \"{}\" contains invalid path \"{}\"", manifestFile.FullName, man.IconPath);
-					problems.Add(new ModProblem
+					if (string.IsNullOrEmpty(man.IconPath) || string.IsNullOrWhiteSpace(man.IconPath))
 					{
-						Directory = dir,
-						Kind = ModProblemKind.InvalidPath,
-						ExtraData = man.IconPath,
-					});
+						_logger.LogWarning("Manifest \"{}\" contains empty icon path", manifestFile.FullName);
+						problems.Add(new ModProblem
+						{
+							Directory = dir,
+							Kind = ModProblemKind.EmptyImagePath,
+							ExtraData = man.IconPath,
+						});
+					}
+					else if (!File.Exists(Path.Combine(dir.FullName, man.IconPath)))
+					{
+						_logger.LogWarning("Manifest \"{}\" contains invalid icon path \"{}\"", manifestFile.FullName, man.IconPath);
+						problems.Add(new ModProblem
+						{
+							Directory = dir,
+							Kind = ModProblemKind.InvalidImagePath,
+							ExtraData = man.IconPath,
+						});
+					}
 				}
 
 				foreach (var opt in opts)
 				{
-					if (opt.Image is not null && !File.Exists(Path.Combine(dir.FullName, opt.Image)))
+					if (opt.Image is not null)
 					{
-						error = true;
-						_logger.LogError("Manifest \"{}\" contains invalid path \"{}\"", manifestFile.FullName, opt.Image);
-						problems.Add(new ModProblem
+						if (string.IsNullOrEmpty(opt.Image) || string.IsNullOrWhiteSpace(opt.Image))
 						{
-							Directory = dir,
-							Kind = ModProblemKind.InvalidPath,
-							ExtraData = opt.Image,
-						});
+							_logger.LogWarning("Manifest \"{}\" contains empty image path", manifestFile.FullName);
+							problems.Add(new ModProblem
+							{
+								Directory = dir,
+								Kind = ModProblemKind.EmptyImagePath,
+							});
+						}
+						else if (!File.Exists(Path.Combine(dir.FullName, opt.Image)))
+						{
+							_logger.LogWarning("Manifest \"{}\" contains invalid image path \"{}\"", manifestFile.FullName, opt.Image);
+							problems.Add(new ModProblem
+							{
+								Directory = dir,
+								Kind = ModProblemKind.InvalidImagePath,
+								ExtraData = opt.Image,
+							});
+						}
 					}
 
 					if (opt.Include is not null)
@@ -618,16 +658,27 @@ internal sealed partial class ModService
 					if (opt.SubOptions is not null)
 						foreach (var sub in opt.SubOptions)
 						{
-							if (sub.Image is not null && !File.Exists(Path.Combine(dir.FullName, sub.Image)))
+							if (sub.Image is not null)
 							{
-								error = true;
-								_logger.LogError("Manifest \"{}\" contains invalid path \"{}\"", manifestFile.FullName, sub.Image);
-								problems.Add(new ModProblem
+								if (string.IsNullOrEmpty(sub.Image) || string.IsNullOrWhiteSpace(sub.Image))
 								{
-									Directory = dir,
-									Kind = ModProblemKind.InvalidPath,
-									ExtraData = sub.Image,
-								});
+									_logger.LogWarning("Manifest \"{}\" contains empty image path", manifestFile.FullName);
+									problems.Add(new ModProblem
+									{
+										Directory = dir,
+										Kind = ModProblemKind.EmptyImagePath,
+									});
+								}
+								else if (!File.Exists(Path.Combine(dir.FullName, sub.Image)))
+								{
+									_logger.LogWarning("Manifest \"{}\" contains invalid image path \"{}\"", manifestFile.FullName, sub.Image);
+									problems.Add(new ModProblem
+									{
+										Directory = dir,
+										Kind = ModProblemKind.InvalidImagePath,
+										ExtraData = sub.Image,
+									});
+								}
 							}
 
 							foreach (var inc in sub.Include)

@@ -17,20 +17,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <None Remove="Resources\Fonts\Blockletter.otf" />
-	  <None Remove="Resources\Fonts\FS Sinclair Bold.otf" />
-	  <None Remove="Resources\Fonts\FS Sinclair Medium.otf" />
-	  <None Remove="Resources\Fonts\FS Sinclair Regular.otf" />
-	  <None Remove="Resources\Images\discord_icon.png" />
-	  <None Remove="Resources\Images\github_icon.png" />
-	  <None Remove="Resources\Images\logo.png" />
-	  <None Remove="Resources\Images\logo_icon.png" />
-	  <None Remove="Resources\Images\logo_splash.png" />
-	  <None Remove="Resources\Images\remove.png" />
-	  <None Remove="Resources\Text\Help.md" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <Resource Include="Resources\Fonts\FS Sinclair Bold.otf" />
 	  <Resource Include="Resources\Fonts\FS Sinclair Medium.otf" />
 	  <Resource Include="Resources\Fonts\FS Sinclair Regular.otf" />

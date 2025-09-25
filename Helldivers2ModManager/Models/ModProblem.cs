@@ -6,6 +6,8 @@ namespace Helldivers2ModManager.Models;
 // Negative values are errors
 internal enum ModProblemKind
 {
+	EmptyImagePath = 6,
+	InvalidImagePath = 5,
 	EmptyIncludes = 4,
 	EmptySubOptions = 3,
 	EmptyOptions = 2,

@@ -203,7 +203,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 		UpdateView();
 
 		if (problems.Length > 0)
-			ShowProblems(problems, "Problems with loading mods:");
+			ShowProblems(problems, "Problems with loading mods:", false, true);
 		Initialized = true;
 		_logger.LogInformation("Initialization successful");
 
@@ -212,7 +212,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 #endif
 	}
 
-	private void ShowProblems(IEnumerable<ModProblem> problems, string prefix, bool error = false)
+	private void ShowProblems(IEnumerable<ModProblem> problems, string prefix, bool error, bool isInit = false)
 	{
 		var sb = new StringBuilder();
 		sb.AppendLine(prefix);
@@ -256,12 +256,16 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 				sb.Append("\t\t");
 				string desc = w.Kind switch
 				{
-					ModProblemKind.NoManifestFound => error
-						? "No manifest found in directory!"
-						: "No manifest found in directory!\n\t\t\tAction: Deleting",
+					ModProblemKind.NoManifestFound => isInit
+						? "No manifest found in directory!\n\t\t\tAction: Deleting"
+						: "No manifest found in directory!\n\t\t\tAction: Inferring from directory",
 					ModProblemKind.EmptyOptions => "Manifest contains empty options! This mod will likely do nothing.",
 					ModProblemKind.EmptySubOptions => "Manifest contains empty sub-options! This mod will likely not work as expected.",
 					ModProblemKind.EmptyIncludes => "Manifest contains empty include lists! This mod my not do anything.",
+					ModProblemKind.InvalidImagePath => w.ExtraData is not null
+						? $"Manifest image path \"{w.ExtraData}\" is invalid!"
+						: "Manifest contains invalid image path!",
+					ModProblemKind.EmptyImagePath => "Manifest constains empty image path!",
 					_ => throw new NotImplementedException()
 				};
 				sb.AppendLine(desc);

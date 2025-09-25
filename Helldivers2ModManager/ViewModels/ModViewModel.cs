@@ -95,13 +95,14 @@ internal sealed partial class ModViewModel : ObservableObject
 
 		var bmp = new BitmapImage();
 		bmp.BeginInit();
-		if (_mod.Manifest.IconPath is { } path)
+		var path = _mod.Manifest.IconPath;
+		if (string.IsNullOrEmpty(path) || string.IsNullOrWhiteSpace(path))
+			bmp.UriSource = new Uri(@"..\Resources\Images\logo_icon.png", UriKind.Relative);
+		else
 		{
 			bmp.UriSource = new Uri(Path.Combine(_mod.Directory.FullName, path));
 			bmp.CacheOption = BitmapCacheOption.OnLoad;
 		}
-		else
-			bmp.UriSource = new Uri(@"..\Resources\Images\logo_icon.png", UriKind.Relative);
 		bmp.EndInit();
 		Icon = bmp;
 	}
