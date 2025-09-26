@@ -12,7 +12,7 @@ namespace Helldivers2ModManager;
 
 internal partial class App : Application
 {
-	public static readonly Version Version = new(1, 3, 0, 0);
+	public static readonly Version Version = new(1, 3, 0, 1);
 
 	public static readonly string? VersionAddition = "End of Life";
 
