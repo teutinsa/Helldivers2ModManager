@@ -22,7 +22,20 @@ namespace Helldivers2ModManager.ViewModels;
 [RegisterService(ServiceLifetime.Transient)]
 internal sealed partial class DashboardPageViewModel : PageViewModelBase
 {
-	public override string Title => "Mods";
+	public override string Title => _localizationService["Dashboard.Title"];
+
+	// Localized labels
+	public string AddLabel => _localizationService["Dashboard.Add"];
+	public string ReportBugLabel => _localizationService["Dashboard.ReportBug"];
+	public string SettingsLabel => _localizationService["Dashboard.Settings"];
+	public string PurgeLabel => _localizationService["Dashboard.Purge"];
+	public string DeployLabel => _localizationService["Dashboard.Deploy"];
+	public string LaunchHD2Label => _localizationService["Dashboard.LaunchHD2"];
+	public string SearchLabel => _localizationService["Dashboard.Search"];
+	public string EditLabel => _localizationService["Dashboard.Edit"];
+	public string PurgeTooltip => _localizationService["Dashboard.PurgeTooltip"];
+	public string DeployTooltip => _localizationService["Dashboard.DeployTooltip"];
+	public string LaunchTooltip => _localizationService["Dashboard.LaunchTooltip"];
 
 	public IReadOnlyList<ModViewModel> Mods { get; private set; }
 
@@ -37,6 +50,7 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	private readonly ModService _modService;
 	private readonly SettingsService _settingsService;
 	private readonly ProfileService _profileService;
+	private readonly LocalizationService _localizationService;
 	private ObservableCollection<ModViewModel> _mods;
 	[ObservableProperty]
 	private Visibility _editVisibility = Visibility.Hidden;
@@ -47,14 +61,18 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 	[ObservableProperty]
 	private bool _initialized = false;
 
-	public DashboardPageViewModel(ILogger<DashboardPageViewModel> logger, IServiceProvider provider, SettingsService settingsService, ModService modService, ProfileService profileService)
+	public DashboardPageViewModel(ILogger<DashboardPageViewModel> logger, IServiceProvider provider, SettingsService settingsService, ModService modService, ProfileService profileService, LocalizationService localizationService)
 	{
 		_logger = logger;
 		_navStore = new(provider.GetRequiredService<NavigationStore>);
 		_settingsService = settingsService;
 		_modService = modService;
 		_profileService = profileService;
+		_localizationService = localizationService;
 		_mods = [];
+
+		// Listen to language changes
+		_localizationService.PropertyChanged += (s, e) => UpdateLocalizedProperties();
 
 		Mods = _mods;
 
@@ -62,6 +80,22 @@ internal sealed partial class DashboardPageViewModel : PageViewModelBase
 			_ = Init();
 		else
 			MessageBox.Registered += (_, _) => _ = Init();
+	}
+
+	private void UpdateLocalizedProperties()
+	{
+		OnPropertyChanged(nameof(Title));
+		OnPropertyChanged(nameof(AddLabel));
+		OnPropertyChanged(nameof(ReportBugLabel));
+		OnPropertyChanged(nameof(SettingsLabel));
+		OnPropertyChanged(nameof(PurgeLabel));
+		OnPropertyChanged(nameof(DeployLabel));
+		OnPropertyChanged(nameof(LaunchHD2Label));
+		OnPropertyChanged(nameof(SearchLabel));
+		OnPropertyChanged(nameof(EditLabel));
+		OnPropertyChanged(nameof(PurgeTooltip));
+		OnPropertyChanged(nameof(DeployTooltip));
+		OnPropertyChanged(nameof(LaunchTooltip));
 	}
 
 	protected override void OnPropertyChanged(PropertyChangedEventArgs e)

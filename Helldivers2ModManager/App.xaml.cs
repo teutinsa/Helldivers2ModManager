@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using System.Windows;
 using Helldivers2ModManager.Stores;
 using Helldivers2ModManager.ViewModels;
+using Helldivers2ModManager.Services;
 
 namespace Helldivers2ModManager;
 
@@ -53,6 +54,28 @@ internal partial class App : Application
 	protected override void OnStartup(StartupEventArgs e)
 	{
 		base.OnStartup(e);
+
+		// Initialize localization service
+		var localizationService = Host.Services.GetRequiredService<LocalizationService>();
+		var settingsService = Host.Services.GetRequiredService<SettingsService>();
+		
+		// Add localization service to application resources
+		Current.Resources.Add("LocalizationService", localizationService);
+		
+		// Load settings first to get the language preference
+		_ = Task.Run(async () =>
+		{
+			try
+			{
+				await settingsService.InitAsync(true);
+				var language = settingsService.Language;
+				await localizationService.InitializeAsync(language);
+			}
+			catch
+			{
+				await localizationService.InitializeAsync("en");
+			}
+		});
 
 		MainWindow = Host.Services.GetRequiredService<MainWindow>();
 		MainWindow.Show();

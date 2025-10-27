@@ -22,7 +22,7 @@ internal static class JsonElementExtensions
 		if (!node.TryGetProperty(propertyName, out var prop))
 			throw new SerializationException($"Could not find property of name \"{propertyName}\"!");
 		if (prop.ValueKind != valueKind)
-			throw new SerializationException($"Property \"{propertyName}\" was not of expected type ´{valueKind.ToString().ToLower()}´!");
+			throw new SerializationException($"Property \"{propertyName}\" was not of expected type \"{valueKind.ToString().ToLower()}\"!");
 		return prop;
 	}
 
@@ -45,7 +45,7 @@ internal static class JsonElementExtensions
 			case TypeCode.Byte:
 			{
 				if (prop.ValueKind != JsonValueKind.Number)
-					throw new SerializationException($"Property \"{propertyName}\" was not of expected type ´{JsonValueKind.Number.ToString().ToLower()}´!");
+					throw new SerializationException($"Property \"{propertyName}\" was not of expected type \"{JsonValueKind.Number.ToString().ToLower()}\"!");
 				if (prop.TryGetByte(out var value))
 					return (T)(object)value;
 				break;
@@ -54,7 +54,7 @@ internal static class JsonElementExtensions
 			case TypeCode.SByte:
 			{
 				if (prop.ValueKind != JsonValueKind.Number)
-					throw new SerializationException($"Property \"{propertyName}\" was not of expected type ´{JsonValueKind.Number.ToString().ToLower()}´!");
+					throw new SerializationException($"Property \"{propertyName}\" was not of expected type \"{JsonValueKind.Number.ToString().ToLower()}\"!");
 				if (prop.TryGetSByte(out var value))
 					return (T)(object)value;
 				break;
@@ -63,7 +63,7 @@ internal static class JsonElementExtensions
 			case TypeCode.Int16:
 			{
 				if (prop.ValueKind != JsonValueKind.Number)
-					throw new SerializationException($"Property \"{propertyName}\" was not of expected type ´{JsonValueKind.Number.ToString().ToLower()}´!");
+					throw new SerializationException($"Property \"{propertyName}\" was not of expected type \"{JsonValueKind.Number.ToString().ToLower()}\"!");
 				if (prop.TryGetInt16(out var value))
 					return (T)(object)value;
 				break;
@@ -72,7 +72,7 @@ internal static class JsonElementExtensions
 			case TypeCode.UInt16:
 			{
 				if (prop.ValueKind != JsonValueKind.Number)
-					throw new SerializationException($"Property \"{propertyName}\" was not of expected type ´{JsonValueKind.Number.ToString().ToLower()}´!");
+					throw new SerializationException($"Property \"{propertyName}\" was not of expected type \"{JsonValueKind.Number.ToString().ToLower()}\"!");
 				if (prop.TryGetUInt16(out var value))
 					return (T)(object)value;
 				break;
@@ -81,7 +81,7 @@ internal static class JsonElementExtensions
 			case TypeCode.Int32:
 			{
 				if (prop.ValueKind != JsonValueKind.Number)
-					throw new SerializationException($"Property \"{propertyName}\" was not of expected type ´{JsonValueKind.Number.ToString().ToLower()}´!");
+					throw new SerializationException($"Property \"{propertyName}\" was not of expected type \"{JsonValueKind.Number.ToString().ToLower()}\"!");
 				if (prop.TryGetInt32(out var value))
 					return (T)(object)value;
 				break;
@@ -90,7 +90,7 @@ internal static class JsonElementExtensions
 			case TypeCode.UInt32:
 			{
 				if (prop.ValueKind != JsonValueKind.Number)
-					throw new SerializationException($"Property \"{propertyName}\" was not of expected type ´{JsonValueKind.Number.ToString().ToLower()}´!");
+					throw new SerializationException($"Property \"{propertyName}\" was not of expected type \"{JsonValueKind.Number.ToString().ToLower()}\"!");
 				if (prop.TryGetUInt32(out var value))
 					return (T)(object)value;
 				break;
@@ -99,7 +99,7 @@ internal static class JsonElementExtensions
 			case TypeCode.Int64:
 			{
 				if (prop.ValueKind != JsonValueKind.Number)
-					throw new SerializationException($"Property \"{propertyName}\" was not of expected type ´{JsonValueKind.Number.ToString().ToLower()}´!");
+					throw new SerializationException($"Property \"{propertyName}\" was not of expected type \"{JsonValueKind.Number.ToString().ToLower()}\"!");
 				if (prop.TryGetInt64(out var value))
 					return (T)(object)value;
 				break;
@@ -108,7 +108,7 @@ internal static class JsonElementExtensions
 			case TypeCode.UInt64:
 			{
 				if (prop.ValueKind != JsonValueKind.Number)
-					throw new SerializationException($"Property \"{propertyName}\" was not of expected type ´{JsonValueKind.Number.ToString().ToLower()}´!");
+					throw new SerializationException($"Property \"{propertyName}\" was not of expected type \"{JsonValueKind.Number.ToString().ToLower()}\"!");
 				if (prop.TryGetUInt64(out var value))
 					return (T)(object)value;
 				break;
@@ -117,7 +117,7 @@ internal static class JsonElementExtensions
 			case TypeCode.Single:
 			{
 				if (prop.ValueKind != JsonValueKind.Number)
-					throw new SerializationException($"Property \"{propertyName}\" was not of expected type ´{JsonValueKind.Number.ToString().ToLower()}´!");
+					throw new SerializationException($"Property \"{propertyName}\" was not of expected type \"{JsonValueKind.Number.ToString().ToLower()}\"!");
 				if (prop.TryGetSingle(out var value))
 					return (T)(object)value;
 				break;
@@ -126,7 +126,7 @@ internal static class JsonElementExtensions
 			case TypeCode.Double:
 			{
 				if (prop.ValueKind != JsonValueKind.Number)
-					throw new SerializationException($"Property \"{propertyName}\" was not of expected type ´{JsonValueKind.Number.ToString().ToLower()}´!");
+					throw new SerializationException($"Property \"{propertyName}\" was not of expected type \"{JsonValueKind.Number.ToString().ToLower()}\"!");
 				if (prop.TryGetDouble(out var value))
 					return (T)(object)value;
 				break;
@@ -135,7 +135,7 @@ internal static class JsonElementExtensions
 			case TypeCode.Decimal:
 			{
 				if (prop.ValueKind != JsonValueKind.Number)
-					throw new SerializationException($"Property \"{propertyName}\" was not of expected type ´{JsonValueKind.Number.ToString().ToLower()}´!");
+					throw new SerializationException($"Property \"{propertyName}\" was not of expected type \"{JsonValueKind.Number.ToString().ToLower()}\"!");
 				if (prop.TryGetDecimal(out var value))
 					return (T)(object)value;
 				break;
@@ -144,7 +144,7 @@ internal static class JsonElementExtensions
 			case TypeCode.String:
 			{
 				if (prop.ValueKind != JsonValueKind.String)
-					throw new SerializationException($"Property \"{propertyName}\" was not of expected type ´{JsonValueKind.String.ToString().ToLower()}´!");
+					throw new SerializationException($"Property \"{propertyName}\" was not of expected type \"{JsonValueKind.String.ToString().ToLower()}\"!");
 				if (prop.GetString() is { } value)
 					return (T)(object)value;
 				break;

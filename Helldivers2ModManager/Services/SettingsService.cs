@@ -125,6 +125,22 @@ internal sealed class SettingsService
 			_caseSensitiveSearch = value;
 		}
 	}
+
+	public string Language
+	{
+		get
+		{
+			GuardInitialized();
+			return _language;
+		}
+
+		set
+		{
+			GuardInitialized();
+			GuardReadonly();
+			_language = value;
+		}
+	}
 	
 	private static readonly FileInfo s_file = new("settings.json");
 	private static readonly JsonDocumentOptions s_options = new()
@@ -141,6 +157,7 @@ internal sealed class SettingsService
 	private float _opacity;
 	private ObservableCollection<string> _skipList = null!;
 	private bool _caseSensitiveSearch;
+	private string _language = "en";
 
 	public SettingsService(ILogger<SettingsService> logger)
 	{
@@ -211,6 +228,7 @@ internal sealed class SettingsService
 						writer.WriteStringValue(elm);
 				writer.WriteEndArray();
 			writer.WriteBoolean(nameof(CaseSensitiveSearch), _caseSensitiveSearch);
+			writer.WriteString(nameof(Language), _language);
 		writer.WriteEndObject();
 		
 		await writer.DisposeAsync();
@@ -325,6 +343,8 @@ internal sealed class SettingsService
 		}
 		if (root.TryGetProperty(nameof(CaseSensitiveSearch), out prop) && prop.ValueKind is JsonValueKind.True or JsonValueKind.False)
 			_caseSensitiveSearch = prop.GetBoolean();
+		if (root.TryGetProperty(nameof(Language), JsonValueKind.String, out prop))
+			_language = prop.GetString()!;
 
 		document.Dispose();
 		await stream.DisposeAsync();
@@ -340,5 +360,6 @@ internal sealed class SettingsService
 		_opacity = 0.8f;
 		_skipList = [];
 		_caseSensitiveSearch = false;
+		_language = "en";
 	}
 }

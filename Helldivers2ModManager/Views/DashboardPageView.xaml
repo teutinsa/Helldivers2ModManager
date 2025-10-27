@@ -26,7 +26,7 @@
 		<StackPanel Grid.Row="0"
 					Grid.RowSpan="2"
 					Grid.Column="0">
-			<Button Content="Add"
+			<Button Content="{Binding AddLabel}"
 					Command="{Binding AddCommand}"
 					IsEnabled="{Binding Initialized}"/>
 			<!--
@@ -39,7 +39,7 @@
 			<Button Content="Import"
 					Command="{Binding ImportCommand}"/>
 			-->
-			<Button Content="Report Bug"
+			<Button Content="{Binding ReportBugLabel}"
 					Command="{Binding ReportBugCommand}"/>
 			<Grid>
 				<Grid.ColumnDefinitions>
@@ -61,37 +61,37 @@
 		</StackPanel>
 		<Button Grid.Row="2"
 				Grid.Column="0"
-				Content="Settings"
+				Content="{Binding SettingsLabel}"
 				Command="{Binding SettingsCommand}"/>
 		<StackPanel Grid.Row="2"
 					Grid.Column="1"
 					Orientation="Horizontal"
 					HorizontalAlignment="Right">
-			<Button Content="Purge"
+			<Button Content="{Binding PurgeLabel}"
 					Style="{DynamicResource CancelButton}"
 					Command="{Binding PurgeCommand}"
 					IsEnabled="{Binding Initialized}">
 				<Button.ToolTip>
-					<TextBlock Text="Removes all patch files from the games data directory."
+					<TextBlock Text="{Binding PurgeTooltip}"
 							   FontFamily="../Resources/Fonts/#FS Sinclair Regular"
 							   Margin="5 0"/>
 				</Button.ToolTip>
 			</Button>
-			<Button Content="Deploy"
+			<Button Content="{Binding DeployLabel}"
 					Style="{DynamicResource ConfirmButton}"
 					Command="{Binding DeployCommand}"
 					IsEnabled="{Binding Initialized}">
 				<Button.ToolTip>
-					<TextBlock Text="Installs all selected mods patch files into the games data directory."
+					<TextBlock Text="{Binding DeployTooltip}"
 							   FontFamily="../Resources/Fonts/#FS Sinclair Regular"
 							   Margin="5 0"/>
 				</Button.ToolTip>
 			</Button>
-			<Button Content="Launch HD2"
+			<Button Content="{Binding LaunchHD2Label}"
 					Command="{Binding RunCommand}"
 					IsEnabled="{Binding Initialized}">
 				<Button.ToolTip>
-					<TextBlock Text="Runs the game through steam."
+					<TextBlock Text="{Binding LaunchTooltip}"
 							   FontFamily="../Resources/Fonts/#FS Sinclair Regular"
 							   Margin="5 0"/>
 				</Button.ToolTip>
@@ -105,7 +105,7 @@
 				<ColumnDefinition Width="Auto"/>
 			</Grid.ColumnDefinitions>
 			<TextBlock Grid.Column="0"
-					   Text="Search:"
+					   Text="{Binding SearchLabel}"
 					   Foreground="White"
 					   FontSize="24"
 					   VerticalAlignment="Center"
@@ -182,7 +182,7 @@
 										Margin="3"
 										Width="50"
 										Foreground="White"
-										Content="Edit"
+										Content="{Binding DataContext.EditLabel, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Page}}}"
 										VerticalContentAlignment="Center"
 										Padding="0"
 										Visibility="{Binding EditVisible}"

@@ -17,7 +17,37 @@ namespace Helldivers2ModManager.ViewModels;
 [RegisterService(ServiceLifetime.Transient)]
 internal sealed partial class SettingsPageViewModel : PageViewModelBase
 {
-	public override string Title => "Settings";
+	public override string Title => _localizationService["Settings.Title"];
+
+	// Localized labels
+	public string GameDirectoryLabel => _localizationService["Settings.GameDirectory"];
+	public string GameDirectoryDesc => _localizationService["Settings.GameDirectoryDesc"];
+	public string GameDirectoryHint => _localizationService["Settings.GameDirectoryHint"];
+	public string AutoDetectLabel => _localizationService["Settings.AutoDetect"];
+	public string StorageDirectoryLabel => _localizationService["Settings.StorageDirectory"];
+	public string StorageDirectoryDesc => _localizationService["Settings.StorageDirectoryDesc"];
+	public string StorageDirectoryWarning => _localizationService["Settings.StorageDirectoryWarning"];
+	public string TempDirectoryLabel => _localizationService["Settings.TempDirectory"];
+	public string TempDirectoryDesc => _localizationService["Settings.TempDirectoryDesc"];
+	public string TempDirectoryItem1 => _localizationService["Settings.TempDirectoryItem1"];
+	public string TempDirectoryItem2 => _localizationService["Settings.TempDirectoryItem2"];
+	public string TempDirectoryItem3 => _localizationService["Settings.TempDirectoryItem3"];
+	public string OpacityLabel => _localizationService["Settings.Opacity"];
+	public string OpacityDesc => _localizationService["Settings.OpacityDesc"];
+	public string LanguageLabel => _localizationService["Settings.Language"];
+	public string LanguageDesc => _localizationService["Settings.LanguageDesc"];
+	public string LogLevelLabel => _localizationService["Settings.LogLevel"];
+	public string LogLevelDesc => _localizationService["Settings.LogLevelDesc"];
+	public string LogLevelDefault => _localizationService["Settings.LogLevelDefault"];
+	public string SearchLabel => _localizationService["Settings.Search"];
+	public string CaseSensitiveLabel => _localizationService["Settings.CaseSensitive"];
+	public string UtilitiesLabel => _localizationService["Settings.Utilities"];
+	public string ResetLabel => _localizationService["Settings.Reset"];
+	public string ResetDesc => _localizationService["Settings.ResetDesc"];
+	public string DevOptionsLabel => _localizationService["Settings.DevOptions"];
+	public string SkipListLabel => _localizationService["Settings.SkipList"];
+	public string SkipListDesc => _localizationService["Settings.SkipListDesc"];
+	public string OKLabel => _localizationService["Settings.OK"];
 
 	public string GameDir
 	{
@@ -87,17 +117,36 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 		}
 	}
 
+	public string Language
+	{
+		get => _settingsService.Initialized ? _settingsService.Language : "en";
+		set
+		{
+			OnPropertyChanging();
+			_settingsService.Language = value;
+			_localizationService.CurrentLanguage = value;
+			OnPropertyChanged();
+		}
+	}
+
+	public ObservableCollection<string> AvailableLanguages => _localizationService.AvailableLanguages;
+
 	private readonly ILogger<SettingsPageViewModel> _logger;
 	private readonly NavigationStore _navStore;
 	private readonly SettingsService _settingsService;
+	private readonly LocalizationService _localizationService;
 	[ObservableProperty]
 	private int _selectedSkip = -1;
 
-	public SettingsPageViewModel(ILogger<SettingsPageViewModel> logger, NavigationStore navStore, SettingsService settingsService)
+	public SettingsPageViewModel(ILogger<SettingsPageViewModel> logger, NavigationStore navStore, SettingsService settingsService, LocalizationService localizationService)
 	{
 		_logger = logger;
 		_navStore = navStore;
 		_settingsService = settingsService;
+		_localizationService = localizationService;
+
+		// Listen to language changes
+		_localizationService.PropertyChanged += (s, e) => UpdateLocalizedProperties();
 
 		SkipList.CollectionChanged += SkipList_CollectionChanged;
 
@@ -105,6 +154,39 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 			_ = Init();
 		else
 			MessageBox.Registered += (_, _) => _ = Init();
+	}
+	
+	private void UpdateLocalizedProperties()
+	{
+		OnPropertyChanged(nameof(Title));
+		OnPropertyChanged(nameof(GameDirectoryLabel));
+		OnPropertyChanged(nameof(GameDirectoryDesc));
+		OnPropertyChanged(nameof(GameDirectoryHint));
+		OnPropertyChanged(nameof(AutoDetectLabel));
+		OnPropertyChanged(nameof(StorageDirectoryLabel));
+		OnPropertyChanged(nameof(StorageDirectoryDesc));
+		OnPropertyChanged(nameof(StorageDirectoryWarning));
+		OnPropertyChanged(nameof(TempDirectoryLabel));
+		OnPropertyChanged(nameof(TempDirectoryDesc));
+		OnPropertyChanged(nameof(TempDirectoryItem1));
+		OnPropertyChanged(nameof(TempDirectoryItem2));
+		OnPropertyChanged(nameof(TempDirectoryItem3));
+		OnPropertyChanged(nameof(OpacityLabel));
+		OnPropertyChanged(nameof(OpacityDesc));
+		OnPropertyChanged(nameof(LanguageLabel));
+		OnPropertyChanged(nameof(LanguageDesc));
+		OnPropertyChanged(nameof(LogLevelLabel));
+		OnPropertyChanged(nameof(LogLevelDesc));
+		OnPropertyChanged(nameof(LogLevelDefault));
+		OnPropertyChanged(nameof(SearchLabel));
+		OnPropertyChanged(nameof(CaseSensitiveLabel));
+		OnPropertyChanged(nameof(UtilitiesLabel));
+		OnPropertyChanged(nameof(ResetLabel));
+		OnPropertyChanged(nameof(ResetDesc));
+		OnPropertyChanged(nameof(DevOptionsLabel));
+		OnPropertyChanged(nameof(SkipListLabel));
+		OnPropertyChanged(nameof(SkipListDesc));
+		OnPropertyChanged(nameof(OKLabel));
 	}
 
 	private static bool ValidateGameDir(DirectoryInfo dir, [NotNullWhen(false)] out string? error)
@@ -228,6 +310,7 @@ internal sealed partial class SettingsPageViewModel : PageViewModelBase
 		OnPropertyChanged(nameof(Opacity));
 		OnPropertyChanged(nameof(SkipList));
 		OnPropertyChanged(nameof(CaseSensitiveSearch));
+		OnPropertyChanged(nameof(Language));
 	}
 
 	private void SkipList_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
