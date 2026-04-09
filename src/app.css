@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@font-face {
+    font-family: 'FS Sinclair';
+    font-style: normal;
+    src: url('/fonts/FS Sinclair Regular.otf');
+}
+
+@font-face {
+    font-family: 'Blockletter';
+    src: url('/fonts/Blockletter.otf');
+}
+
+.font-sinclair {
+    font-family: 'FS Sinclair';
+}
+
+.font-blockletter {
+    font-family: 'Blockletter';
+}
+
+:root {
+    font-family: 'FS Sinclair';
+    -webkit-user-select: none;
+    user-select: none;
+}
