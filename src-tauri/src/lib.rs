@@ -1,15 +1,16 @@
 pub mod commands;
-pub mod services;
+pub mod models;
+pub mod archive;
 
-use std::sync::Mutex;
 use log::LevelFilter;
 use tauri_plugin_log::{Target, TargetKind};
-use services::{mods::ModsService, profiles::ProfilesService};
+use tokio::sync::Mutex;
 
-#[derive(Debug, Default)]
+use crate::models::Mod;
+
+#[derive(Default)]
 pub struct AppState {
-    pub mods: Mutex<ModsService>,
-    pub profiles: Mutex<ProfilesService>
+    mods: Mutex<Option<Vec<Mod>>>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -35,7 +36,10 @@ pub fn run() {
         )
         .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
-            
+            commands::mods::get_mods,
+            commands::mods::add_mod,
+            commands::profiles::load_profiles,
+            commands::profiles::save_profiles,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

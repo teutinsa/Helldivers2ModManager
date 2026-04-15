@@ -15,7 +15,9 @@
   "dependencies": {
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-log": "^2.8.0",
-    "@tauri-apps/plugin-opener": "^2"
+    "@tauri-apps/plugin-opener": "^2",
+    "svelte-bootstrap-icons": "^3.3.0",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.6",

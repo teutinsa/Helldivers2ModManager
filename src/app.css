@@ -24,3 +24,19 @@
     -webkit-user-select: none;
     user-select: none;
 }
+
+.hd2mm-button {
+    @apply px-2 py-1 border-2 text-zinc-300 border-zinc-500 hover:border-yellow-300 active:bg-yellow-300 active:border-yellow-300 active:text-zinc-900;
+}
+
+.hd2mm-danger-button {
+    @apply px-2 py-1 border-2 text-zinc-300 border-red-700 hover:border-red-500 active:bg-red-500 active:border-red-500 active:text-zinc-100;
+}
+
+.hd2mm-success-button {
+    @apply px-2 py-1 border-2 text-zinc-300 border-green-700 hover:border-green-500 active:bg-green-500 active:border-green-500 active:text-zinc-100;
+}
+
+.hd2mm-input {
+    @apply px-2 py-1 text-zinc-300 border-zinc-500 border-2 hover:border-yellow-300 focus:outline-none focus:border-yellow-300;
+}

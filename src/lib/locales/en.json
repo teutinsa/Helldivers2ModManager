@@ -2,5 +2,79 @@
     "app": {
         "title": "Mod Manager",
         "version": "v{0}"
+    },
+    "sidebar": {
+        "mods_button": {
+            "tip": "Mods"
+        },
+        "create_button": {
+            "tip": "Create"
+        },
+        "help_button": {
+            "tip": "Help"
+        },
+        "settings_button": {
+            "tip": "Settings"
+        }
+    },
+    "pages": {
+        "mods": {
+            "popup": {
+                "confirm": {
+                    "remove_profile": {
+                        "title": "Remove Profile",
+                        "question": "Are you sure you want to remove this profile?"
+                    },
+                    "purge": {
+                        "title": "Purge",
+                        "question": "Are you sure you want to uninstall all mods from the game?"
+                    }
+                },
+                "input": {
+                    "add_profile": {
+                        "placeholder": "Profile name"
+                    }
+                }
+            },
+            "loading": {
+                "text": "Loading..."
+            },
+            "loading_failed": {
+                "title": "Loading failed!"
+            },
+            "search_input": {
+                "placeholder": "Search"
+            },
+            "purge_button": {
+                "text": "Purge",
+                "tip": "Uinstall all mods from the game."
+            },
+            "deploy_button": {
+                "text": "Deploy",
+                "tip": "Install the current selection of mods."
+            },
+            "launch_button": {
+                "text": "Launch",
+                "tip": "Launch the game through Steam."
+            }
+        }
+    },
+    "popup": {
+        "confirm": {
+            "yes_button": {
+                "text": "Yes"
+            },
+            "no_button": {
+                "text": "No"
+            }
+        },
+        "input": {
+            "confirm_button": {
+                "text": "Confirm"
+            },
+            "abort_button": {
+                "text": "Abort"
+            }
+        }
     }
 }

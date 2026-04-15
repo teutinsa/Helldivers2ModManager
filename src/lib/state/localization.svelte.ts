@@ -1,7 +1,7 @@
 import { loadTranslations } from '$lib/services/localization';
 import type { Locale, TranslationKey, Translations } from '$lib/types/localization';
-import '$lib/utils/stringExtensions';
 import { createLogger } from '$lib/utils/logger';
+import '$lib/utils/stringExtensions';
 
 const log = createLogger('LocalizationService')
 let locale = $state<Locale>('en');
@@ -19,7 +19,6 @@ export function useLocalization() {
         },
         
         t(key: TranslationKey, args?: Record<string, unknown> | unknown[]): string {
-            log.debug('Translation requested', { key: key });
             const parts = key.split('.');
             
             let current: any = translations;
@@ -28,15 +27,16 @@ export function useLocalization() {
                 current = current[part];
             }
             
-            const template = typeof current === 'string' ? current : `{${key}}`;
-            if (!args) {
-                log.debug('Obtained translation', { key, result: template });
-                return template;
+            if (typeof current !== 'string') {
+                log.error("Key not found!", { key })
+                return `{${key}}`;
             }
-            log.debug('Obtained translation template', { key, template });
+
+            const template = current as string;
+            if (!args)
+                return template;
 
             const format = template.format(args);
-            log.debug('Formatted template', { key, template, args, format })
             return format;
         },
 
