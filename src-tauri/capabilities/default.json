@@ -9,8 +9,17 @@
     "core:window:allow-minimize",
     "core:window:allow-toggle-maximize",
     "core:window:allow-start-dragging",
-    "opener:allow-open-path",
-    "opener:allow-open-url",
-    "log:default"
+    "log:default",
+    "opener:default",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "steam:*"
+        }
+      ]
+    },
+    "dialog:allow-open",
+    "dialog:allow-save"
   ]
 }

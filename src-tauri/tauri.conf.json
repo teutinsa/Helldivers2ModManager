@@ -19,11 +19,17 @@
         "minHeight": 600,
         "decorations": false,
         "backgroundColor": "#000",
-        "devtools": false
+        "devtools": false,
+        "center": true,
+        "dragDropEnabled": true
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["./**"]
+      }
     }
   },
   "bundle": {

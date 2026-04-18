@@ -34,6 +34,22 @@
                     "add_profile": {
                         "placeholder": "Profile name"
                     }
+                },
+                "wait": {
+                    "purge": {
+                        "message": "Purging mods..."
+                    },
+                    "add": {
+                        "message": "Adding mod..."
+                    },
+                    "add_multiple": {
+                        "message": "Adding mods..."
+                    }
+                },
+                "notification": {
+                    "add_error": {
+                        "message": "Mod adding failed!"
+                    }
                 }
             },
             "loading": {
@@ -45,9 +61,13 @@
             "search_input": {
                 "placeholder": "Search"
             },
+            "add_button": {
+                "text": "Add",
+                "tip": "Add a mod to the library."
+            },
             "purge_button": {
                 "text": "Purge",
-                "tip": "Uinstall all mods from the game."
+                "tip": "Uninstall all mods from the game."
             },
             "deploy_button": {
                 "text": "Deploy",
@@ -56,7 +76,11 @@
             "launch_button": {
                 "text": "Launch",
                 "tip": "Launch the game through Steam."
-            }
+            },
+            "library_button": {
+                "tip": "Library"
+            },
+            "drop_message": "Drop to add mod"
         }
     },
     "popup": {
@@ -74,6 +98,23 @@
             },
             "abort_button": {
                 "text": "Abort"
+            },
+            "errors": {
+                "empty": "Input can not be empty.",
+                "range_length": "Input must be between {0} and {1} characters long.",
+                "min_length": "Input must be at least {0} characters long.",
+                "max_length": "Input can not be longer than {0} characters long.",
+                "format": "Input must adhere for this format: {0}"
+            }
+        },
+        "notification": {
+            "title": {
+                "info": "Info",
+                "warning": "Warning",
+                "error": "Error"
+            },
+            "ok_button": {
+                "text": "OK"
             }
         }
     }

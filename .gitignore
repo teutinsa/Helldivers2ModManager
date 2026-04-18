@@ -8,8 +8,14 @@ node_modules
 !.env.example
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+/.vs
 /.vscode
+/.idea
 /target/
 *.lock
 pnpm-lock.yaml
 *.log
+src-tauri/log/
+src-tauri/mods/
+src-tauri/profiles.json
+src-tauri/settings.json

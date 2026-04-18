@@ -8,6 +8,6 @@ export type SettingsV1 = {
     Version: "V1",
     GamePath: string,
     SkipList: SkipEntry[]
-}
+};
 
 export type Settings = SettingsV1 /* | SettingsV2 */;

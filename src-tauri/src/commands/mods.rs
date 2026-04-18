@@ -1,22 +1,52 @@
-use std::path::{Path, PathBuf};
-use anyhow_tauri::{TAResult, IntoTAResult};
-use rand::{TryRng, rngs::SysRng};
+use crate::{
+    archive::Archive,
+    models::{
+        manifest::{legacy, Manifest},
+        Mod,
+    },
+    AppState,
+};
+use anyhow_tauri::{IntoTAResult, TAResult};
+use rand::{rngs::SysRng, TryRng};
+use std::{collections::HashSet, path::PathBuf};
 use tauri::State;
 use uuid::Uuid;
-use crate::{AppState, archive::Archive, models::{Mod, manifest::{Manifest, legacy}}};
 
 const MODS_DIRECTORY: &'static str = "mods/";
 const MANIFEST_FILE: &'static str = "manifest.json";
 
+trait ZipResult<S, E, T> {
+    fn zip(self, other: Result<T, E>) -> Result<(S, T), E>;
+    fn zip_value(self, other: T) -> Result<(S, T), E>;
+}
+
+impl<S, E, T> ZipResult<S, E, T> for Result<S, E> {
+    fn zip(self, other: Result<T, E>) -> Result<(S, T), E> {
+        match (self, other) {
+            (Ok(a), Ok(b)) => Ok((a, b)),
+            (Err(e), Ok(_)) => Err(e),
+            (Ok(_), Err(e)) => Err(e),
+            (Err(e), Err(_)) => Err(e),
+        }
+    }
+
+    fn zip_value(self, other: T) -> Result<(S, T), E> {
+        match self {
+            Ok(s) => Ok((s, other)),
+            Err(e) => Err(e)
+        }
+    }
+}
+
 #[tauri::command]
 pub async fn get_mods(state: State<'_, AppState>) -> TAResult<Vec<Mod>> {
-    let mods = state.mods.lock().await;
+    let mut state_mods = state.mods.lock().await;
 
-    if let Some(mods) = mods.as_ref() {
+    if let Some(mods) = state_mods.as_ref() {
         return Ok(mods.clone());
     }
 
-    let mods_dir = Path::new(MODS_DIRECTORY);
+    let mods_dir = state.base_path.join(MODS_DIRECTORY);
     if !mods_dir.is_dir() {
         tokio::fs::create_dir(mods_dir).await.into_ta_result()?;
         return Ok(vec![]);
@@ -37,10 +67,12 @@ pub async fn get_mods(state: State<'_, AppState>) -> TAResult<Vec<Mod>> {
 
         mods.push(Mod {
             manifest,
-            directory: mod_dir
+            directory: mod_dir,
         });
     }
-    
+
+    log::info!("Mods read.");
+    *state_mods = Some(mods.clone());
     Ok(mods)
 }
 
@@ -52,61 +84,211 @@ pub async fn add_mod(state: State<'_, AppState>, archive_file: PathBuf) -> TARes
     }
     let mods = mods.as_mut().unwrap();
 
-    let mut archive = Archive::open(&archive_file)?;
-    
-    let name = archive_file.file_name()
+    let archive = Archive::open(&archive_file)?;
+
+    let name = archive_file
+        .file_prefix()
         .unwrap()
         .to_str()
         .map(str::to_string)
         .ok_or(anyhow::anyhow!("file name conversion failed"))?;
 
-    let mut mod_dir = PathBuf::new();
-    mod_dir.push(MODS_DIRECTORY);
+    let mut mod_dir = state.base_path.join(MODS_DIRECTORY);
     mod_dir.push(&name);
 
     let manifest_file = mod_dir.join(MANIFEST_FILE);
-    if mod_dir.try_exists().into_ta_result()? {
+    prepare_mod_dir(mod_dir.clone(), manifest_file.clone(), name.clone()).await.into_ta_result()?;
+
+    let (archive, manifest) = resolve_manifest(archive, name.clone(), manifest_file.clone()).await.into_ta_result()?;
+
+    let r#mod = Mod {
+        manifest,
+        directory: mod_dir.clone(),
+    };
+
+    if mods.iter().any(|m| m.guid() == r#mod.guid()) {
+        return anyhow::anyhow!("mod with GUID {{{}}} already exists", r#mod.guid())
+            .into_ta_result();
+    }
+    
+    extract_archive(archive, mod_dir).await?;
+
+    mods.push(r#mod.clone());
+    Ok(r#mod)
+}
+
+#[tauri::command]
+pub async fn add_mods(state: State<'_, AppState>, archive_files: Vec<PathBuf>) -> TAResult<Vec<TAResult<Mod>>> {
+    let mut mods = state.mods.lock().await;
+    if mods.is_none() {
+        return anyhow::anyhow!("mods not read").into_ta_result();
+    }
+    let mods = mods.as_mut().unwrap();
+    
+    let data = archive_files
+        .iter()
+        .map(|archive_file| Archive::open(archive_file).into_ta_result())
+        .collect::<Vec<_>>();
+
+    let data = archive_files
+        .into_iter()
+        .zip(data)
+        .map(|(archive_file, result)| {
+            result
+                .zip_value(archive_file)
+                .map(|(archive, archive_file)| {
+                    let name = archive_file
+                        .file_prefix()
+                        .unwrap()
+                        .to_str()
+                        .map(str::to_string)
+                        .ok_or(anyhow::anyhow!("file name conversion failed"))
+                        .into_ta_result()?;
+                    Ok((archive, name))
+                })
+                .flatten()
+        })
+        .collect::<Vec<_>>();
+
+    let data = data
+        .into_iter()
+        .map(|result| {
+            result
+                .map(|(archive, name)| {
+                    let mut mod_dir = state.base_path.join(MODS_DIRECTORY);
+                    mod_dir.push(&name);
+                    let manifest_file = mod_dir.join(MANIFEST_FILE);
+                    (archive, name, mod_dir, manifest_file)
+                })
+        })
+        .collect::<Vec<_>>();
+
+    let data = futures::future::join_all(
+        data.into_iter().map(|result| async {
+            match result {
+                Ok((archive, name, mod_dir, manifest_file)) => {
+                    prepare_mod_dir(mod_dir.clone(), manifest_file.clone(), name.clone()).await?;
+                    Ok((archive, name, mod_dir, manifest_file))
+                }
+                Err(e) => Err(e)
+            }
+        })
+    ).await;
+
+    let data = futures::future::join_all(
+        data.into_iter().map(|result| async {
+            match result {
+                Ok((archive, name, mod_dir, manifest_file)) => {
+                    let (archive, manifest) = resolve_manifest(archive, name, manifest_file).await?;
+                    Ok((archive, mod_dir, manifest))
+                }
+                Err(e) => Err(e)
+            }
+        })
+    ).await;
+    
+    let data = data
+        .into_iter()
+        .map(|result| {
+            result.map(|(archive, mod_dir, manifest)| {
+                let r#mod = Mod {
+                    manifest,
+                    directory: mod_dir
+                };
+                (archive, r#mod)
+            })
+        })
+        .collect::<Vec<_>>();
+    
+    let mut guids: HashSet<Uuid> = mods.iter().map(|m| m.guid()).collect();
+    let data = data
+        .into_iter()
+        .map(|result| {
+            result.map(|(archive, r#mod)| {
+                let guid = r#mod.guid();
+                if guids.insert(guid) {
+                    Ok((archive, r#mod))
+                } else {
+                    anyhow_tauri::bail!("mod with GUID {{{}}} already exists", guid)
+                }
+            })
+            .flatten()
+        })
+        .collect::<Vec<_>>();
+
+    let mut guids = HashSet::<Uuid>::new();
+    let data = data
+        .into_iter()
+        .map(|result| {
+            result.map(|(archive, r#mod)| {
+                let guid = r#mod.guid();
+                if guids.insert(guid) {
+                    Ok((archive, r#mod))
+                } else {
+                    anyhow_tauri::bail!("already adding mod with GUID {{{}}}", guid)
+                }
+            })
+            .flatten()
+        })
+        .collect::<Vec<_>>();
+
+    let data = futures::future::join_all(
+        data.into_iter().map(|result| async {
+            match result {
+                Ok((archive, r#mod)) => {
+                    extract_archive(archive, r#mod.directory.clone()).await?;
+                    Ok(r#mod)
+                }
+                Err(e) => Err(e)
+            }
+        })
+    ).await;
+
+    for r#mod in data.iter().flatten() {
+        mods.push(r#mod.clone());
+    }
+    
+    Ok(data)
+}
+
+async fn prepare_mod_dir(mod_dir: PathBuf, manifest_file: PathBuf, name: String) -> TAResult<()> {
+    if tokio::fs::try_exists(&mod_dir).await.into_ta_result()? {
         if tokio::fs::try_exists(&manifest_file).await.into_ta_result()? {
             return anyhow::anyhow!("mod directory \"{}\" already exists", name).into_ta_result();
         } else {
             tokio::fs::remove_dir_all(&mod_dir).await.into_ta_result()?;
         }
     }
+    tokio::fs::create_dir_all(&mod_dir).await.into_ta_result()
+}
 
-    tokio::fs::create_dir_all(&mod_dir).await.into_ta_result()?;
-
-    let manifest = if archive.has_path(MANIFEST_FILE)? {
+async fn resolve_manifest(mut archive: Archive, name: String, manifest_file: PathBuf) -> TAResult<(Archive, Manifest)> {
+    if archive.has_path(MANIFEST_FILE)? {
         let manifest_data = archive.read_path(MANIFEST_FILE)?;
-        serde_json::from_slice(&manifest_data).into_ta_result()?
+        let manifest = serde_json::from_slice(&manifest_data).into_ta_result()?;
+        Ok((archive, manifest))
     } else {
         let mut guid = [0u8; 16];
         guid[..5].copy_from_slice(b"LOCAL");
         SysRng.try_fill_bytes(&mut guid[5..]).into_ta_result()?;
-        
+
         let manifest = Manifest::Legacy(legacy::Manifest {
             guid: Uuid::from_bytes(guid),
             name,
             description: String::new(),
             icon_path: None,
-            options: None
+            options: None,
         });
 
         let manifest_data = serde_json::to_vec_pretty(&manifest).into_ta_result()?;
-        tokio::fs::write(&manifest_file, manifest_data).await.into_ta_result()?;
+        tokio::fs::write(&manifest_file, manifest_data)
+            .await
+            .into_ta_result()?;
 
-        manifest
-    };
-
-    let r#mod = Mod {
-        manifest,
-        directory: mod_dir.clone()
-    };
-
-    if mods.iter().any(|m| m.guid() == r#mod.guid()) {
-        return anyhow::anyhow!("mod with guid {{{}}} already exists", r#mod.guid()).into_ta_result();
+        Ok((archive, manifest))
     }
-    archive.extract_to(&mod_dir)?;
+}
 
-    mods.push(r#mod.clone());
-    Ok(r#mod)
+async fn extract_archive(mut archive: Archive, mod_dir: PathBuf) -> TAResult<()> {
+    tokio::task::spawn_blocking(move || archive.extract_to(mod_dir).into_ta_result()).await.into_ta_result()?
 }

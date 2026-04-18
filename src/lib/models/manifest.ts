@@ -1,6 +1,6 @@
-import { UUID } from "$lib/types/uuid";
+import type { UUID } from "$lib/types/uuid";
 
-namespace legacy {
+export namespace legacy {
     export type Manifest = {
         readonly Guid: UUID;
         readonly Name: string;
@@ -10,9 +10,9 @@ namespace legacy {
     };
 }
 
-namespace v1 {
+export namespace v1 {
     export type Manifest = {
-        readonly Version: number;
+        Version: 1;
         readonly Guid: UUID;
         readonly Name: string;
         readonly Description: string;
@@ -42,9 +42,9 @@ namespace v1 {
     };
 }
 
-namespace v2 {
+export namespace v2 {
     export type Manifest = {
-        readonly Version: number;
+        Version: 2;
         readonly Guid: UUID;
         readonly Name: string;
         readonly Description: string;
@@ -84,4 +84,4 @@ namespace v2 {
     };
 }
 
-type Manifest = legacy.Manifest | v1.Manifest | v2.Manifest;
+export type Manifest = legacy.Manifest | v1.Manifest | v2.Manifest;

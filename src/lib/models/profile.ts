@@ -1,4 +1,4 @@
-import { UUID } from "$lib/types/uuid";
+import type { UUID } from "$lib/types/uuid";
 
 export type ConfigLegacy = {
     For: "Legacy";

@@ -11,6 +11,34 @@
     src: url('/fonts/Blockletter.otf');
 }
 
+:root {
+    font-family: 'FS Sinclair';
+    -webkit-user-select: none;
+    user-select: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-zinc-800) var(--color-zinc-950);
+}
+
+::-webkit-scrollbar {
+    @apply
+        w-2
+        h-2
+    ;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply
+        bg-zinc-800
+        rounded
+    ;
+}
+
+::-webkit-scrollbar-track {
+    @apply
+        bg-zinc-950
+    ;
+}
+
 .font-sinclair {
     font-family: 'FS Sinclair';
 }
@@ -19,24 +47,113 @@
     font-family: 'Blockletter';
 }
 
-:root {
-    font-family: 'FS Sinclair';
-    -webkit-user-select: none;
-    user-select: none;
+.hd2mm-button {
+    @apply
+        px-2
+        py-1
+        border-2
+        text-zinc-300
+        bg-transparent
+        border-zinc-500
+        hover:border-yellow-300
+        active:text-zinc-900
+        active:bg-yellow-300
+        active:border-yellow-300
+        disabled:text-zinc-400
+        disabled:bg-transparent
+        disabled:border-zinc-700
+    ;
+    font-family: 'Blockletter';
 }
 
-.hd2mm-button {
-    @apply px-2 py-1 border-2 text-zinc-300 border-zinc-500 hover:border-yellow-300 active:bg-yellow-300 active:border-yellow-300 active:text-zinc-900;
+.hd2mm-button-nop {
+    @apply
+        border-2
+        text-zinc-300
+        bg-transparent
+        border-zinc-500
+        hover:border-yellow-300
+        active:text-zinc-900
+        active:bg-yellow-300
+        active:border-yellow-300
+        disabled:text-zinc-400
+        disabled:bg-transparent
+        disabled:border-zinc-700
+    ;
+    font-family: 'Blockletter';
 }
 
 .hd2mm-danger-button {
-    @apply px-2 py-1 border-2 text-zinc-300 border-red-700 hover:border-red-500 active:bg-red-500 active:border-red-500 active:text-zinc-100;
+    @apply
+        px-2
+        py-1
+        border-2
+        text-zinc-300
+        bg-transparent
+        border-zinc-500
+        hover:border-red-500
+        active:text-zinc-100
+        active:bg-red-500
+        active:border-red-500
+    ;
+    font-family: 'Blockletter';
 }
 
 .hd2mm-success-button {
-    @apply px-2 py-1 border-2 text-zinc-300 border-green-700 hover:border-green-500 active:bg-green-500 active:border-green-500 active:text-zinc-100;
+    @apply
+        px-2
+        py-1
+        border-2
+        text-zinc-300
+        bg-transparent
+        border-zinc-500
+        hover:border-green-500
+        active:text-zinc-100
+        active:bg-green-500
+        active:border-green-500
+    ;
+    font-family: 'Blockletter';
 }
 
 .hd2mm-input {
-    @apply px-2 py-1 text-zinc-300 border-zinc-500 border-2 hover:border-yellow-300 focus:outline-none focus:border-yellow-300;
+    @apply
+        px-2
+        py-1
+        border-2
+        text-zinc-300
+        bg-zinc-900
+        border-zinc-500
+        hover:border-yellow-300
+        focus:outline-none
+        focus:border-yellow-300
+    ;
+}
+
+.hd2mm-select {
+    @apply
+        text-zinc-300
+        border-zinc-500
+        border-2
+        hover:border-yellow-300
+        focus:outline-none
+        focus:border-yellow-300
+    ;
+}
+
+.hd2mm-select > option {
+    @apply
+        bg-zinc-800
+        text-zinc-300
+        hover:bg-yellow-300
+        hover:text-zinc-900
+    ;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
 }

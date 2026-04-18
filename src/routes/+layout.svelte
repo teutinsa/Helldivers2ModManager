@@ -24,7 +24,7 @@
     <Titlebar />
     <div class="relative flex-1 flex flex-row">
         <Sidebar />
-        <main class="flex-1 p-2">
+        <main class="flex-1 p-2 overflow-hidden min-w-0">
             <slot />
         </main>
         <Popup />

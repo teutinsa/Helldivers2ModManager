@@ -8,7 +8,7 @@ export function usePopup() {
             return popups.length > 0;
         },
 
-        get currentPopup(): Popup {
+        get currentPopup(): Popup<any> {
             return popups[popups.length - 1];
         },
 

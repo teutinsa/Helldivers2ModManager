@@ -5,7 +5,9 @@
 </script>
 
 {#if popup.isShown}
-    <div class="absolute inset-0 z-50 bg-black/20 flex justify-center items-center">
-        <popup.currentPopup.component popup={popup.currentPopup} />
-    </div>
+    {#key popup.currentPopup}
+        <div class="absolute inset-0 z-50 bg-black/20 flex justify-center items-center">
+            <svelte:component this={popup.currentPopup.component} popup={popup.currentPopup} />
+        </div>
+    {/key}
 {/if}
