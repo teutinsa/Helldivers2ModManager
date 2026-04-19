@@ -1,5 +1,4 @@
 use anyhow_tauri::{IntoTAResult, TAResult};
-use indexmap::IndexMap;
 use tauri::State;
 
 use crate::{AppState, models::profile::{Profile, ProfilesConfig}};
@@ -18,7 +17,7 @@ pub async fn load_profiles(state: State<'_, AppState>) -> TAResult<ProfilesConfi
             profiles: vec![
                 Profile::V1 {
                     name: "Default".to_string(),
-                    configs: IndexMap::new()
+                    configs: Vec::new()
                 }
             ],
             active: 0
@@ -28,7 +27,19 @@ pub async fn load_profiles(state: State<'_, AppState>) -> TAResult<ProfilesConfi
 
 #[tauri::command]
 pub async fn save_profiles(state: State<'_, AppState>, config: ProfilesConfig) -> TAResult<()> {
+    log::info!("Saving profiles...");
+    
+    for profile in &config.profiles {
+        log::debug!("Profile \"{}\" Order:", profile.name());
+        for config in profile.configs() {
+            log::debug!("- {{{}}}", config.uuid());
+        }
+    }
+
     let data = serde_json::to_vec_pretty(&config).into_ta_result()?;
     tokio::fs::write(state.base_path.join(PROFILES_FILE), data).await.into_ta_result()?;
+    
+    log::info!("Profiles saved.");
+
     Ok(())
 }

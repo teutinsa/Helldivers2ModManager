@@ -1,7 +1,5 @@
-# Tauri + SvelteKit + TypeScript
+# Helldivers2ModManager
 
-This template should help get you started developing with Tauri, SvelteKit and TypeScript in Vite.
+A simple mod manager for the game Helldivers 2.
 
-## Recommended IDE Setup
-
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer).
+Read more about it on the [website](https://teutinsa.github.io/hd2mm-site/index.html).

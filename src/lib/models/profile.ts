@@ -2,12 +2,14 @@ import type { UUID } from "$lib/types/uuid";
 
 export type ConfigLegacy = {
     For: "Legacy";
+    Guid: UUID;
     Enabled: boolean;
     Selected: number;
 };
 
 export type ConfigV1 = {
     For: "V1";
+    Guid: UUID;
     Enabled: boolean;
     Toggled: boolean[];
     Selected: number[];
@@ -15,6 +17,7 @@ export type ConfigV1 = {
 
 export type ConfigV2 = {
     For: "V2";
+    Guid: UUID;
     Enabled: boolean;
     Toggled: boolean[];
     Selected: number[];
@@ -25,7 +28,7 @@ export type Config = ConfigLegacy | ConfigV1 | ConfigV2;
 export type ProfileV1 = {
     Version: "V1";
     Name: string;
-    Configs: Record<UUID, Config>;
+    Configs: Config[];
 };
 
 export type Profile = ProfileV1;

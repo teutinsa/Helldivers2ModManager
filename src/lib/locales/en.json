@@ -80,7 +80,20 @@
             "library_button": {
                 "tip": "Library"
             },
-            "drop_message": "Drop to add mod"
+            "library": {
+                "insert_top_button": {
+                    "tip": "Insert at top"
+                },
+                "insert_bottom_button": {
+                    "tip": "Insert at bottom"
+                },
+                "delete_button": {
+                    "tip": "Delete"
+                },
+                "update_button": {
+                    "tip": "Update"
+                }
+            }
         }
     },
     "popup": {

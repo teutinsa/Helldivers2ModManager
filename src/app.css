@@ -157,3 +157,35 @@
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
 }
+
+.popup-content > button {
+    @apply
+        px-2
+        py-1
+        text-zinc-300
+        bg-transparent
+        hover:bg-zinc-700
+        active:text-zinc-900
+        active:bg-yellow-300
+        disabled:text-zinc-400
+        disabled:bg-transparent
+        flex
+        flex-row
+        gap-1
+        items-center
+    ;
+}
+
+.popup-content > hr {
+    @apply
+        border-t-2
+        border-zinc-500
+    ;
+}
+
+.popup-content > button svg {
+    @apply
+        w-5
+        h-5
+    ;
+}

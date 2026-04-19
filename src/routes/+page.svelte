@@ -1,15 +1,15 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { SvelteMap } from "svelte/reactivity";
-    import { Plus, Dash, Backspace, ArrowBarRight, ArrowBarLeft, Arrow90degLeft, ArrowReturnLeft, PencilSquare, Download } from "svelte-bootstrap-icons";
-    import { getCurrentWebview } from "@tauri-apps/api/webview";
+    import { Plus, Dash, Backspace, ArrowBarRight, ArrowBarLeft, Arrow90degLeft, ArrowReturnLeft, PencilSquare, Download, ThreeDotsVertical, CaretUpFill, CaretDownFill, Trash3, ArrowBarUp, ArrowBarDown, CaretUp, CaretDown, Eraser } from "svelte-bootstrap-icons";
     import { openUrl } from "@tauri-apps/plugin-opener";
     import { open } from "@tauri-apps/plugin-dialog";
+    import { SortableList } from "@rodrigodagostino/svelte-sortable-list"
     import { useLocalization } from "$lib/state/localization.svelte";
     import { createLogger } from "$lib/utils/logger";
     import type { Mod } from "$lib/models/mod";
     import type { Config, Profile, ProfileV1 } from "$lib/models/profile";
-    import { addMod, getMods, loadProfiles, saveProfiles } from "$lib/utils/commands";
+    import { addMod, addMods, getMods, loadProfiles, saveProfiles } from "$lib/utils/commands";
     import type { UUID } from "$lib/types/uuid";
     import { usePopup } from "$lib/state/popup.svelte";
     import {
@@ -20,8 +20,8 @@
         ErrorPopup
     } from "$lib/types/popup";
     import ToggleSwitch from "$lib/components/ToggleSwitch.svelte";
+    import PopupMenuButton from "$lib/components/PopupMenuButton.svelte";
 
-    const log = createLogger("ModsPage");
     const { t } = useLocalization();
     const { show: showPopup } = usePopup();
 
@@ -29,20 +29,19 @@
     let profiles = $state<Profile[]>([]);
     let activeProfile = $state<number>(0);
     let searchText = $state<string>("");
-    let profileConfigs = $state<[UUID, Config][]>([]);
+    let profileConfigs = $state<Config[]>([]);
     let iconPaths = new SvelteMap<UUID, string | null>();
-    let dragIndex = $state<number | null>(null);
     let libraryExtended = $state<boolean>(false);
     let libraryVisible = $state<boolean>(false);
     let isDragging = $state<boolean>(false);
     let initPromise = $state<Promise<void>>();
 
     let currentProfile = $derived<Profile | undefined>(profiles[activeProfile]);
-    let profileMods = $derived<Mod[]>(profileConfigs.map(([guid, _]) => mods.find(m => m.guid === guid)).filter((m): m is Mod => m !== undefined));
-    let profileEntries = $derived<[UUID, Config, Mod][]>(
+    let profileMods = $derived<Mod[]>(profileConfigs.map(config => mods.find(m => m.guid === config.Guid)).filter((m): m is Mod => m !== undefined));
+    let profileEntries = $derived<[Config, Mod][]>(
         profileConfigs
-            .map(([guid, config], i) => [guid, config, profileMods[i]] as [UUID, Config, Mod])
-            .filter(([_, __, mod]) =>
+            .map((config, i) => [config, profileMods[i]] as [Config, Mod])
+            .filter(([_, mod]) =>
                 searchText.length === 0 ||
                 [mod.name, mod.description].some(field =>
                     field.toLowerCase().includes(searchText.toLowerCase())
@@ -52,30 +51,21 @@
     let enableRemoveProfile = $derived<boolean>(profiles.length > 1);
     let enableClearSearch = $derived<boolean>(searchText.length > 1);
     let libraryMods = $derived<Mod[]>(
-        mods.filter((m) => !profileConfigs.some(([guid, _]) => guid === m.guid)),
+        mods.filter((m) => !profileConfigs.some(config => config.Guid === m.guid)),
     );
     let libraryEnabled = $derived<boolean>(searchText.length === 0);
     let allowReorder = $derived<boolean>(searchText.length === 0);
-
-    let unlisten: () => void;
-
+    
     $effect(() => {
         if (!currentProfile) return;
 
         switch (currentProfile.Version) {
             case "V1":
-                profileConfigs = Object.entries((currentProfile as ProfileV1).Configs) as [UUID, Config][];
+                profileConfigs = currentProfile.Configs;
                 break;
         }
 
-        return () => {
-            const record = Object.fromEntries(profileConfigs) as Record<UUID, Config>;
-            switch (currentProfile.Version) {
-                case "V1":
-                    currentProfile.Configs = record;
-                    break;
-            }
-        };
+        return applyCurrentConfigChanges;
     });
 
     $effect(() => {
@@ -87,34 +77,13 @@
         }
     });
 
-    onMount(async () => {
+    onMount(() => {
         initPromise = init();
-
-        unlisten = await getCurrentWebview().onDragDropEvent(async (e) => {
-            switch (e.payload.type) {
-                case "enter":
-                    isDragging = true;
-                    break;
-                
-                case "drop":
-                    isDragging = false;
-                    const validPaths = e.payload.paths.filter(p => p.endsWith(".zip") || p.endsWith(".7z") || p.endsWith(".rar"));
-                    if (validPaths.length == 0) return;
-                    if (validPaths.length == 1) {
-                        await doAddMod(validPaths[0]);
-                    } else {
-                        await doAddMods(...validPaths);
-                    }
-                    break;
-                
-                case "leave":
-                    isDragging = false;
-                    break;
-            }
-        });
     });
 
-    onDestroy(() => unlisten?.());
+    onDestroy(async () => {
+        await doSaveProfiles();
+    });
 
     async function init() {
         const [loadedMods, loadedConfig] = await Promise.all([
@@ -128,10 +97,19 @@
         activeProfile = loadedConfig.Active;
     }
 
+    function applyCurrentConfigChanges() {
+        switch (currentProfile!.Version) {
+            case "V1":
+                currentProfile!.Configs = profileConfigs;
+                break;
+        }
+    }
+
     function makeConfigForMod(mod: Mod): Config {
         if (!("Version" in mod.Manifest)) {
             return {
                 For: "Legacy",
+                Guid: mod.Manifest.Guid,
                 Enabled: true,
                 Selected: 0
             };
@@ -139,6 +117,7 @@
             const len = mod.Manifest.Options?.length ?? 0;
             return {
                 For: "V1",
+                Guid: mod.Manifest.Guid,
                 Enabled: true,
                 Toggled: new Array(len).fill(true),
                 Selected: new Array(len).fill(0)
@@ -147,6 +126,7 @@
             const len = mod.Manifest.Options?.length ?? 0;
             return {
                 For: "V2",
+                Guid: mod.Manifest.Guid,
                 Enabled: true,
                 Toggled: new Array(len).fill(true),
                 Selected: new Array(len).fill(0)
@@ -180,10 +160,34 @@
     async function doAddMods(...filenames: string[]) {
         const wait = new WaitPopup(t("pages.mods.popup.wait.add_multiple.message"));
         showPopup(wait);
+
         try {
-
+            const results = await addMods(filenames);
         } catch(ex: unknown) {
+            let message: string;
+            if (ex instanceof Error) {
+                message = ex.message;
+            } else if (typeof ex === "string") {
+                message = ex;
+            } else {
+                message = "Unknown error!";
+            }
+            showPopup(new ErrorPopup(t("pages.mods.popup.notification.add_error.message"), message));
+        } finally {
+            wait.close();
+        }
+    }
 
+    async function doSaveProfiles(): Promise<boolean> {
+        const wait = new WaitPopup("");
+        showPopup(wait);
+
+        try {
+            applyCurrentConfigChanges()
+            await saveProfiles({ Profiles: profiles, Active: activeProfile });
+            return true;
+        } catch {
+            return false;
         } finally {
             wait.close();
         }
@@ -210,27 +214,40 @@
         if (!confirm) return;
     }
 
-    function onDragStart(i: number) {
-        if (!allowReorder) return;
-        dragIndex = i;
+    async function onEditConfig(i: number) {
+
     }
 
-    function onDragOver(e: DragEvent, i: number) {
-        e.preventDefault();
-
-        if (!allowReorder) return;
-        if (dragIndex === null || dragIndex === i) return;
-
-        const reorderd = [...profileConfigs];
-        const [removed] = reorderd.splice(dragIndex, 1);
-        reorderd.splice(i, 0, removed);
-
-        profileConfigs = reorderd;
-        dragIndex = i;
+    function onRemove(i: number) {
+        profileConfigs.splice(i, 1);
     }
 
-    function onDragEnd() {
-        dragIndex = null;
+    function onMoveUp(i: number) {
+        if (i === 0) return;
+
+        const [elm] = profileConfigs.splice(i, 1);
+        profileConfigs.splice(i - 1, 0, elm);
+    }
+
+    function onMoveDown(i: number) {
+        if (i === profileConfigs.length - 1) return;
+
+        const [elm] = profileConfigs.splice(i, 1);
+        profileConfigs.splice(i + 1, 0, elm);
+    }
+
+    function onToTop(i: number) {
+        if (i === 0) return;
+
+        const [elm] = profileConfigs.splice(i, 1);
+        profileConfigs.splice(0, 0, elm);
+    }
+
+    function onToBottom(i: number) {
+        if (i === profileConfigs.length - 1) return;
+
+        const [elm] = profileConfigs.splice(i, 1);
+        profileConfigs.push(elm);
     }
 
     async function onToggleLibrary() {
@@ -247,18 +264,18 @@
     function insertTop(i: number) {
         const mod = libraryMods[i];
         const config = makeConfigForMod(mod);
-        profileConfigs.splice(0, 0, [mod.guid, config]);
+        profileConfigs.splice(0, 0, config);
     }
 
     function insertBottom(i: number) {
         const mod = libraryMods[i];
         const config = makeConfigForMod(mod);
-        profileConfigs.push([mod.guid, config]);
+        profileConfigs.push(config);
     }
 
     async function onAddMod() {
-        const filename = await open({
-            multiple: false,
+        const filenames = await open({
+            multiple: true,
             directory: false,
             filters: [
                 {
@@ -267,9 +284,13 @@
                 }
             ]
         });
-        if (!filename) return;
+        if (!filenames) return;
 
-        await doAddMod(filename);
+        if (filenames.length == 1) {
+            await doAddMod(filenames[0]);
+        } else {
+            await doAddMods(...filenames);
+        }
     }
 
     async function onPurge() {
@@ -296,13 +317,7 @@
         const wait = new WaitPopup("");
         showPopup(wait);
         try {
-            const record = Object.fromEntries(profileConfigs) as Record<UUID, Config>;
-            switch (currentProfile.Version) {
-                case "V1":
-                    currentProfile.Configs = record;
-                    break;
-            }
-            await saveProfiles({ Profiles: profiles, Active: activeProfile });
+            
         } finally {
             wait.close();
         }
@@ -373,17 +388,13 @@
         <!-- Center -->
         <div class="flex-1 flex flex-row relative">
             <!-- Mod List -->
-            <ol class="flex-1 mr-7 overflow-y-scroll">
-                {#each profileEntries as [guid, config, mod], i (guid)}
-                    {@const iconPath = iconPaths.get(guid)}
+            <ul class="flex-1 mr-7 overflow-y-scroll">
+                {#each profileEntries as [config, mod], i (config.Guid)}
+                    {@const iconPath = iconPaths.get(config.Guid)}
                     <li
-                        draggable={allowReorder}
-                        ondragstart={() => onDragStart(i)}
-                        ondragover={(e) => onDragOver(e, i)}
-                        ondragend={onDragEnd}
                         class="mb-1 mr-1 p-2 text-zinc-300 bg-zinc-800 rounded flex flex-row gap-1 items-center"
-                        class:cursor-grab={allowReorder}
-                        class:opacity-50={dragIndex === i}
+                        /*class:cursor-grab={allowReorder}*/
+                        /*draggable={allowReorder}*/
                     >
                         <img
                             class="w-14 h-14"
@@ -411,18 +422,56 @@
                                 </select>
                             {/if}
                         {:else}
-                            <button class="hd2mm-button-nop p-2">
+                            <button
+                                class="hd2mm-button-nop p-2"
+                                onclick={() => onEditConfig(i)}
+                            >
                                 <PencilSquare class="block mx-auto" />
                             </button>
                         {/if}
+                        <PopupMenuButton>
+                            <button onclick={() => onRemove(i)}>
+                                <Eraser />
+                                <span>Remove</span>
+                            </button>
+                            <hr>
+                            <button
+                                disabled={i === 0}
+                                onclick={() => onMoveUp(i)}
+                            >
+                                <CaretUp />
+                                <span>Move Up</span>
+                            </button>
+                            <button
+                                disabled={i === profileEntries.length - 1}
+                                onclick={() => onMoveDown(i)}
+                            >
+                                <CaretDown />
+                                <span>Move Down</span>
+                            </button>
+                            <button
+                                disabled={i === 0}
+                                onclick={() => onToTop(i)}
+                            >
+                                <ArrowBarUp />
+                                <span>To Top</span>
+                            </button>
+                            <button
+                                disabled={i === profileEntries.length - 1}
+                                onclick={() => onToBottom(i)}
+                            >
+                                <ArrowBarDown />
+                                <span>To Bottom</span>
+                            </button>
+                        </PopupMenuButton>
                     </li>
                 {/each}
-            </ol>
+            </ul>
             <!-- Library -->
             <div
                 class="flex flex-row gap-1 absolute z-10 transition-all right-0 h-full bg-zinc-900
                     {libraryExtended
-                    ? 'w-70'
+                    ? 'w-90'
                     : 'w-6'}"
             >
                 <button
@@ -440,9 +489,10 @@
                 {#if libraryVisible}
                     <ul class="py-1 flex-1 border-y border-zinc-500 overflow-y-auto">
                         {#each libraryMods as mod, i}
-                            <li class="grid grid-cols-[min-content_1fr] gap-1 text-zinc-300 bg-zinc-800 rounded mb-1 p-1">
+                            <li class="grid grid-cols-[min-content_1fr_min-content] gap-1 text-zinc-300 bg-zinc-800 rounded mb-1 p-1">
                                 <button
                                     class="hd2mm-button-nop p-1"
+                                    title={t("pages.mods.library.insert_top_button.tip")}
                                     onclick={() => insertTop(i)}
                                 >
                                     <Arrow90degLeft class="block m-auto" width="16" height="16" />
@@ -450,11 +500,24 @@
                                 <span class="text-2xl truncate">{mod.name}</span>
                                 <button
                                     class="hd2mm-button-nop p-1"
+                                    title={t("pages.mods.library.delete_button.tip")}
+                                >
+                                    <Trash3 class="block m-auto" width="16" height="16" />
+                                </button>
+                                <button
+                                    class="hd2mm-button-nop p-1"
+                                    title={t("pages.mods.library.insert_bottom_button.tip")}
                                     onclick={() => insertBottom(i)}
                                 >
                                     <ArrowReturnLeft class="block m-auto" width="16" height="16" />
                                 </button>
                                 <span class="text-sm truncate">{mod.description}</span>
+                                <button
+                                    class="hd2mm-button-nop p-1"
+                                    title={t("pages.mods.library.update_button.tip")}
+                                >
+                                    <Download class="block m-auto" width="16" height="16" />
+                                </button>
                             </li>
                         {/each}
                     </ul>

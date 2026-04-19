@@ -4,6 +4,8 @@ import InputPopupComponent from "$lib/components/popups/InputPopup.svelte";
 import WaitPopupComponent from "$lib/components/popups/WaitPopup.svelte";
 import NotificationPopupComponent from "$lib/components/popups/NotificationPopup.svelte";
 import ErrorPopupComponent from "$lib/components/popups/ErrorPopup.svelte";
+import AddResultPopupComponent from "$lib/components/popups/AddResultPopup.svelte";
+import type { ModAddResult } from "./results";
 
 export abstract class Popup<T = void> {
     abstract component: Component<any, any, any>;
@@ -70,6 +72,14 @@ export class ErrorPopup extends Popup {
         public readonly message: string,
         public readonly errorMessage: string
     ) {
+        super();
+    }
+}
+
+export class AddResultPopup extends Popup {
+    component = AddResultPopupComponent;
+
+    constructor(results: ModAddResult[]) {
         super();
     }
 }

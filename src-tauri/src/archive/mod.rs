@@ -41,26 +41,23 @@ impl Archive {
     pub fn has_name(&mut self, name: &str) -> anyhow::Result<bool> {
         match &mut self.0 {
             ArchiveInner::Zip(archive) => {
-                match archive.by_name(name) {
-                    Ok(_) => Ok(true),
-                    Err(e) => match e {
-                        zip::result::ZipError::FileNotFound => Ok(false),
-                        e => Err(e.into())
+                for i in 0..archive.len() {
+                    let file = archive.by_index(i)?;
+                    if Path::new(file.name())
+                        .file_name()
+                        .and_then(OsStr::to_str) == Some(name)
+                    {
+                        return Ok(true);
                     }
                 }
+                Ok(false)
             },
             ArchiveInner::SevenZ { archive, .. } => {
                 Ok(
                     archive.archive()
                         .files
                         .iter()
-                        .find(
-                            |f| Path::new(f.name())
-                                .file_name()
-                                .map(|n| n.to_str())
-                                .flatten() == Some(name)
-                        )
-                        .is_some()
+                        .any(|f| Path::new(f.name()).file_name().and_then(OsStr::to_str) == Some(name))
                 )
             },
             ArchiveInner::Rar(path) => {
@@ -68,8 +65,7 @@ impl Archive {
                     let file = file?;
                     if file.filename
                         .file_name()
-                        .map(|n| n.to_str())
-                        .flatten() == Some(name)
+                        .and_then(OsStr::to_str) == Some(name)
                     {
                         return Ok(true);
                     }
@@ -95,8 +91,7 @@ impl Archive {
                     archive.archive()
                         .files
                         .iter()
-                        .find(|f| Path::new(f.name()) == path.as_ref())
-                        .is_some()
+                        .any(|f| Path::new(f.name()) == path.as_ref())
                 )
             },
             ArchiveInner::Rar(archive) => {
@@ -120,7 +115,9 @@ impl Archive {
                 return Ok(data);
             },
             ArchiveInner::SevenZ { archive, .. } => {
-                let file = &path.as_ref().to_string_lossy();
+                let file = path.as_ref()
+                    .to_str()
+                    .ok_or(anyhow::anyhow!("path contains non-UTF-8 characters"))?;
                 archive.read_file(file).map_err(anyhow::Error::from)
             },
             ArchiveInner::Rar(archive) => {
@@ -152,6 +149,8 @@ impl Archive {
                 archive.extract(path.as_ref()).map_err(anyhow::Error::from)
             },
             ArchiveInner::SevenZ { path: archive, .. } => {
+                // sevenz_rust2 does not support extraction from an open ArchiveReader,
+                // so we re-open the file here.
                 sevenz_rust2::decompress_file(archive, path).map_err(anyhow::Error::from)
             },
             ArchiveInner::Rar(archive) => {
@@ -181,7 +180,10 @@ enum IterInner<'a> {
         archive: &'a sevenz_rust2::Archive,
         index: usize,
     },
-    Rar(unrar::OpenArchive<unrar::List, unrar::CursorBeforeHeader>),
+    Rar {
+        archive: unrar::OpenArchive<unrar::List, unrar::CursorBeforeHeader>,
+        done: bool,
+    },
 }
 
 pub struct ArchiveIter<'a>(IterInner<'a>);
@@ -199,25 +201,30 @@ impl<'a> ArchiveIter<'a> {
             },
             ArchiveInner::Rar(archive) => {
                 let archive = unrar::Archive::new(archive).open_for_listing()?;
-                IterInner::Rar(archive)
+                IterInner::Rar {
+                    archive,
+                    done: false
+                }
             },
         }))
     }
 }
 
 impl<'a> Iterator for ArchiveIter<'a> {
-    type Item = ArchiveEntry;
+    type Item = anyhow::Result<ArchiveEntry>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match &mut self.0 {
             IterInner::Zip { archive, index } => {
                 if *index < archive.len() {
-                    let file = archive.by_index(*index).ok()?;
+                    let entry = archive.by_index(*index)
+                        .map(|file| ArchiveEntry {
+                            is_directory: file.is_dir(),
+                            path: file.mangled_name(),
+                        })
+                        .map_err(anyhow::Error::from);
                     *index += 1;
-                    Some(ArchiveEntry {
-                        is_directory: file.is_dir(),
-                        path: file.mangled_name()
-                    })
+                    Some(entry)
                 } else {
                     None
                 }
@@ -226,26 +233,35 @@ impl<'a> Iterator for ArchiveIter<'a> {
                 if *index < archive.files.len() {
                     let file = &archive.files[*index];
                     *index += 1;
-                    Some(ArchiveEntry {
+                    Some(Ok(ArchiveEntry {
                         is_directory: file.is_directory(),
-                        path: PathBuf::from(file.name())
-                    })
+                        path: PathBuf::from(file.name()),
+                    }))
                 } else {
                     None
                 }
             },
-            IterInner::Rar(archive) => {
-                archive.next()
-                    .map(|result| result.ok())
-                    .flatten()
-                    .map(|entry| ArchiveEntry {
+            IterInner::Rar { archive, done } => {
+                if *done {
+                    return None;
+                }
+                match archive.next() {
+                    None => None,
+                    Some(Err(e)) => {
+                        *done = true;
+                        Some(Err(anyhow::Error::from(e)))
+                    }
+                    Some(Ok(entry)) => Some(Ok(ArchiveEntry {
                         is_directory: entry.is_directory(),
                         path: entry.filename
-                    })
+                    }))
+                }
             },
         }
     }
 }
+
+impl<'a> std::iter::FusedIterator for ArchiveIter<'a> {}
 
 pub struct ArchiveEntry {
     is_directory: bool,
