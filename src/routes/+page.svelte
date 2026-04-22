@@ -165,7 +165,7 @@
             } else {
                 message = "Unknown error!";
             }
-            showPopup(new ErrorPopup(t("pages.mods.popup.notification.add_error.message"), message));
+            showPopup(new ErrorPopup(t("pages.mods.popup.error.delete.message"), message));
         } finally {
             wait.close();
         }

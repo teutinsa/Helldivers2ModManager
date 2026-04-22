@@ -71,9 +71,18 @@
                     }
                 },
                 "error": {
-                    "add": "Mod adding failed!",
-                    "purge": "",
-                    "deploy": ""
+                    "delete": {
+                        "message": ""
+                    },
+                    "add": {
+                        "message": "Mod adding failed!"
+                    },
+                    "purge": {
+                        "message": ""
+                    },
+                    "deploy": {
+                        "message": ""
+                    }
                 }
             },
             "loading": {
@@ -82,8 +91,17 @@
             "loading_failed": {
                 "title": "Loading failed!"
             },
+            "add_profile_button": {
+                "tip": ""
+            },
+            "remove_profile_button": {
+                "tip": ""
+            },
             "search_input": {
                 "placeholder": "Search"
+            },
+            "clear_search_button": {
+                "tip": ""
             },
             "add_button": {
                 "text": "Add",
@@ -117,7 +135,8 @@
                 "update_button": {
                     "tip": "Update"
                 }
-            }
+            },
+            "drop_message": ""
         },
         "settings": {
             "popup": {

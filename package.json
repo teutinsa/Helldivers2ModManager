@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "scan:i18n": "node scripts/check-i18n.mjs",
+    "build:checked": "pnpm run scan:i18n && pnpm run build"
   },
   "license": "MIT",
   "dependencies": {
