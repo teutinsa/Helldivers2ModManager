@@ -28,6 +28,10 @@
                     "purge": {
                         "title": "Purge",
                         "question": "Are you sure you want to uninstall all mods from the game?"
+                    },
+                    "delete": {
+                        "title": "Delete",
+                        "question": "Are you sure you want to delete this mod?"
                     }
                 },
                 "input": {
@@ -36,20 +40,40 @@
                     }
                 },
                 "wait": {
-                    "purge": {
-                        "message": "Purging mods..."
-                    },
                     "add": {
                         "message": "Adding mod..."
                     },
                     "add_multiple": {
                         "message": "Adding mods..."
+                    },
+                    "saving": {
+                        "message": "Saving profiles..."
+                    },
+                    "delete": {
+                        "message": "Deleting mod..."
+                    },
+                    "purge": {
+                        "message": "Purging mods..."
+                    },
+                    "deploy": {
+                        "message": "Deploying mods..."
                     }
                 },
                 "notification": {
-                    "add_error": {
-                        "message": "Mod adding failed!"
+                    "empty_deploy_error": {
+                        "message": "Can not deploy empty profile!"
+                    },
+                    "purge_success": {
+                        "message": "Purge successful."
+                    },
+                    "deploy_success": {
+                        "message": "Deployment successful."
                     }
+                },
+                "error": {
+                    "add": "Mod adding failed!",
+                    "purge": "",
+                    "deploy": ""
                 }
             },
             "loading": {
@@ -94,6 +118,48 @@
                     "tip": "Update"
                 }
             }
+        },
+        "settings": {
+            "popup": {
+                "notification": {
+                    "validation_error": {
+                        "message": "Invalid settings values!"
+                    }
+                },
+                "input": {
+                    "add_skip": {
+                        "placeholder": "eg. 0cf14e223de06a26"
+                    }
+                }
+            },
+            "title": "Settings",
+            "loading": {
+                "text": "Loading..."
+            },
+            "loading_failed": {
+                "title": "Loading failed!"
+            },
+            "game_path": {
+                "title": "Game Path",
+                "placeholder": "eg. Steam/steamapps/common/Helldivers 2/",
+                "browse_button": {
+                    "tip": "Browse..."
+                }
+            },
+            "skip_list": {
+                "title": "Skip List"
+            },
+            "validation_error": {
+                "game_path": {
+                    "empty": "Game path can not be empty!",
+                    "exists": "Game path does not exist!",
+                    "invalid": "Game path is invalid!",
+                    "tools_exists": "Game path does not contain a directory named \"tools\"!",
+                    "data_exists": "Game path does not contain a directory named \"data\"!",
+                    "bin_exists": "Game path does not contain a directory named \"bin\"!",
+                    "exe_exists": "Game path's \"bin\" directory does not contain the \"helldivers2.exe\"!"
+                }
+            }
         }
     },
     "popup": {
@@ -114,6 +180,7 @@
             },
             "errors": {
                 "empty": "Input can not be empty.",
+                "exact_length": "Input must be exactly {0} characters long.",
                 "range_length": "Input must be between {0} and {1} characters long.",
                 "min_length": "Input must be at least {0} characters long.",
                 "max_length": "Input can not be longer than {0} characters long.",
@@ -126,6 +193,12 @@
                 "warning": "Warning",
                 "error": "Error"
             },
+            "ok_button": {
+                "text": "OK"
+            }
+        },
+        "add_result": {
+            "title": "Add Result",
             "ok_button": {
                 "text": "OK"
             }

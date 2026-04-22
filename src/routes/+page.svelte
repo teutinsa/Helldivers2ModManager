@@ -1,15 +1,14 @@
 <script lang="ts">
-    import { onDestroy, onMount } from "svelte";
     import { SvelteMap } from "svelte/reactivity";
     import { Plus, Dash, Backspace, ArrowBarRight, ArrowBarLeft, Arrow90degLeft, ArrowReturnLeft, PencilSquare, Download, ThreeDotsVertical, CaretUpFill, CaretDownFill, Trash3, ArrowBarUp, ArrowBarDown, CaretUp, CaretDown, Eraser } from "svelte-bootstrap-icons";
     import { openUrl } from "@tauri-apps/plugin-opener";
     import { open } from "@tauri-apps/plugin-dialog";
+    import * as log from "@tauri-apps/plugin-log";
     import { SortableList } from "@rodrigodagostino/svelte-sortable-list"
     import { useLocalization } from "$lib/state/localization.svelte";
-    import { createLogger } from "$lib/utils/logger";
     import type { Mod } from "$lib/models/mod";
-    import type { Config, Profile, ProfileV1 } from "$lib/models/profile";
-    import { addMod, addMods, getMods, loadProfiles, saveProfiles } from "$lib/utils/commands";
+    import type { Config, Profile } from "$lib/models/profile";
+    import { addMod, addMods, deleteMod, getMods, loadProfiles, saveProfiles, deploy, purge } from "$lib/utils/commands";
     import type { UUID } from "$lib/types/uuid";
     import { usePopup } from "$lib/state/popup.svelte";
     import {
@@ -17,10 +16,13 @@
         InputPopup,
         WaitPopup,
         NotificationPopup,
-        ErrorPopup
+        ErrorPopup,
+        AddResultPopup
     } from "$lib/types/popup";
     import ToggleSwitch from "$lib/components/ToggleSwitch.svelte";
     import PopupMenuButton from "$lib/components/PopupMenuButton.svelte";
+    import { onNavigate } from "$app/navigation";
+    import type { ModAddResult } from "$lib/types/results";
 
     const { t } = useLocalization();
     const { show: showPopup } = usePopup();
@@ -34,7 +36,7 @@
     let libraryExtended = $state<boolean>(false);
     let libraryVisible = $state<boolean>(false);
     let isDragging = $state<boolean>(false);
-    let initPromise = $state<Promise<void>>();
+    let initPromise = $state<Promise<void>>(init());
 
     let currentProfile = $derived<Profile | undefined>(profiles[activeProfile]);
     let profileMods = $derived<Mod[]>(profileConfigs.map(config => mods.find(m => m.guid === config.Guid)).filter((m): m is Mod => m !== undefined));
@@ -77,21 +79,16 @@
         }
     });
 
-    onMount(() => {
-        initPromise = init();
-    });
-
-    onDestroy(async () => {
+    onNavigate(async () => {
         await doSaveProfiles();
     });
 
     async function init() {
         const [loadedMods, loadedConfig] = await Promise.all([
             getMods(),
-            loadProfiles(),
-            new Promise((r) => setTimeout(r, 1000)), // added to prevent flashing of loading indicator
+            loadProfiles()
         ]);
-
+        
         mods = loadedMods;
         profiles = loadedConfig.Profiles;
         activeProfile = loadedConfig.Active;
@@ -103,6 +100,18 @@
                 currentProfile!.Configs = profileConfigs;
                 break;
         }
+    }
+
+    function removeModFromProfiles(mod: Mod) {
+        profiles.forEach(profile => {
+            switch (profile.Version) {
+                case "V1":
+                    const i = profile.Configs.findIndex(config => config.Guid === mod.guid);
+                    if (i === -1) return;
+                    profile.Configs.splice(i, 1);
+                    break;
+            }
+        });
     }
 
     function makeConfigForMod(mod: Mod): Config {
@@ -136,6 +145,32 @@
         }
     }
 
+    async function doDeleteMod(guid: string) {
+        const i = mods.findIndex(m => m.guid == guid);
+        if (i === -1) return;
+
+        const wait = new WaitPopup(t("pages.mods.popup.wait.delete.message"));
+        showPopup(wait);
+
+        try {
+            const [mod] = mods.splice(i, 1);
+            removeModFromProfiles(mod);
+            await deleteMod(mod.guid);
+        } catch(ex: unknown) {
+            let message: string;
+            if (ex instanceof Error) {
+                message = ex.message;
+            } else if (typeof ex === "string") {
+                message = ex;
+            } else {
+                message = "Unknown error!";
+            }
+            showPopup(new ErrorPopup(t("pages.mods.popup.notification.add_error.message"), message));
+        } finally {
+            wait.close();
+        }
+    }
+
     async function doAddMod(filename: string) {
         const wait = new WaitPopup(t("pages.mods.popup.wait.add.message"));
         showPopup(wait);
@@ -151,7 +186,7 @@
             } else {
                 message = "Unknown error!";
             }
-            showPopup(new ErrorPopup(t("pages.mods.popup.notification.add_error.message"), message));
+            showPopup(new ErrorPopup(t("pages.mods.popup.error.add.message"), message));
         } finally {
             wait.close();
         }
@@ -163,6 +198,26 @@
 
         try {
             const results = await addMods(filenames);
+
+            const addResults = results.map<ModAddResult>((r, i) => {
+                if ("Ok" in r) {
+                    return {
+                        success: true,
+                        archiveFile: filenames[i]
+                    };
+                } else {
+                    return {
+                        success: false,
+                        archiveFile: filenames[i],
+                        errorMessage: r.Err
+                    }
+                }
+            });
+            const popup = new AddResultPopup(addResults);
+            showPopup(popup)
+            
+            const modsToAdd = results.filter(r => "Ok" in r).map(r => r.Ok);
+            mods.push(...modsToAdd);
         } catch(ex: unknown) {
             let message: string;
             if (ex instanceof Error) {
@@ -172,14 +227,14 @@
             } else {
                 message = "Unknown error!";
             }
-            showPopup(new ErrorPopup(t("pages.mods.popup.notification.add_error.message"), message));
+            showPopup(new ErrorPopup(t("pages.mods.popup.error.add.message"), message));
         } finally {
             wait.close();
         }
     }
 
     async function doSaveProfiles(): Promise<boolean> {
-        const wait = new WaitPopup("");
+        const wait = new WaitPopup(t("pages.mods.popup.wait.saving.message"));
         showPopup(wait);
 
         try {
@@ -194,14 +249,19 @@
     }
 
     async function onAddProfile() {
-        const input = await showPopup(
-            new InputPopup(
-                t("pages.mods.popup.input.add_profile.placeholder"),
-                false,
-                3,
-            ),
-        );
+        const input = await showPopup(new InputPopup(
+            t("pages.mods.popup.input.add_profile.placeholder"),
+            false,
+            3,
+        ));
         if (!input) return;
+        
+        profiles.push({
+            Version: "V1",
+            Name: input,
+            Configs: []
+        });
+        activeProfile = profiles.length - 1;
     }
 
     async function onRemoveProfile() {
@@ -212,6 +272,18 @@
             ),
         );
         if (!confirm) return;
+
+        profiles.splice(activeProfile, 1);
+        if (activeProfile > 0) activeProfile--;
+    }
+
+    function onDragEnd(e: SortableList.RootEvents["ondragend"]) {
+        const { draggedItemIndex, targetItemIndex, isCanceled } = e;
+
+        if (isCanceled || typeof targetItemIndex !== "number" || draggedItemIndex === targetItemIndex) return;
+
+        const [elm] = profileConfigs.splice(draggedItemIndex, 1);
+        profileConfigs.splice(targetItemIndex, 0, elm);
     }
 
     async function onEditConfig(i: number) {
@@ -261,16 +333,31 @@
         }
     }
 
-    function insertTop(i: number) {
+    function onInsertTop(i: number) {
         const mod = libraryMods[i];
         const config = makeConfigForMod(mod);
         profileConfigs.splice(0, 0, config);
     }
 
-    function insertBottom(i: number) {
+    function onInsertBottom(i: number) {
         const mod = libraryMods[i];
         const config = makeConfigForMod(mod);
         profileConfigs.push(config);
+    }
+
+    async function onDelete(i: number) {
+        const confirm = new ConfirmPopup(
+            t("pages.mods.popup.confirm.delete.title"),
+            t("pages.mods.popup.confirm.delete.question"),
+        );
+        if (!await showPopup(confirm)) return;
+        const mod = libraryMods[i];
+        await doDeleteMod(mod.guid);
+    }
+
+    function onUpdate(i: number) {
+        const mod = libraryMods[i];
+        //TODO
     }
 
     async function onAddMod() {
@@ -304,8 +391,20 @@
 
         const wait = new WaitPopup(t("pages.mods.popup.wait.purge.message"));
         showPopup(wait);
+
         try {
-            await new Promise((r) => setTimeout(r, 3000));
+            await purge();
+            showPopup(new NotificationPopup("info", t("pages.mods.popup.notification.purge_success.message")));
+        } catch(ex: unknown) {
+            let message: string;
+            if (ex instanceof Error) {
+                message = ex.message;
+            } else if (typeof ex === "string") {
+                message = ex;
+            } else {
+                message = "Unknown error!";
+            }
+            showPopup(new ErrorPopup(t("pages.mods.popup.error.purge.message"), message));
         } finally {
             wait.close();
         }
@@ -313,11 +412,28 @@
 
     async function onDeploy() {
         if (!currentProfile) return;
+        
+        if (currentProfile.Configs.length === 0) {
+            showPopup(new NotificationPopup("error", t("pages.mods.popup.notification.empty_deploy_error.message")));
+            return;
+        }
 
-        const wait = new WaitPopup("");
+        const wait = new WaitPopup(t("pages.mods.popup.wait.deploy.message"));
         showPopup(wait);
+
         try {
-            
+            await deploy(currentProfile.Configs);
+            showPopup(new NotificationPopup("info", t("pages.mods.popup.notification.deploy_success.message")));
+        } catch(ex: unknown) {
+            let message: string;
+            if (ex instanceof Error) {
+                message = ex.message;
+            } else if (typeof ex === "string") {
+                message = ex;
+            } else {
+                message = "Unknown error!";
+            }
+            showPopup(new ErrorPopup(t("pages.mods.popup.error.deploy.message"), message));
         } finally {
             wait.close();
         }
@@ -374,6 +490,10 @@
                 class="flex-1 hd2mm-input"
                 type="text"
                 placeholder={t("pages.mods.search_input.placeholder")}
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
                 bind:value={searchText}
             />
             <button
@@ -388,85 +508,92 @@
         <!-- Center -->
         <div class="flex-1 flex flex-row relative">
             <!-- Mod List -->
-            <ul class="flex-1 mr-7 overflow-y-scroll">
-                {#each profileEntries as [config, mod], i (config.Guid)}
-                    {@const iconPath = iconPaths.get(config.Guid)}
-                    <li
-                        class="mb-1 mr-1 p-2 text-zinc-300 bg-zinc-800 rounded flex flex-row gap-1 items-center"
-                        /*class:cursor-grab={allowReorder}*/
-                        /*draggable={allowReorder}*/
-                    >
-                        <img
-                            class="w-14 h-14"
-                            src={iconPath ?? "images/hd2_icon.png"}
-                            alt={iconPath ? "Mod icon" : "Default icon"}
-                        />
-                        <div class="flex-1 flex flex-col gap-0.5 justify-between min-w-0">
-                            <span class="text-2xl truncate">{mod.name}</span>
-                            {#if "Version" in mod.Manifest && mod.Manifest.Version === 2 && mod.Manifest.Tags}
-                                <div class="flex flex-row gap-1 overflow-hidden">
-                                    {#each mod.Manifest.Tags as tag}
-                                        <span class="px-1 bg-zinc-700 text-xs rounded">{tag}</span>
-                                    {/each}
+            <div class="flex-1 mr-7 pr-1 overflow-y-scroll overflow-x-hidden">
+                <SortableList.Root
+                    ondragend={onDragEnd}
+                    isDisabled={!allowReorder}
+                    gap={4}
+                >
+                    {#each profileEntries as [config, mod], i (config.Guid)}
+                        {@const iconPath = iconPaths.get(config.Guid)}
+                        <SortableList.Item
+                            id={config.Guid}
+                            index={i}
+                        >
+                            <div class="p-2 text-zinc-300 bg-zinc-800 rounded flex flex-row gap-1 items-center">
+                                <img
+                                    class="w-14 h-14"
+                                    src={iconPath ?? "images/hd2_icon.png"}
+                                    alt={iconPath ? "Mod icon" : "Default icon"}
+                                />
+                                <div class="flex-1 flex flex-col gap-0.5 justify-between min-w-0">
+                                    <span class="text-2xl truncate">{mod.name}</span>
+                                    {#if "Version" in mod.Manifest && mod.Manifest.Version === 2 && mod.Manifest.Tags}
+                                        <div class="flex flex-row gap-1 overflow-hidden">
+                                            {#each mod.Manifest.Tags as tag}
+                                                <span class="px-1 bg-zinc-700 text-xs rounded">{tag}</span>
+                                            {/each}
+                                        </div>
+                                    {/if}
+                                    <span class="text-sm truncate">{mod.description}</span>
                                 </div>
-                            {/if}
-                            <span class="text-sm truncate">{mod.description}</span>
-                        </div>
-                        <ToggleSwitch bind:checked={config.Enabled} />
-                        {#if config.For === "Legacy"}
-                            {#if !("Version" in mod.Manifest) && mod.Manifest.Options}
-                                <select class="w-32 hd2mm-select" bind:value={config.Selected}>
-                                    {#each mod.Manifest.Options as option, i }
-                                        <option value={i}>{option}</option>
-                                    {/each}
-                                </select>
-                            {/if}
-                        {:else}
-                            <button
-                                class="hd2mm-button-nop p-2"
-                                onclick={() => onEditConfig(i)}
-                            >
-                                <PencilSquare class="block mx-auto" />
-                            </button>
-                        {/if}
-                        <PopupMenuButton>
-                            <button onclick={() => onRemove(i)}>
-                                <Eraser />
-                                <span>Remove</span>
-                            </button>
-                            <hr>
-                            <button
-                                disabled={i === 0}
-                                onclick={() => onMoveUp(i)}
-                            >
-                                <CaretUp />
-                                <span>Move Up</span>
-                            </button>
-                            <button
-                                disabled={i === profileEntries.length - 1}
-                                onclick={() => onMoveDown(i)}
-                            >
-                                <CaretDown />
-                                <span>Move Down</span>
-                            </button>
-                            <button
-                                disabled={i === 0}
-                                onclick={() => onToTop(i)}
-                            >
-                                <ArrowBarUp />
-                                <span>To Top</span>
-                            </button>
-                            <button
-                                disabled={i === profileEntries.length - 1}
-                                onclick={() => onToBottom(i)}
-                            >
-                                <ArrowBarDown />
-                                <span>To Bottom</span>
-                            </button>
-                        </PopupMenuButton>
-                    </li>
-                {/each}
-            </ul>
+                                <ToggleSwitch bind:checked={config.Enabled} />
+                                {#if config.For === "Legacy"}
+                                    {#if !("Version" in mod.Manifest) && mod.Manifest.Options}
+                                        <select class="w-32 hd2mm-select" bind:value={config.Selected}>
+                                            {#each mod.Manifest.Options as option, i }
+                                                <option value={i}>{option}</option>
+                                            {/each}
+                                        </select>
+                                    {/if}
+                                {:else}
+                                    <button
+                                        class="hd2mm-button-nop p-2"
+                                        onclick={() => onEditConfig(i)}
+                                    >
+                                        <PencilSquare class="block mx-auto" />
+                                    </button>
+                                {/if}
+                                <PopupMenuButton insertTarget="main">
+                                    <button onclick={() => onRemove(i)}>
+                                        <Eraser />
+                                        <span>Remove</span>
+                                    </button>
+                                    <hr>
+                                    <button
+                                        disabled={i === 0}
+                                        onclick={() => onMoveUp(i)}
+                                    >
+                                        <CaretUp />
+                                        <span>Move Up</span>
+                                    </button>
+                                    <button
+                                        disabled={i === profileEntries.length - 1}
+                                        onclick={() => onMoveDown(i)}
+                                    >
+                                        <CaretDown />
+                                        <span>Move Down</span>
+                                    </button>
+                                    <button
+                                        disabled={i === 0}
+                                        onclick={() => onToTop(i)}
+                                    >
+                                        <ArrowBarUp />
+                                        <span>To Top</span>
+                                    </button>
+                                    <button
+                                        disabled={i === profileEntries.length - 1}
+                                        onclick={() => onToBottom(i)}
+                                    >
+                                        <ArrowBarDown />
+                                        <span>To Bottom</span>
+                                    </button>
+                                </PopupMenuButton>
+                            </div>
+                        </SortableList.Item>
+                    {/each}
+                </SortableList.Root>
+            </div>
             <!-- Library -->
             <div
                 class="flex flex-row gap-1 absolute z-10 transition-all right-0 h-full bg-zinc-900
@@ -493,7 +620,7 @@
                                 <button
                                     class="hd2mm-button-nop p-1"
                                     title={t("pages.mods.library.insert_top_button.tip")}
-                                    onclick={() => insertTop(i)}
+                                    onclick={() => onInsertTop(i)}
                                 >
                                     <Arrow90degLeft class="block m-auto" width="16" height="16" />
                                 </button>
@@ -501,13 +628,14 @@
                                 <button
                                     class="hd2mm-button-nop p-1"
                                     title={t("pages.mods.library.delete_button.tip")}
+                                    onclick={() => onDelete(i)}
                                 >
                                     <Trash3 class="block m-auto" width="16" height="16" />
                                 </button>
                                 <button
                                     class="hd2mm-button-nop p-1"
                                     title={t("pages.mods.library.insert_bottom_button.tip")}
-                                    onclick={() => insertBottom(i)}
+                                    onclick={() => onInsertBottom(i)}
                                 >
                                     <ArrowReturnLeft class="block m-auto" width="16" height="16" />
                                 </button>
@@ -515,6 +643,8 @@
                                 <button
                                     class="hd2mm-button-nop p-1"
                                     title={t("pages.mods.library.update_button.tip")}
+                                    onclick={() => onUpdate(i)}
+                                    disabled
                                 >
                                     <Download class="block m-auto" width="16" height="16" />
                                 </button>

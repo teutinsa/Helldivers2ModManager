@@ -20,12 +20,16 @@
 
         if (popup.minLength && popup.maxLength) {
             if (input.length < popup.minLength || input.length > popup.maxLength) {
-                newErrors.push(
-                    t("popup.input.errors.range_length", [
-                        popup.minLength,
-                        popup.maxLength,
-                    ]),
-                );
+                if (popup.minLength === popup.maxLength) {
+                    newErrors.push(t("popup.input.errors.exact_length", [popup.maxLength]));
+                } else {
+                    newErrors.push(
+                        t("popup.input.errors.range_length", [
+                            popup.minLength,
+                            popup.maxLength,
+                        ]),
+                    );
+                }
             }
         } else {
             if (popup.minLength && input.length < popup.minLength) {
@@ -54,6 +58,11 @@
         id="input"
         type="text"
         placeholder={popup.placeholder}
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+        maxlength={popup.minLength}
         bind:value={input}
     />
     {#if !isValid}

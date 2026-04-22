@@ -77,6 +77,23 @@ pub async fn get_mods(state: State<'_, AppState>) -> TAResult<Vec<Mod>> {
 }
 
 #[tauri::command]
+pub async fn delete_mod(state: State<'_, AppState>, guid: Uuid) -> TAResult<()> {
+    let mut mods = state.mods.lock().await;
+    if mods.is_none() {
+        return anyhow::anyhow!("mods not read").into_ta_result();
+    }
+    let mods = mods.as_mut().unwrap();
+
+    if let Some(i) = mods.iter().position(|m| m.guid() == guid) {
+        let r#mod = mods.remove(i);
+        tokio::fs::remove_dir_all(r#mod.directory).await.into_ta_result()?;
+        Ok(())
+    } else {
+        anyhow_tauri::bail!("mod with GUID {{{}}} not found", guid);
+    }
+}
+
+#[tauri::command]
 pub async fn add_mod(state: State<'_, AppState>, archive_file: PathBuf) -> TAResult<Mod> {
     let mut mods = state.mods.lock().await;
     if mods.is_none() {

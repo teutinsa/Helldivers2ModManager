@@ -9,7 +9,7 @@ const PROFILES_FILE: &'static str = "profiles.json";
 pub async fn load_profiles(state: State<'_, AppState>) -> TAResult<ProfilesConfig> {
     let profiles_file = state.base_path.join(PROFILES_FILE);
 
-    if profiles_file.try_exists().into_ta_result()? {
+    if tokio::fs::try_exists(&profiles_file).await.into_ta_result()? {
         let data = tokio::fs::read(profiles_file).await.into_ta_result()?;
         serde_json::from_slice(&data).into_ta_result()
     } else {

@@ -79,7 +79,7 @@ export class ErrorPopup extends Popup {
 export class AddResultPopup extends Popup {
     component = AddResultPopupComponent;
 
-    constructor(results: ModAddResult[]) {
+    constructor(public readonly results: ModAddResult[]) {
         super();
     }
 }

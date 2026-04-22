@@ -35,6 +35,8 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_prevent_default::debug())
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(if cfg!(debug_assertions) {
@@ -56,10 +58,14 @@ pub fn run() {
         .manage(AppState::new(exe_dir))
         .invoke_handler(tauri::generate_handler![
             commands::mods::get_mods,
+            commands::mods::delete_mod,
             commands::mods::add_mod,
             commands::mods::add_mods,
             commands::profiles::load_profiles,
             commands::profiles::save_profiles,
+            commands::settings::load_settings,
+            commands::settings::save_settings,
+            commands::purge,
             commands::deploy
         ])
         .run(tauri::generate_context!())

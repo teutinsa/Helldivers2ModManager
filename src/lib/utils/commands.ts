@@ -1,15 +1,19 @@
 import { invoke } from '@tauri-apps/api/core';
+import * as log from '@tauri-apps/plugin-log';
 import { Mod } from '../models/mod';
-import type { ProfilesConfig } from '$lib/models/profile';
+import type { Config, ProfilesConfig } from '$lib/models/profile';
 import type { Manifest } from '$lib/models/manifest';
 import type { RustResult } from '$lib/types/results';
-import { createLogger } from './logger';
-
-const log = createLogger("Commands");
+import type { UUID } from '$lib/types/uuid';
+import type { Settings } from '$lib/models/settings';
 
 export async function getMods(): Promise<Mod[]> {
     const mods = await invoke<{ Manifest: Manifest, Directory: string }[]>("get_mods");
     return mods.map(m => new Mod(m.Manifest, m.Directory));
+}
+
+export async function deleteMod(guid: UUID): Promise<void> {
+    await invoke<void>("delete_mod", { guid });
 }
 
 export async function addMod(archiveFile: string): Promise<Mod> {
@@ -18,9 +22,7 @@ export async function addMod(archiveFile: string): Promise<Mod> {
 }
 
 export async function addMods(archiveFiles: string[]): Promise<RustResult<Mod>[]> {
-    log.debug("Adding mods...", { archiveFiles });
     const results = await invoke<RustResult<{ Manifest: Manifest, Directory: string }>[]>("add_mods", { archiveFiles });
-    log.debug("Added mods.", { results });
     return results.map(result => {
         if ("Ok" in result) {
             return {
@@ -37,4 +39,20 @@ export async function loadProfiles(): Promise<ProfilesConfig> {
 
 export async function saveProfiles(config: ProfilesConfig): Promise<void> {
     await invoke<void>("save_profiles", { config });
+}
+
+export async function loadSettings(): Promise<Settings> {
+    return await invoke<Settings>("load_settings");
+}
+
+export async function saveSettings(settings: Settings): Promise<void> {
+    await invoke<void>("save_settings", { settings });
+}
+
+export async function deploy(configs: Config[]): Promise<void> {
+    await invoke<void>("deploy", { configs });
+}
+
+export async function purge(): Promise<void> {
+    await invoke<void>("purge");
 }

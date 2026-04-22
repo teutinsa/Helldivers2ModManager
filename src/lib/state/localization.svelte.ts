@@ -1,9 +1,8 @@
+import * as log from '@tauri-apps/plugin-log';
 import { loadTranslations } from '$lib/services/localization';
 import type { Locale, TranslationKey, Translations } from '$lib/types/localization';
-import { createLogger } from '$lib/utils/logger';
 import '$lib/utils/stringExtensions';
 
-const log = createLogger('LocalizationService')
 let locale = $state<Locale>('en');
 let translations = $state<Translations>({});
 
@@ -28,7 +27,7 @@ export function useLocalization() {
             }
             
             if (typeof current !== 'string') {
-                log.error("Key not found!", { key })
+                log.error("Key not found!", { keyValues: { key } })
                 return `{${key}}`;
             }
 

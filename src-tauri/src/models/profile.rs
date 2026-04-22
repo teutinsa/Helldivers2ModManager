@@ -34,6 +34,14 @@ impl Config {
             Config::V2 { guid, .. } => guid,
         }
     }
+
+    pub fn enabled(&self) -> bool {
+        match self {
+            Config::Legacy { enabled, .. } => *enabled,
+            Config::V1 { enabled, .. } => *enabled,
+            Config::V2 { enabled, .. } => *enabled,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

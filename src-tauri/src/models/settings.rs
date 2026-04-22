@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
@@ -33,9 +33,40 @@ mod ascii_string {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "Version", rename_all = "PascalCase")]
 pub enum Settings {
+    #[serde(rename_all = "PascalCase")]
     V1 {
         game_path: PathBuf,
         #[serde(with = "ascii_string")]
         skip_list: Vec<[u8; 16]>
+    }
+}
+
+impl Settings {
+    pub fn validate(&self) -> bool {
+        match self {
+            Settings::V1 { game_path, .. } => {
+                !game_path.as_os_str().is_empty()
+            },
+        }
+    }
+
+    pub fn game_path(&self) -> &Path {
+        match self {
+            Settings::V1 { game_path, .. } => {
+                game_path.as_path()
+            },
+        }
+    }
+
+    pub fn has_skip_entry(&self, s: &str) -> bool {
+        match self {
+            Settings::V1 { skip_list, .. } => {
+                skip_list.iter()
+                    .filter_map(|entry| {
+                        str::from_utf8(entry).ok()
+                    })
+                    .any(|entry| entry == s)
+            },
+        }
     }
 }

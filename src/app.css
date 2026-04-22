@@ -11,6 +11,36 @@
     src: url('/fonts/Blockletter.otf');
 }
 
+@property --text-outline-thickness {
+    syntax: "<length>";
+    inherits: true;
+    initial-value: 1px;
+}
+
+@property --text-outline-color {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: #000;
+}
+
+@utility text-outline {
+    --text-outline-color: var(--color-zinc-950);
+    text-shadow:
+        calc(-1 * var(--text-outline-thickness)) calc(-1 * var(--text-outline-thickness)) 0 var(--text-outline-color),  
+                  var(--text-outline-thickness)  calc(-1 * var(--text-outline-thickness)) 0 var(--text-outline-color),
+        calc(-1 * var(--text-outline-thickness))           var(--text-outline-thickness)  0 var(--text-outline-color),
+                  var(--text-outline-thickness)            var(--text-outline-thickness)  0 var(--text-outline-color);
+}
+
+@utility text-outline-* {
+    --text-outline-color: --value(--color-*);
+    text-shadow:
+        calc(-1 * var(--text-outline-thickness)) calc(-1 * var(--text-outline-thickness)) 0 var(--text-outline-color),  
+                  var(--text-outline-thickness)  calc(-1 * var(--text-outline-thickness)) 0 var(--text-outline-color),
+        calc(-1 * var(--text-outline-thickness))           var(--text-outline-thickness)  0 var(--text-outline-color),
+                  var(--text-outline-thickness)            var(--text-outline-thickness)  0 var(--text-outline-color);
+}
+
 :root {
     font-family: 'FS Sinclair';
     -webkit-user-select: none;
@@ -188,4 +218,14 @@
         w-5
         h-5
     ;
+}
+
+.bg-construction {
+    background: repeating-linear-gradient(
+        -45deg,
+        var(--color-yellow-400),
+        var(--color-yellow-400) 10px,
+        var(--color-zinc-800) 10px,
+        var(--color-zinc-800) 20px
+    );
 }

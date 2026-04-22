@@ -8,12 +8,6 @@
     import { initLocalization } from "$lib/state/localization.svelte";
 
     onMount(async () => {
-        if (import.meta.env.PROD) {
-            window.addEventListener("contextmenu", (e) => {
-                e.preventDefault();
-            });
-        }
-
         await initLocalization("en");
     });
 </script>
