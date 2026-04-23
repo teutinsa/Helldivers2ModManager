@@ -170,7 +170,7 @@
     ;
 }
 
-.hd2mm-select > option {
+.hd2mm-select option {
     @apply
         bg-zinc-800
         text-zinc-300

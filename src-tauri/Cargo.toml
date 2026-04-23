@@ -1,6 +1,6 @@
 [package]
 name = "hd2mm"
-version = "2.0.0-preview"
+version = "2.0.0-preview3"
 description = "A simple mod manager for Helldivers 2."
 authors = ["you"]
 edition = "2021"

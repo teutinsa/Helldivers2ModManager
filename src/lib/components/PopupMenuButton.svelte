@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { Snippet } from "svelte";
     import { ThreeDotsVertical } from "svelte-bootstrap-icons";
+    import { clickOutside, scrollOutside, windowResize, portal } from "$lib/actions";
 
     let isOpen = $state<boolean>(false);
     let x = $state<number>(0);
@@ -19,33 +20,6 @@
         const maxY = window.innerHeight - popupRect.height - 8;
         y = Math.min(y, maxY);
     });
-
-    function clickOutside(node: HTMLElement, onClose: () => void) {
-        function handler(e: MouseEvent) {
-            if (!node.contains(e.target as Node)) onClose();
-        }
-        document.addEventListener("mousedown", handler);
-        return { destroy() { document.removeEventListener("mousedown", handler); } };
-    }
-
-    function windowResize(_: HTMLElement, onClose: () => void) {
-        function handler(_: UIEvent) {
-            onClose();
-        }
-        window.addEventListener("resize", handler);
-        return { destroy() { window.removeEventListener("resize", handler); } }
-    }
-
-    function portal(node: HTMLElement, target: string | HTMLElement) {
-        function update(target: string | HTMLElement) {
-            const elm = typeof target == "string"
-                ? document.querySelector(target) as HTMLElement
-                : target;
-            elm.appendChild(node);
-        }
-        update(target);
-        return { update, destroy() { node.remove(); } }
-    }
     
     function onClick() {
         isOpen = true;
@@ -68,6 +42,7 @@
     <div
         bind:this={popup}
         use:clickOutside={() => isOpen = false}
+        use:scrollOutside={() => isOpen = false}
         use:windowResize={() => isOpen = false}
         use:portal={insertTarget ?? "body"}
         class="fixed border-2 border-zinc-500 bg-zinc-800 drop-shadow-xl/50 transform-none m-0 z-40"

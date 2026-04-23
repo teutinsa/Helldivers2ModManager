@@ -18,9 +18,7 @@
         NotificationPopup,
         ErrorPopup,
         AddResultPopup,
-
         ModConfigPopup
-
     } from "$lib/types/popup";
     import ToggleSwitch from "$lib/components/ToggleSwitch.svelte";
     import PopupMenuButton from "$lib/components/PopupMenuButton.svelte";
@@ -528,7 +526,7 @@
             <div class="flex-1 mr-7 pr-1 overflow-y-scroll overflow-x-hidden">
                 <SortableList.Root
                     ondragend={onDragEnd}
-                    isDisabled={!allowReorder}
+                    isLocked={!allowReorder}
                     gap={4}
                 >
                     {#each profileEntries as [config, mod], i (config.Guid)}
@@ -541,7 +539,7 @@
                                 <img
                                     class="w-14 h-14"
                                     src={iconPath ?? "images/hd2_icon.png"}
-                                    alt={iconPath ? "Mod icon" : "Default icon"}
+                                    alt="Mod icon"
                                 />
                                 <div class="flex-1 flex flex-col gap-0.5 justify-between min-w-0">
                                     <span class="text-2xl truncate">{mod.name}</span>
