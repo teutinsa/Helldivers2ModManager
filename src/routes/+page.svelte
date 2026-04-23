@@ -17,7 +17,10 @@
         WaitPopup,
         NotificationPopup,
         ErrorPopup,
-        AddResultPopup
+        AddResultPopup,
+
+        ModConfigPopup
+
     } from "$lib/types/popup";
     import ToggleSwitch from "$lib/components/ToggleSwitch.svelte";
     import PopupMenuButton from "$lib/components/PopupMenuButton.svelte";
@@ -88,6 +91,16 @@
             getMods(),
             loadProfiles()
         ]);
+
+        loadedConfig.Profiles.forEach(profile => {
+            switch (profile.Version) {
+                case "V1":
+                    profile.Configs = profile.Configs.filter(config => {
+                        return loadedMods.some(mod => mod.guid === config.Guid);
+                    });
+                    break;
+            }
+        });
         
         mods = loadedMods;
         profiles = loadedConfig.Profiles;
@@ -287,7 +300,11 @@
     }
 
     async function onEditConfig(i: number) {
-
+        if (i < 0 || i >= profileEntries.length) return;
+        const [config, mod] = profileEntries[i];
+        const newConfig = await showPopup(new ModConfigPopup(mod, config));
+        if (!newConfig) return;
+        profileConfigs[i] = newConfig;
     }
 
     function onRemove(i: number) {
@@ -549,6 +566,7 @@
                                 {:else}
                                     <button
                                         class="hd2mm-button-nop p-2"
+                                        class:invisible={!Array.isArray(mod.Manifest.Options)}
                                         onclick={() => onEditConfig(i)}
                                     >
                                         <PencilSquare class="block mx-auto" />

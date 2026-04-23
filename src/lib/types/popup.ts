@@ -5,7 +5,10 @@ import WaitPopupComponent from "$lib/components/popups/WaitPopup.svelte";
 import NotificationPopupComponent from "$lib/components/popups/NotificationPopup.svelte";
 import ErrorPopupComponent from "$lib/components/popups/ErrorPopup.svelte";
 import AddResultPopupComponent from "$lib/components/popups/AddResultPopup.svelte";
+import ModConfigPopupComponent from "$lib/components/popups/ModConfigPopup.svelte";
 import type { ModAddResult } from "./results";
+import type { Config } from "$lib/models/profile";
+import type { Mod } from "$lib/models/mod";
 
 export abstract class Popup<T = void> {
     abstract component: Component<any, any, any>;
@@ -80,6 +83,17 @@ export class AddResultPopup extends Popup {
     component = AddResultPopupComponent;
 
     constructor(public readonly results: ModAddResult[]) {
+        super();
+    }
+}
+
+export class ModConfigPopup extends Popup<Config | null> {
+    component = ModConfigPopupComponent;
+
+    constructor(
+        public readonly mod: Mod,
+        public readonly config: Config
+    ) {
         super();
     }
 }

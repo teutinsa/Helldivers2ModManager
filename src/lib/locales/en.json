@@ -72,16 +72,16 @@
                 },
                 "error": {
                     "delete": {
-                        "message": ""
+                        "message": "Mod deleting failed!"
                     },
                     "add": {
                         "message": "Mod adding failed!"
                     },
                     "purge": {
-                        "message": ""
+                        "message": "Purging failed!"
                     },
                     "deploy": {
-                        "message": ""
+                        "message": "Deployment failed!"
                     }
                 }
             },
@@ -92,16 +92,16 @@
                 "title": "Loading failed!"
             },
             "add_profile_button": {
-                "tip": ""
+                "tip": "New profile"
             },
             "remove_profile_button": {
-                "tip": ""
+                "tip": "Remove profile"
             },
             "search_input": {
                 "placeholder": "Search"
             },
             "clear_search_button": {
-                "tip": ""
+                "tip": "Clear"
             },
             "add_button": {
                 "text": "Add",
@@ -136,7 +136,7 @@
                     "tip": "Update"
                 }
             },
-            "drop_message": ""
+            "drop_message": "Drop archives to add"
         },
         "settings": {
             "popup": {
@@ -218,6 +218,11 @@
         },
         "add_result": {
             "title": "Add Result",
+            "ok_button": {
+                "text": "OK"
+            }
+        },
+        "config": {
             "ok_button": {
                 "text": "OK"
             }
