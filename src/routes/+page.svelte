@@ -1,6 +1,7 @@
 <script lang="ts">
     import { SvelteMap } from "svelte/reactivity";
     import { Plus, Dash, Backspace, ArrowBarRight, ArrowBarLeft, Arrow90degLeft, ArrowReturnLeft, PencilSquare, Download, ThreeDotsVertical, CaretUpFill, CaretDownFill, Trash3, ArrowBarUp, ArrowBarDown, CaretUp, CaretDown, Eraser } from "svelte-bootstrap-icons";
+    import { getCurrentWindow } from "@tauri-apps/api/window";
     import { openUrl } from "@tauri-apps/plugin-opener";
     import { open } from "@tauri-apps/plugin-dialog";
     import * as log from "@tauri-apps/plugin-log";
@@ -81,12 +82,16 @@
         }
     });
 
-    onMount(async () => {
+    onMount(() => {
         initPromise = init();
 
-        if (!await checkSettings()) {
-            goto("/settings");
-        }
+        const unlisten = getCurrentWindow().onCloseRequested(async (_) => {
+            await doSaveProfiles();
+        });
+
+        return () => {
+            unlisten.then(f => f());
+        };
     });
 
     onNavigate(async () => {
@@ -94,6 +99,11 @@
     });
 
     async function init() {
+        if (!await checkSettings()) {
+            goto("/settings");
+            return;
+        }
+
         const [loadedMods, loadedConfig] = await Promise.all([
             getMods(),
             loadProfiles()
