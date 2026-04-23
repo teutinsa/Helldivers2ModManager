@@ -42,10 +42,33 @@ pub enum Settings {
 }
 
 impl Settings {
-    pub fn validate(&self) -> bool {
+    pub async fn validate(&self) -> bool {
         match self {
             Settings::V1 { game_path, .. } => {
-                !game_path.as_os_str().is_empty()
+                if !game_path.as_os_str().is_empty() {
+                    return false;
+                }
+                
+                if !tokio::fs::try_exists(game_path).await.unwrap_or(false) {
+                    return false;
+                } else {
+                    if !tokio::fs::try_exists(game_path.join("tools")).await.unwrap_or(false) {
+                        return false;
+                    }
+                    if !tokio::fs::try_exists(game_path.join("data")).await.unwrap_or(false) {
+                        return false;
+                    }
+                    let bin_path = game_path.join("bin");
+                    if !tokio::fs::try_exists(&bin_path).await.unwrap_or(false) {
+                        return false;
+                    } else {
+                        if !tokio::fs::try_exists(bin_path.join("helldivers2.exe")).await.unwrap_or(false) {
+                            return false;
+                        }
+                    }
+                }
+                
+                return true;
             },
         }
     }

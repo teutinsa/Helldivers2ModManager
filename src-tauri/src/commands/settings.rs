@@ -40,3 +40,9 @@ pub async fn save_settings(state: State<'_, AppState>, settings: Settings) -> TA
     let data = serde_json::to_vec_pretty(&settings).into_ta_result()?;
     tokio::fs::write(state.base_path.join(SETTINGS_FILE), data).await.into_ta_result()
 }
+
+#[tauri::command]
+pub  async fn check_settings(state: State<'_, AppState>) -> TAResult<bool> {
+    let settings = do_load_settings(&state.base_path).await?;
+    Ok(settings.validate().await)
+}

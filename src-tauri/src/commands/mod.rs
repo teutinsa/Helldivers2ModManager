@@ -116,7 +116,7 @@ pub async fn deploy(state: State<'_, AppState>, configs: Vec<Config>) -> TAResul
     let mods = mods.as_ref().unwrap();
 
     let settings = do_load_settings(&state.base_path).await?;
-    if !settings.validate() {
+    if !settings.validate().await {
         return anyhow::anyhow!("invalid settings").into_ta_result();
     }
 
@@ -227,7 +227,7 @@ pub async fn deploy(state: State<'_, AppState>, configs: Vec<Config>) -> TAResul
 #[tauri::command]
 pub async fn purge(state: State<'_, AppState>) -> TAResult<()> {
     let settings = load_settings(state).await?;
-    if !settings.validate() {
+    if !settings.validate().await {
         return anyhow::anyhow!("invalid settings").into_ta_result();
     }
 

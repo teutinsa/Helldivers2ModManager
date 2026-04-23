@@ -49,6 +49,10 @@ export async function saveSettings(settings: Settings): Promise<void> {
     await invoke<void>("save_settings", { settings });
 }
 
+export async function checkSettings(): Promise<boolean> {
+    return await invoke<boolean>("check_settings");
+}
+
 export async function deploy(configs: Config[]): Promise<void> {
     await invoke<void>("deploy", { configs });
 }

@@ -65,6 +65,7 @@ pub fn run() {
             commands::profiles::save_profiles,
             commands::settings::load_settings,
             commands::settings::save_settings,
+            commands::settings::check_settings,
             commands::purge,
             commands::deploy
         ])

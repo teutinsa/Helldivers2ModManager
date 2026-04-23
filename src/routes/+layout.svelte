@@ -6,9 +6,15 @@
     import Popup from "$lib/components/Popup.svelte";
     import { onMount } from "svelte";
     import { initLocalization } from "$lib/state/localization.svelte";
+    import { checkSettings } from "$lib/utils/commands";
+    import { goto } from "$app/navigation";
 
     onMount(async () => {
         await initLocalization("en");
+
+        if (!await checkSettings()) {
+            goto("/settings");
+        }
     });
 </script>
 

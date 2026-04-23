@@ -8,7 +8,7 @@
     import { useLocalization } from "$lib/state/localization.svelte";
     import type { Mod } from "$lib/models/mod";
     import type { Config, Profile } from "$lib/models/profile";
-    import { addMod, addMods, deleteMod, getMods, loadProfiles, saveProfiles, deploy, purge } from "$lib/utils/commands";
+    import { addMod, addMods, deleteMod, getMods, loadProfiles, saveProfiles, deploy, purge, checkSettings } from "$lib/utils/commands";
     import type { UUID } from "$lib/types/uuid";
     import { usePopup } from "$lib/state/popup.svelte";
     import {
@@ -22,8 +22,9 @@
     } from "$lib/types/popup";
     import ToggleSwitch from "$lib/components/ToggleSwitch.svelte";
     import PopupMenuButton from "$lib/components/PopupMenuButton.svelte";
-    import { onNavigate } from "$app/navigation";
+    import { goto, onNavigate } from "$app/navigation";
     import type { ModAddResult } from "$lib/types/results";
+    import { onMount } from "svelte";
 
     const { t } = useLocalization();
     const { show: showPopup } = usePopup();
@@ -37,7 +38,7 @@
     let libraryExtended = $state<boolean>(false);
     let libraryVisible = $state<boolean>(false);
     let isDragging = $state<boolean>(false);
-    let initPromise = $state<Promise<void>>(init());
+    let initPromise = $state<Promise<void>>();
 
     let currentProfile = $derived<Profile | undefined>(profiles[activeProfile]);
     let profileMods = $derived<Mod[]>(profileConfigs.map(config => mods.find(m => m.guid === config.Guid)).filter((m): m is Mod => m !== undefined));
@@ -77,6 +78,14 @@
             mod.iconPath()
                 .then(path => iconPaths.set(mod.guid, path ?? null))
                 .catch(() => iconPaths.set(mod.guid, null));
+        }
+    });
+
+    onMount(async () => {
+        initPromise = init();
+
+        if (!await checkSettings()) {
+            goto("/settings");
         }
     });
 
