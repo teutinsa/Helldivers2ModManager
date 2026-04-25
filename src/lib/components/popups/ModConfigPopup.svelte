@@ -73,7 +73,7 @@
             class="w-6 h-6 rounded-full border-4 border-transparent border-b-yellow-300 animate-spin self-center"
         ></div>
     {:then _}
-        <div class="pr-1 flex flex-col gap-1 overflow-x-hidden overflow-y-auto">
+        <div class="pr-5 flex flex-col gap-1 overflow-x-hidden overflow-y-auto">
             {#each (popup.mod.Manifest as v1.Manifest).Options! as option, i}
                 {@const image = option.Image ? imagePaths.get(option.Image) : undefined}
                 <div class="flex flex-row gap-1">
@@ -94,7 +94,10 @@
                             >
                                 {#snippet renderItem(sub)}
                                     {@const subImage = sub.Image ? imagePaths.get(sub.Image) : undefined}
-                                    <div class="flex flex-row gap-1">
+                                    <div
+                                        class="flex flex-row gap-1"
+                                        title={sub.Description}
+                                    >
                                         <img
                                             class="object-contain shrink-0"
                                             src={subImage ?? "images/hd2_icon.png"}
@@ -113,7 +116,7 @@
                     </div>
                     <input
                         bind:checked={toggled[i]}
-                        class="w-5 h-5 mt-1 self-start bg-transparent accent-yellow-300 border-zinc-500 border-2"
+                        class="w-5 h-5 mt-1 self-start bg-zinc-800 accent-yellow-300 border-zinc-500 border-2"
                         type="checkbox"
                     />
                 </div>

@@ -26,6 +26,7 @@
     import { goto, onNavigate } from "$app/navigation";
     import type { ModAddResult } from "$lib/types/results";
     import { onMount } from "svelte";
+    import Select from "$lib/components/Select.svelte";
 
     const { t } = useLocalization();
     const { show: showPopup } = usePopup();
@@ -99,6 +100,8 @@
     });
 
     async function init() {
+        log.info("Initializing...");
+
         if (!await checkSettings()) {
             goto("/settings");
             return;
@@ -122,6 +125,8 @@
         mods = loadedMods;
         profiles = loadedConfig.Profiles;
         activeProfile = loadedConfig.Active;
+
+        log.info("Initialization complete.");
     }
 
     function applyCurrentConfigChanges() {

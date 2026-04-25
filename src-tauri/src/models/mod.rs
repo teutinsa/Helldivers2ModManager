@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use manifest::Manifest;
 
+use crate::utils::fix_path_casing;
+
 #[derive(Debug, Clone, Copy)]
 pub struct Version<const N: u64>;
 
@@ -66,5 +68,39 @@ impl Mod {
             Manifest::V1(m) => m.guid,
             Manifest::V2(m) => m.guid,
         }
+    }
+
+    pub async fn normalize_paths(&mut self) -> anyhow::Result<()> {
+        match &mut self.manifest {
+            Manifest::Legacy(manifest) => {
+                if let Some(icon_path) = manifest.icon_path.as_ref() {
+                    manifest.icon_path = Some(fix_path_casing(&self.directory, icon_path).await?);
+                }
+            }
+            Manifest::V1(manifest) => {
+                if let Some(icon_path) = manifest.icon_path.as_ref() {
+                    manifest.icon_path = Some(fix_path_casing(&self.directory, icon_path).await?);
+                }
+
+                if let Some(options) = manifest.options.as_mut() {
+                    for opt in options {
+                        if let Some(image) = opt.image.as_ref() {
+                            opt.image = Some(fix_path_casing(&self.directory, image).await?);
+                        }
+
+                        if let Some(sub_options) = opt.sub_options.as_mut() {
+                            for sub in sub_options {
+                                if let Some(image) = sub.image.as_ref() {
+                                    sub.image = Some(fix_path_casing(&self.directory, image).await?);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Manifest::V2(manifest) => todo!()
+        }
+
+        Ok(())
     }
 }

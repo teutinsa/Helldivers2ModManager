@@ -42,33 +42,33 @@ pub enum Settings {
 }
 
 impl Settings {
-    pub async fn validate(&self) -> bool {
+    pub async fn validate(&self) -> anyhow::Result<()> {
         match self {
             Settings::V1 { game_path, .. } => {
-                if !game_path.as_os_str().is_empty() {
-                    return false;
+                if game_path.as_os_str().is_empty() {
+                    anyhow::bail!("`game_path` is empty");
                 }
                 
                 if !tokio::fs::try_exists(game_path).await.unwrap_or(false) {
-                    return false;
+                    anyhow::bail!("`game_path` doesn't exist");
                 } else {
                     if !tokio::fs::try_exists(game_path.join("tools")).await.unwrap_or(false) {
-                        return false;
+                        anyhow::bail!("`game_path` doesn't contain dir \"tools\"");
                     }
                     if !tokio::fs::try_exists(game_path.join("data")).await.unwrap_or(false) {
-                        return false;
+                        anyhow::bail!("`game_path` doesn't contain dir \"data\"");
                     }
                     let bin_path = game_path.join("bin");
                     if !tokio::fs::try_exists(&bin_path).await.unwrap_or(false) {
-                        return false;
+                        anyhow::bail!("`game_path` doesn't contain dir \"bin\"");
                     } else {
                         if !tokio::fs::try_exists(bin_path.join("helldivers2.exe")).await.unwrap_or(false) {
-                            return false;
+                            anyhow::bail!("\"bin\" dir does not contain \"helldivers2.exe\"");
                         }
                     }
                 }
                 
-                return true;
+                Ok(())
             },
         }
     }

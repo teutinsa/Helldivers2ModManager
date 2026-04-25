@@ -30,6 +30,26 @@ pub async fn do_load_settings(base_path: &Path) -> anyhow::Result<Settings> {
     Ok(settings)
 }
 
+pub async fn do_check_settings(base_path: &Path) -> anyhow::Result<bool> {
+    log::info!("Checking settings...");
+
+    match do_load_settings(base_path).await {
+        Ok(settings) => {
+            match settings.validate().await {
+                Ok(()) => {
+                    log::info!("Settings vaid.");
+                    Ok(true)
+                }
+                Err(e) => {
+                    log::error!("Settings invalid: {}", e);       
+                    Ok(false)
+                }
+            }
+        }
+        Err(e) => Err(e)
+    }
+}
+
 #[tauri::command]
 pub async fn load_settings(state: State<'_, AppState>) -> TAResult<Settings> {
     do_load_settings(&state.base_path).await.into_ta_result()
@@ -43,6 +63,5 @@ pub async fn save_settings(state: State<'_, AppState>, settings: Settings) -> TA
 
 #[tauri::command]
 pub  async fn check_settings(state: State<'_, AppState>) -> TAResult<bool> {
-    let settings = do_load_settings(&state.base_path).await?;
-    Ok(settings.validate().await)
+    do_check_settings(&state.base_path).await.into_ta_result()
 }

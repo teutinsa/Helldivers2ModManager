@@ -4,7 +4,7 @@ use anyhow_tauri::{IntoTAResult, TAResult};
 use regex::Regex;
 use tauri::State;
 
-use crate::{AppState, commands::settings::{do_load_settings, load_settings}, models::{manifest::Manifest, profile::Config}};
+use crate::{AppState, commands::settings::{do_check_settings, do_load_settings, load_settings}, models::{manifest::Manifest, profile::Config}};
 
 pub mod mods;
 pub mod profiles;
@@ -116,8 +116,8 @@ pub async fn deploy(state: State<'_, AppState>, configs: Vec<Config>) -> TAResul
     let mods = mods.as_ref().unwrap();
 
     let settings = do_load_settings(&state.base_path).await?;
-    if !settings.validate().await {
-        return anyhow::anyhow!("invalid settings").into_ta_result();
+    if let Err(e) = settings.validate().await {
+        return anyhow::anyhow!("invalid settings: {}", e).into_ta_result();
     }
 
     let mods = mods.iter()
@@ -227,8 +227,8 @@ pub async fn deploy(state: State<'_, AppState>, configs: Vec<Config>) -> TAResul
 #[tauri::command]
 pub async fn purge(state: State<'_, AppState>) -> TAResult<()> {
     let settings = load_settings(state).await?;
-    if !settings.validate().await {
-        return anyhow::anyhow!("invalid settings").into_ta_result();
+    if let Err(e) = settings.validate().await {
+        return anyhow::anyhow!("invalid settings: {}", e).into_ta_result();
     }
 
     let data_dir = settings.game_path().join("data");

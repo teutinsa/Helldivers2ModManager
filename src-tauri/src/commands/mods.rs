@@ -65,10 +65,13 @@ pub async fn get_mods(state: State<'_, AppState>) -> TAResult<Vec<Mod>> {
         let manifest_data = tokio::fs::read(manifest_file).await.into_ta_result()?;
         let manifest: Manifest = serde_json::from_slice(&manifest_data).into_ta_result()?;
 
-        mods.push(Mod {
+        let mut r#mod = Mod {
             manifest,
             directory: mod_dir,
-        });
+        };
+        r#mod.normalize_paths().await?;
+
+        mods.push(r#mod);
     }
 
     log::info!("Mods read.");
@@ -101,6 +104,8 @@ pub async fn add_mod(state: State<'_, AppState>, archive_file: PathBuf) -> TARes
     }
     let mods = mods.as_mut().unwrap();
 
+    log::info!("Adding mod from \"{:?}\"...", archive_file);
+
     let archive = Archive::open(&archive_file)?;
 
     let name = archive_file
@@ -118,7 +123,7 @@ pub async fn add_mod(state: State<'_, AppState>, archive_file: PathBuf) -> TARes
 
     let (archive, manifest) = resolve_manifest(archive, name.clone(), manifest_file.clone()).await.into_ta_result()?;
 
-    let r#mod = Mod {
+    let mut r#mod = Mod {
         manifest,
         directory: mod_dir.clone(),
     };
@@ -130,7 +135,12 @@ pub async fn add_mod(state: State<'_, AppState>, archive_file: PathBuf) -> TARes
     
     extract_archive(archive, mod_dir).await?;
 
+    if let Err(e) = r#mod.normalize_paths().await {
+        log::error!("Path normalization failed: {}", e);
+    }
+
     mods.push(r#mod.clone());
+    log::info!("Mod successfully added.");
     Ok(r#mod)
 }
 
@@ -254,6 +264,20 @@ pub async fn add_mods(state: State<'_, AppState>, archive_files: Vec<PathBuf>) -
             match result {
                 Ok((archive, r#mod)) => {
                     extract_archive(archive, r#mod.directory.clone()).await?;
+                    Ok(r#mod)
+                }
+                Err(e) => Err(e)
+            }
+        })
+    ).await;
+
+    let data = futures::future::join_all(
+        data.into_iter().map(|result| async {
+            match result {
+                Ok(mut r#mod) => {
+                    if let Err(e) = r#mod.normalize_paths().await {
+                        log::error!("Path normalization failed for \"{}\": {}", r#mod.guid(), e);
+                    }
                     Ok(r#mod)
                 }
                 Err(e) => Err(e)
