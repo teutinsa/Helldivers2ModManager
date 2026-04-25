@@ -3,6 +3,7 @@ name: Build
 on:
   push:
     branches: [ 2.0-rewrite ]
+    tags: [ 'v*_preview*' ]
   workflow_dispatch: 
 
 jobs:
@@ -16,7 +17,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -37,11 +38,14 @@ jobs:
       - name: Build
         run: pnpm tauri build
       
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
         with:
-          name: windows-build
-          path: src-tauri/target/release/hd2mm.exe
+          name: Release Preview
+          draft: true
+          prerelease: true
+          files: src-tauri/target/release/hd2mm.exe
+
   
   build-linux:
     runs-on: ubuntu-latest
@@ -53,7 +57,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -79,8 +83,10 @@ jobs:
       - name: Build
         run: pnpm tauri build
       
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
         with:
-          name: linux-build
-          path: src-tauri/target/release/hd2mm
+          name: Release Preview
+          draft: true
+          prerelease: true
+          files: src-tauri/target/release/hd2mm
