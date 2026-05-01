@@ -62,7 +62,7 @@
         autocorrect="off"
         autocapitalize="off"
         spellcheck="false"
-        maxlength={popup.minLength}
+        maxlength={popup.maxLength}
         bind:value={input}
     />
     {#if !isValid}

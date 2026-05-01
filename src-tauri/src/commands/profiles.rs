@@ -9,11 +9,19 @@ const PROFILES_FILE: &'static str = "profiles.json";
 pub async fn load_profiles(state: State<'_, AppState>) -> TAResult<ProfilesConfig> {
     let profiles_file = state.base_path.join(PROFILES_FILE);
 
-    if tokio::fs::try_exists(&profiles_file).await.into_ta_result()? {
+    log::info!("Loading profiles...");
+
+    log::info!("Looking for {:?}", &profiles_file);
+    let profiles = if tokio::fs::try_exists(&profiles_file).await.into_ta_result()? {
+        log::info!("Opening...");
         let data = tokio::fs::read(profiles_file).await.into_ta_result()?;
-        serde_json::from_slice(&data).into_ta_result()
+
+        log::info!("Deserializing...");
+        serde_json::from_slice(&data).into_ta_result()?
     } else {
-        Ok(ProfilesConfig {
+        log::info!("Not found. Using default.");
+        
+        ProfilesConfig {
             profiles: vec![
                 Profile::V1 {
                     name: "Default".to_string(),
@@ -21,18 +29,23 @@ pub async fn load_profiles(state: State<'_, AppState>) -> TAResult<ProfilesConfi
                 }
             ],
             active: 0
-        })
-    }
+        }
+    };
+
+    log::info!("Profiles loaded.");
+    Ok(profiles)
 }
 
 #[tauri::command]
 pub async fn save_profiles(state: State<'_, AppState>, config: ProfilesConfig) -> TAResult<()> {
     log::info!("Saving profiles...");
     
-    for profile in &config.profiles {
-        log::debug!("Profile \"{}\" Order:", profile.name());
-        for config in profile.configs() {
-            log::debug!("- {{{}}}", config.uuid());
+    if log::log_enabled!(log::Level::Debug) {
+        for profile in &config.profiles {
+            log::debug!("Profile \"{}\" Order:", profile.name());
+            for config in profile.configs() {
+                log::debug!("- {{{}}}", config.uuid());
+            }
         }
     }
 

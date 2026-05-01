@@ -4,7 +4,7 @@ use anyhow_tauri::{IntoTAResult, TAResult};
 use regex::Regex;
 use tauri::State;
 
-use crate::{AppState, commands::settings::{do_check_settings, do_load_settings, load_settings}, models::{manifest::Manifest, profile::Config}};
+use crate::{AppState, commands::settings::{do_load_settings, load_settings}, models::{manifest::Manifest, profile::Config}};
 
 pub mod mods;
 pub mod profiles;
@@ -21,6 +21,8 @@ struct PatchFileTriplet {
 
 async fn get_patch_files_from_dir(dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let patch_regex = PATCH_REGEX.get_or_init(|| Regex::new(r"^[0-9a-f]{16}\.patch_\d+(?:\.gpu_resources|\.stream)?$").unwrap());
+
+    log::info!("Collecting pach files of directory {:?}...", dir);
 
     let mut entries = Vec::new();
     let mut dir_reader = tokio::fs::read_dir(dir).await?;
@@ -41,6 +43,7 @@ async fn get_patch_files_from_dir(dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
         entries.push(path);
     }
 
+    log::info!("Found {} patch files.", entries.len());
     Ok(entries)
 }
 
@@ -100,10 +103,14 @@ async fn add_files_from_dir(dir: &Path, groups: &mut HashMap<String, Vec<PatchFi
 }
 
 async fn do_purge(data_dir: &Path) -> anyhow::Result<()> {
+    log::info!("Purging...");
+
     let patch_files = get_patch_files_from_dir(data_dir).await?;
 
+    log::info!("Deleting files...");
     futures::future::try_join_all(patch_files.iter().map(|f| tokio::fs::remove_file(f))).await?;
 
+    log::info!("Purge complete.");
     Ok(())
 }
 
@@ -133,12 +140,15 @@ pub async fn deploy(state: State<'_, AppState>, configs: Vec<Config>) -> TAResul
 
     do_purge(&data_dir).await?;
 
+    log::info!("Deploying...");
+
     if mods.is_empty() {
+        log::info!("Nothing to deploy.");
         return Ok(());
     }
 
+    log::info!("Grouping files...");
     let mut groups: HashMap<String, Vec<PatchFileTriplet>> = HashMap::new();
-
     for (r#mod, config) in mods {
         if !config.enabled() {
             continue;
@@ -188,13 +198,21 @@ pub async fn deploy(state: State<'_, AppState>, configs: Vec<Config>) -> TAResul
                     add_files_from_dir(base, &mut groups).await?;
                 }
             }
-            (Manifest::V2(manifest), Config::V2 { selected, toggled, .. }) => {
+            (Manifest::V2(_manifest), Config::V2 { .. }) => {
                 todo!("V2 manifest mods not supported yet");
             }
             _ => unreachable!("manifest and config version should always match")
         }
     }
+
+    log::info!("Collected files into {} groups.", groups.len());
+    if log::log_enabled!(log::Level::Debug) {
+        for (k, v) in &groups {
+            log::debug!(" - k: \"{}\"; v: [{}]", k, v.len());
+        }
+    }
     
+    log::info!("Copying files...");
     for (name, triplets) in &groups {
         let offset = if settings.has_skip_entry(name) { 1 } else { 0 };
 
@@ -221,6 +239,7 @@ pub async fn deploy(state: State<'_, AppState>, configs: Vec<Config>) -> TAResul
         }
     }
 
+    log::info!("Deployment complete.");
     Ok(())
 }
 

@@ -22,9 +22,9 @@
     class="flex flex-col h-dvh overflow-hidden bg-zinc-900 border-zinc-500 border-4"
 >
     <Titlebar />
-    <div class="relative flex-1 flex flex-row">
+    <div class="relative flex-1 flex flex-row min-h-0">
         <Sidebar />
-        <main class="flex-1 p-2 overflow-hidden min-w-0">
+        <main class="flex-1 p-2 overflow-hidden min-w-0 min-h-0 h-full">
             <slot />
         </main>
         <Popup />

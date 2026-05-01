@@ -11,14 +11,15 @@ pub async fn do_load_settings(base_path: &Path) -> anyhow::Result<Settings> {
     log::info!("Loading settings...");
     let settings_file = base_path.join(SETTINGS_FILE);
 
-    log::info!("Checking if {:?}", &settings_file);
+    log::info!("Looking for {:?}", &settings_file);
     let settings = if tokio::fs::try_exists(&settings_file).await? {
-        log::info!("Found.");
-
+        log::info!("Opening...");
         let data = tokio::fs::read(&settings_file).await?;
+
+        log::info!("Deserializing...");
         serde_json::from_slice(&data)?
     } else {
-        log::info!("Using default.");
+        log::info!("Not found. Using default.");
 
         Settings::V1 {
             game_path: PathBuf::new(),
@@ -57,8 +58,13 @@ pub async fn load_settings(state: State<'_, AppState>) -> TAResult<Settings> {
 
 #[tauri::command]
 pub async fn save_settings(state: State<'_, AppState>, settings: Settings) -> TAResult<()> {
+    log::info!("Saving settings...");
+
     let data = serde_json::to_vec_pretty(&settings).into_ta_result()?;
-    tokio::fs::write(state.base_path.join(SETTINGS_FILE), data).await.into_ta_result()
+    tokio::fs::write(state.base_path.join(SETTINGS_FILE), data).await.into_ta_result()?;
+
+    log::info!("Settings saved.");
+    Ok(())
 }
 
 #[tauri::command]

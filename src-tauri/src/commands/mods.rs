@@ -15,6 +15,7 @@ use uuid::Uuid;
 const MODS_DIRECTORY: &'static str = "mods/";
 const MANIFEST_FILE: &'static str = "manifest.json";
 
+#[allow(dead_code)]
 trait ZipResult<S, E, T> {
     fn zip(self, other: Result<T, E>) -> Result<(S, T), E>;
     fn zip_value(self, other: T) -> Result<(S, T), E>;
@@ -42,7 +43,10 @@ impl<S, E, T> ZipResult<S, E, T> for Result<S, E> {
 pub async fn get_mods(state: State<'_, AppState>) -> TAResult<Vec<Mod>> {
     let mut state_mods = state.mods.lock().await;
 
+    log::info!("Loading mods...");
+
     if let Some(mods) = state_mods.as_ref() {
+        log::info!("Mods already loaded.");
         return Ok(mods.clone());
     }
 
@@ -74,8 +78,8 @@ pub async fn get_mods(state: State<'_, AppState>) -> TAResult<Vec<Mod>> {
         mods.push(r#mod);
     }
 
-    log::info!("Mods read.");
     *state_mods = Some(mods.clone());
+    log::info!("Mods loaded.");
     Ok(mods)
 }
 
@@ -87,9 +91,16 @@ pub async fn delete_mod(state: State<'_, AppState>, guid: Uuid) -> TAResult<()> 
     }
     let mods = mods.as_mut().unwrap();
 
+    log::info!("Deleting mod \"{}\"...", guid);
+
     if let Some(i) = mods.iter().position(|m| m.guid() == guid) {
         let r#mod = mods.remove(i);
+        log::info!("Mod removed form regitry.");
+
+        log::info!("Deleting files...");
         tokio::fs::remove_dir_all(r#mod.directory).await.into_ta_result()?;
+        
+        log::info!("Mod deletion complete.");
         Ok(())
     } else {
         anyhow_tauri::bail!("mod with GUID {{{}}} not found", guid);
@@ -104,10 +115,12 @@ pub async fn add_mod(state: State<'_, AppState>, archive_file: PathBuf) -> TARes
     }
     let mods = mods.as_mut().unwrap();
 
-    log::info!("Adding mod from \"{:?}\"...", archive_file);
+    log::info!("Adding mod from {:?}...", archive_file);
 
+    log::debug!("Opening archive...");
     let archive = Archive::open(&archive_file)?;
 
+    log::debug!("Obtaining name...");
     let name = archive_file
         .file_prefix()
         .unwrap()
@@ -115,12 +128,15 @@ pub async fn add_mod(state: State<'_, AppState>, archive_file: PathBuf) -> TARes
         .map(str::to_string)
         .ok_or(anyhow::anyhow!("file name conversion failed"))?;
 
+    log::info!("Resolving mod directory...");
     let mut mod_dir = state.base_path.join(MODS_DIRECTORY);
     mod_dir.push(&name);
 
+    log::info!("Preparing mod directory...");
     let manifest_file = mod_dir.join(MANIFEST_FILE);
     prepare_mod_dir(mod_dir.clone(), manifest_file.clone(), name.clone()).await.into_ta_result()?;
 
+    log::info!("Resolving manifest...");
     let (archive, manifest) = resolve_manifest(archive, name.clone(), manifest_file.clone()).await.into_ta_result()?;
 
     let mut r#mod = Mod {
@@ -128,13 +144,16 @@ pub async fn add_mod(state: State<'_, AppState>, archive_file: PathBuf) -> TARes
         directory: mod_dir.clone(),
     };
 
+    log::info!("Checking for duplicate...");
     if mods.iter().any(|m| m.guid() == r#mod.guid()) {
         return anyhow::anyhow!("mod with GUID {{{}}} already exists", r#mod.guid())
             .into_ta_result();
     }
     
+    log::info!("Extracting archive...");
     extract_archive(archive, mod_dir).await?;
 
+    log::debug!("Normalizing paths...");
     if let Err(e) = r#mod.normalize_paths().await {
         log::error!("Path normalization failed: {}", e);
     }
@@ -151,14 +170,22 @@ pub async fn add_mods(state: State<'_, AppState>, archive_files: Vec<PathBuf>) -
         return anyhow::anyhow!("mods not read").into_ta_result();
     }
     let mods = mods.as_mut().unwrap();
+
+    log::info!("Adding mods from:",);
+    for archive_file in &archive_files {
+        log::info!(" - {:?}", archive_file);
+    }
     
+    log::debug!("Opening archives...");
     let data = archive_files
         .iter()
         .map(|archive_file| Archive::open(archive_file).into_ta_result())
         .collect::<Vec<_>>();
 
+    log::debug!("Obtaining names...");
     let data = archive_files
-        .into_iter()
+        .iter()
+        .cloned()
         .zip(data)
         .map(|(archive_file, result)| {
             result
@@ -177,6 +204,7 @@ pub async fn add_mods(state: State<'_, AppState>, archive_files: Vec<PathBuf>) -
         })
         .collect::<Vec<_>>();
 
+    log::info!("Resolving mod directories...");
     let data = data
         .into_iter()
         .map(|result| {
@@ -190,6 +218,7 @@ pub async fn add_mods(state: State<'_, AppState>, archive_files: Vec<PathBuf>) -
         })
         .collect::<Vec<_>>();
 
+    log::info!("Preparing mod directories...");
     let data = futures::future::join_all(
         data.into_iter().map(|result| async {
             match result {
@@ -202,6 +231,7 @@ pub async fn add_mods(state: State<'_, AppState>, archive_files: Vec<PathBuf>) -
         })
     ).await;
 
+    log::info!("Resolving manifests...");
     let data = futures::future::join_all(
         data.into_iter().map(|result| async {
             match result {
@@ -227,6 +257,7 @@ pub async fn add_mods(state: State<'_, AppState>, archive_files: Vec<PathBuf>) -
         })
         .collect::<Vec<_>>();
     
+    log::info!("Checking for duplicates...");
     let mut guids: HashSet<Uuid> = mods.iter().map(|m| m.guid()).collect();
     let data = data
         .into_iter()
@@ -259,6 +290,7 @@ pub async fn add_mods(state: State<'_, AppState>, archive_files: Vec<PathBuf>) -
         })
         .collect::<Vec<_>>();
 
+    log::info!("Extracting archives...");
     let data = futures::future::join_all(
         data.into_iter().map(|result| async {
             match result {
@@ -271,6 +303,7 @@ pub async fn add_mods(state: State<'_, AppState>, archive_files: Vec<PathBuf>) -
         })
     ).await;
 
+    log::debug!("Normalizing paths...");
     let data = futures::future::join_all(
         data.into_iter().map(|result| async {
             match result {
@@ -289,6 +322,15 @@ pub async fn add_mods(state: State<'_, AppState>, archive_files: Vec<PathBuf>) -
         mods.push(r#mod.clone());
     }
     
+    log::info!("Adding complete.");
+    for (p, r) in archive_files.iter().zip(&data) {
+        if let Err(e) = r {
+            log::info!(" - {:?} : Err -> {}", p, e);
+        } else {
+            log::info!(" - {:?} : Ok", p);
+        }
+    }
+
     Ok(data)
 }
 

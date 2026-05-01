@@ -7,7 +7,7 @@
     import * as log from "@tauri-apps/plugin-log";
     import { SortableList } from "@rodrigodagostino/svelte-sortable-list"
     import { useLocalization } from "$lib/state/localization.svelte";
-    import type { Mod } from "$lib/models/mod";
+    import { Mod } from "$lib/models/mod";
     import type { Config, Profile } from "$lib/models/profile";
     import { addMod, addMods, deleteMod, getMods, loadProfiles, saveProfiles, deploy, purge, checkSettings } from "$lib/utils/commands";
     import type { UUID } from "$lib/types/uuid";
@@ -121,10 +121,31 @@
                     break;
             }
         });
-        
-        mods = loadedMods;
-        profiles = loadedConfig.Profiles;
-        activeProfile = loadedConfig.Active;
+
+        if (import.meta.env.DEV) {
+            mods = Array.from(Array(20).keys()).map(i => new Mod(
+                {
+                    Guid: i.toString(),
+                    Name: `Test ${i + 1}`,
+                    Description: "Test",
+                    IconPath: undefined,
+                    Options: undefined
+                },
+                "./Mods"
+            ));
+            profiles = [
+                {
+                    Version: "V1",
+                    Name: "Test",
+                    Configs: mods.map(m => makeConfigForMod(m))
+                }
+            ];
+            activeProfile = 0;
+        } else {
+            mods = loadedMods;
+            profiles = loadedConfig.Profiles;
+            activeProfile = loadedConfig.Active;
+        }
 
         log.info("Initialization complete.");
     }
@@ -545,9 +566,9 @@
             </button>
         </div>
         <!-- Center -->
-        <div class="flex-1 flex flex-row relative">
+        <div class="flex-1 flex flex-row relative min-h-0">
             <!-- Mod List -->
-            <div class="flex-1 mr-7 pr-1 overflow-y-scroll overflow-x-hidden">
+            <div class="flex-1 mr-7 pr-1 overflow-y-scroll h-full">
                 <SortableList.Root
                     ondragend={onDragEnd}
                     isLocked={!allowReorder}
