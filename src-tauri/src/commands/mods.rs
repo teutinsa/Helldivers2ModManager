@@ -95,7 +95,7 @@ pub async fn delete_mod(state: State<'_, AppState>, guid: Uuid) -> TAResult<()> 
 
     if let Some(i) = mods.iter().position(|m| m.guid() == guid) {
         let r#mod = mods.remove(i);
-        log::info!("Mod removed form regitry.");
+        log::info!("Mod removed form registry.");
 
         log::info!("Deleting files...");
         tokio::fs::remove_dir_all(r#mod.directory).await.into_ta_result()?;

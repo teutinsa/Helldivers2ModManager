@@ -22,7 +22,7 @@ struct PatchFileTriplet {
 async fn get_patch_files_from_dir(dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let patch_regex = PATCH_REGEX.get_or_init(|| Regex::new(r"^[0-9a-f]{16}\.patch_\d+(?:\.gpu_resources|\.stream)?$").unwrap());
 
-    log::info!("Collecting pach files of directory {:?}...", dir);
+    log::info!("Collecting patch files of directory {:?}...", dir);
 
     let mut entries = Vec::new();
     let mut dir_reader = tokio::fs::read_dir(dir).await?;

@@ -8,7 +8,7 @@
     import { SortableList } from "@rodrigodagostino/svelte-sortable-list"
     import { useLocalization } from "$lib/state/localization.svelte";
     import { Mod } from "$lib/models/mod";
-    import type { Config, Profile } from "$lib/models/profile";
+    import type {Config, Profile, ProfilesConfig} from "$lib/models/profile";
     import { addMod, addMods, deleteMod, getMods, loadProfiles, saveProfiles, deploy, purge, checkSettings } from "$lib/utils/commands";
     import type { UUID } from "$lib/types/uuid";
     import { usePopup } from "$lib/state/popup.svelte";
@@ -107,7 +107,7 @@
             return;
         }
 
-        const [loadedMods, loadedConfig] = await Promise.all([
+        const [loadedMods, loadedConfig]: [Mod[], ProfilesConfig] = await Promise.all<Promise<Mod[]> | Promise<ProfilesConfig>>([
             getMods(),
             loadProfiles()
         ]);
@@ -122,30 +122,9 @@
             }
         });
 
-        if (import.meta.env.DEV) {
-            mods = Array.from(Array(20).keys()).map(i => new Mod(
-                {
-                    Guid: i.toString(),
-                    Name: `Test ${i + 1}`,
-                    Description: "Test",
-                    IconPath: undefined,
-                    Options: undefined
-                },
-                "./Mods"
-            ));
-            profiles = [
-                {
-                    Version: "V1",
-                    Name: "Test",
-                    Configs: mods.map(m => makeConfigForMod(m))
-                }
-            ];
-            activeProfile = 0;
-        } else {
-            mods = loadedMods;
-            profiles = loadedConfig.Profiles;
-            activeProfile = loadedConfig.Active;
-        }
+        mods = loadedMods;
+        profiles = loadedConfig.Profiles;
+        activeProfile = loadedConfig.Active;
 
         log.info("Initialization complete.");
     }
@@ -270,7 +249,7 @@
                 }
             });
             const popup = new AddResultPopup(addResults);
-            showPopup(popup)
+            showPopup(popup);
             
             const modsToAdd = results.filter(r => "Ok" in r).map(r => r.Ok);
             mods.push(...modsToAdd);
