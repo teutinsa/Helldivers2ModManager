@@ -27,7 +27,7 @@ tokio = { version = "1.52", features = ["fs"] }
 anyhow = "1.0"
 anyhow-tauri = "1.0"
 zip = "8.5"
-sevenz-rust2 = { version = "0.20", features = ["util"] }
+sevenz-rust2 = { version = "0.23", features = ["util"] }
 unrar = "0.5"
 tauri-plugin-dialog = "2.7"
 futures = "0.3"
@@ -35,3 +35,7 @@ regex = "1.12"
 
 [target.x86_64-pc-windows-gnu]
 linker = "x86_64-w64-mingw32-gcc"
+
+[dev-dependencies]
+tempfile = "3.27.0"
+tokio = { version = "1.52", features = ["rt-multi-thread", "macros"] }
